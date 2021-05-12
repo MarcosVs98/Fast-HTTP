@@ -1,11 +1,9 @@
 import sys
 import random
 import logging
-from fake_useragent import UserAgent
 
-# Rastreie com responsabilidade, identificando-se 
-# (e seu site) no agente do usuário
-USER_AGENT = UserAgent().random
+# Rastreie com responsabilidade, identificando-se
+
 # Configure o máximo de blocos 
 CONCURRENT_BLOCKS   = 417
 # Configure o máximo de solicitações simultâneas executadas
@@ -39,7 +37,7 @@ TELNETCONSOLE_ENABLED = False
 DEFAULT_REQUEST_HEADERS = {
    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
    'Accept-Language': 'en',
-   'User-agent':USER_AGENT
+   'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
 }
 
 # O número médio de solicitações WGFastRequest deve
@@ -57,27 +55,6 @@ DEFAULT_REQUEST_TIMEOUT = {
     "sock_read"   : AUTOTHROTTLE_READ_DELAY
 }
 
-LOGGER = {
-	'datefmt'  : '%Y-%m-%d %H:%M:%S',
-	'format'   :'[%(asctime)s][%(threadName)s][%(module)s:%(funcName)s:%(lineno)d] %(levelname)s: %(message)s',
-	'level'    : logging.INFO,
-	'stream'   : sys.stdout
-}
 
-LUMINATI = {
-	'countries' : ['al', 'ar', 'am', 'au', 'at', 'az', 'bd', 'by', 'be', 'bo',
-		'br', 'bg', 'kh', 'ca', 'cl', 'cn', 'co', 'cy', 'cz', 'dk', 'do', 'ec',
-		'eg', 'ee', 'fi', 'fr', 'ge', 'de', 'gr', 'gt', 'hk', 'hu', 'is', 'in',
-    	'id', 'ie', 'il', 'it', 'jm', 'jp', 'jo', 'kz', 'kr', 'kg', 'la', 'lv',
-		'lt', 'lu', 'my', 'mx', 'md', 'ma', 'nl', 'nz', 'no', 'pk', 'pa', 'pe',
-		'ph', 'pl', 'pt', 'ro', 'ru', 'sa', 'sg', 'sk', 'za', 'es', 'lk', 'se',
-		'ch', 'tw', 'tj', 'th', 'tr', 'tm', 'ua', 'ae', 'gb', 'us', 'uz', 'vn'],
-
-	'hostname'  : 'zproxy.lum-superproxy.io',
-	'port'      : 22225,
-	'baseuser'  : '************',
-	'passwd'    : '************',
-	'zone'      : 'iptester'
-}
 
 #end-of-file

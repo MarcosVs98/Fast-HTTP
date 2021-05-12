@@ -1,186 +1,161 @@
+import io
 import json
 import time
 import asyncio
 import aiohttp
 import random
 from queue import Queue
-from utils import generate_proxy_address
-from clientResponse import dict_response 
+from entities import dict_response
 from exceptions import FailedAIO
-from clientResponse import ClientResponse
+from entities import ClientResponse
 from settings import DEFAULT_REQUEST_HEADERS
 from settings import DEFAULT_REQUEST_TIMEOUT
 from settings import CONCURRENT_BLOCKS
 from settings import CONCURRENT_REQUESTS
 
+from entities import HTTPRedirectHistoryItem
+from entities import SHTTPRequest
+from entities import SClientSession, ClientResponse
 
 class ClientSession:
 	"""
 		Classe responsável por montar interface para realização de solicitações HTTP. 
-  		A sessão encapsula um conjunto de conexões suportando keepalives por padrão.   
+		A sessão encapsula um conjunto de conexões suportando keepalives por padrão.   
 	"""
-	def __init__(self,loop=None, connector=None, cookies=None, headers=DEFAULT_REQUEST_HEADERS, timeout=None, **kwargs):
 
-		self.loop      = loop
-		self.connector = connector
-		self.cookies   = cookies
-		self.headers   = headers
-		self.timeout   = timeout
+	def _init__(self, **kwargs):
+		self.connect(**kwargs)
 
-	def connect(self):
-
-		kwargs = {
-			"connector"            : self.connector,
-			"loop"                 : self.loop, 
-			"cookies"              : self.cookies, 
-			"headers"              : self.headers, 
+	def connect(self, **kwargs):
+		kwargs.update({
 			"skip_auto_headers"    : None, 
 			"auth"                 : None, 
 			"json_serialize"       : json.dumps, 
 			"cookie_jar"           : None, 
-			"read_timeout"         : None, 
-			"conn_timeout"         : None, 
+
+			"conn_timeout"         : None,   
 			"raise_for_status"     : True, 
 			"connector_owner"      : True, 
 			"auto_decompress"      : True, 
 			"requote_redirect_url" : False, 
 			"trust_env"            : False, 
 			"trace_configs"        : None
-		}
+		})
+
 
 		return aiohttp.ClientSession(**kwargs)
 
-	async def __aenter__(self):
+	async def aenter__(self):
 		return self.session
 
-	async def __aexit__(self, exc_type, exc, tb):
+	async def aexit__(self, exc_type, exc, tb):
 		return self.connect().close()
 
-	async def __aiter__(self):
+	async def aiter__(self):
 		return self
-    
-	async def __await__(self):
-		return self.connect().__await__()
+
+	async def await__(self):
+		return self.connect().__await()
 
 
-class HTTPRequest(object):
+class HTTPRequest():
 	"""
 		Classe responsavel por executar solicitações HTTP assíncronas 
 		e retornar objetos de resposta.
 	"""
-	def __init__(self, method, url, headers=None, cookies=None, redirects=None,max_redirects=None, auth=None, timeout=None, 
-			postdata=None, proxy=None, luminati=False, proxy_user=None, proxy_auth=None, proxy_pass=None, proxy_headers=None,json=None,
-   			 params=None, skip_auto_headers=None, ssl=True, sslcontext=None, verify_ssl=True, raise_for_status=False):
-
-		self.method            = method.upper()
-		self.url               = url
-		self.headers           = headers
-		self.cookies           = cookies
-		self.redirects         = redirects
-		self.max_redirects     = max_redirects
-		self.auth              = auth
-		self.timeout           = timeout
-		self.postdata          = postdata
-		self.proxy             = proxy
-		self.luminati          = luminati 
-		self.proxy_auth        = proxy_auth
-		self.proxy_user        = proxy_user
-		self.proxy_pass        = proxy_pass
-		self.proxy_headers     = proxy_headers
-		self.json              = json
-		self.params            = params
-		self.skip_auto_headers = skip_auto_headers
-		self.ssl               = ssl
-		self.sslcontext        = sslcontext
-		self.verify_ssl        = verify_ssl
-		self.raise_for_status  = raise_for_status
-		self.loop = None
- 
-	async def prepare_request(self):
-
-		if not self.headers:
-			self.headers = DEFAULT_REQUEST_HEADERS
+	def __init__(self):
+		self._loop = None
+		self.response_history = None
+		self.contents_buffer = None
   
-		if self.timeout:
-			self.timeout = aiohttp.ClientTimeout(**DEFAULT_REQUEST_TIMEOUT)
-   
-		if self.luminati is True:
-			self.proxy = generate_proxy_address()
-   
-		if self.proxy_user and self.proxy_pass:
-			self.proxy_auth = aiohttp.BasicAuth(self.proxy_user, self.proxy_pass)
+	async def send_request(self, request=None, *args, **kwargs):
+
+		if request is None:
+			request = SHTTPRequest(**kwargs)
+
+
+		contents_buffer = io.BytesIO()
 		
-		if self.verify_ssl and self.sslcontext:
-			#Path dos certificados exemplo '/path/to/ca-bundle.crt'
+		## Request Headers
+		#if request.headers is not None:
+		#	if not isinstance(request.headers, (list, tuple)):
+		#		raise WGHTTPClientException(f'Invalid request headers')
+		#	if not all(isinstance(i, (tuple, list)) for i in request.headers):
+		#		raise WGHTTPClientException(f'Invalid request headers')
+		#	if not all(len(i) == 2 for i in request.headers):
+		#		raise WGHTTPClientException(f'Invalid request headers')
+		#	rawheaders = [f'{k}: {v}' for k, v in request.headers]
+		#else:
+		
+		request.headers = DEFAULT_REQUEST_HEADERS
+
+		# Timeout
+		if not request.timeout:
+			request.timeout = aiohttp.ClientTimeout(**DEFAULT_REQUEST_TIMEOUT)
+
+		# Local Address
+
+		# Open Socket Callback
+
+		# HTTP Proxy
+		#if request.proxy_user and request.proxy_pass:
+
+		#	print(f'Proxy Server Enabled: address="{request.proxy_host}" port="{request.proxy_port}"')
+		#	request.proxy_auth = aiohttp.BasicAuth(request.proxy_user, request.proxy_pass)
+
+		# Certificados / SSL
+		if request.verify_ssl and request.sslcontext:
+			# Path dos certificados exemplo '/path/to/ca-bundle.crt'
 			self.ssl.create_default_context(cafile=self.sslcontext)
-	
-		kwargs = {
-				"params"               : self.params,
-				"data"                 : self.postdata,
-				"json"                 : self.json, 
-				"cookies"              : self.cookies, 
-				"headers"              : self.headers, 
-				"skip_auto_headers"    : self.skip_auto_headers,
-				"auth"                 : self.auth, 
-				"allow_redirects"      : self.redirects, 
-				"max_redirects"        : self.max_redirects, 
-				"compress"             : None, 
-				"chunked"              : None, 
-				"raise_for_status"     : self.raise_for_status,
-				"proxy"                : self.proxy, 
-				"proxy_auth"           : self.proxy_auth, 
-				"timeout"              : self.timeout, 
-				"ssl"                  : self.ssl, 
-				"verify_ssl"           : self.verify_ssl, 
-				"proxy_headers"        : self.proxy_headers
-		}
+
 		try:
-			###############################################
-			#     CRIA UMA INSTANCIA DE CLIENT SESSION    #
-			###############################################
+			# Cliente Aio Session / Perform!
 			async with ClientSession().connect() as client:
-				
-				######################################
-				#           SOLICITAÇÃO GET          #
-				######################################
-				if self.method == 'GET':
-					async with client.get(self.url,**kwargs) as resp:
-						return ClientResponse(**await dict_response(resp)) 
-					raise aiohttp.errors.ClientResponseError('Falha de resposta')
 
-				######################################
-				#          SOLICITAÇÃO POST          #
-				######################################
-				elif self.method == 'POST':
+				# HTTP Method
+				if request.method == 'GET':
+					kwargs.pop('method', None)
+					kwargs.pop('sslcontext', None)
+
+					async with client.get(**kwargs) as resp:
+						return ClientResponse(**await dict_response(resp))
+
+
+				elif request.method == 'POST':
 					async with client.post(self.url,**kwargs) as resp:
-						return ClientResponse(**await dict_response(resp))
-					raise aiohttp.errors.ClientResponseError('Falha de resposta')
+						response = ClientResponse(**await dict_response(resp))
 
-				######################################
-				#          SOLICITAÇÃO PUT           #
-				######################################
-				elif self.method == 'PUT':
+				elif request.method == 'PUT':
 					async with client.put(self.url,**kwargs) as resp:
-						return ClientResponse(**await dict_response(resp))
-					raise aiohttp.errors.ClientResponseError('Falha de resposta')
+						response = ClientResponse(**await dict_response(resp))
 
-				######################################
-				#           SOLICITAÇÃO HEAD         #
-				######################################
-				elif self.method == 'HEAD':
+				elif request.method == 'HEAD':
 					async with client.head(self.url,**kwargs) as resp:
-						return ClientResponse(**await dict_response(resp))
-					raise aiohttp.errors.ClientResponseError('Falha de resposta')
-
-				######################################
-				#     SOLICITAÇÂO NÃO IMPLEMENTADA   #
-				######################################
+						response = ClientResponse(**await dict_response(resp))
 				else:
 					raise aiohttp.errors.ClientRequestError("Método de requisição não suportado")
+
+			print(f'HTTP Server Response: {response}')
+
+			# return response
+			return response
+
+		except aiohttp.ClientError as exc:
+			print(f'HTTP Server Response: {response}')
 			raise aiohttp.ClientError('Falha ao conectar à interface.')
-		except Exception as exc:
-			print('Erro inesperado')
-   
+
+	def get(self, url, **kwargs):
+		kwargs.update({'url': url, 'method': 'GET'})
+		return self.prepare_request(**kwargs)
+
+	def post(self, url, **kwargs):
+		kwargs.update({'url': url, 'method': 'POST'})
+		return self.prepare_request(**kwargs)
+
+	def head(self, url, **kwargs):
+		kwargs.update({'url': url, 'method': 'HEAD'})
+		return self.prepare_request(**kwargs)
+
 	@property
 	def loop_generator(self):
 		return asyncio.get_event_loop()
@@ -191,13 +166,13 @@ class HTTPRequest(object):
 			self.loop()
 		raise Exception('Encerramento do loop falhou.')
 
-	async def fetch(self):
-		return await self.prepare_request()
-	
-	def result(self):
+	async def fetch(self, **kwargs):
+		return await self.send_request(**kwargs)
+
+	def prepare_request(self, **kwargs):
 		self.loop = self.loop_generator
-		return self.loop.run_until_complete(self.fetch())  
-	
+		return self.loop.run_until_complete(self.fetch(**kwargs))  
+
 	def __enter__(cls):
 		return cls
 
@@ -206,9 +181,16 @@ class HTTPRequest(object):
 
 
 
+request = HTTPRequest()
+print(request.get('https://www.panvel.com/panvel/main.do'))
+
+
+
+'''
 class FastHTTP(object):
 	"""
 		Classe responsável por realizar solicitações simulataneas.
+		Receber uma lista de objetos e manda brasa com thread pool
 	"""
 	def __init__(self, method, concurrent_requests, max_queue_size=0, concurrent_blocks=None): 
 
@@ -308,5 +290,5 @@ class FastHTTP(object):
 		if self.loop is not None:
 			self.loop()
 		raise Exception('Encerramento do loop falhou.')
-
+'''
 #end-of-file
