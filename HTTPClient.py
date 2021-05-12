@@ -58,36 +58,36 @@ class ClientSession:
 		return self.connect().__await()
 
 
+
+
+
 class HTTPRequest():
 	"""
 		Classe responsavel por executar solicitações HTTP assíncronas 
 		e retornar objetos de resposta.
 	"""
 	def __init__(self):
+
 		self._loop = None
-		self.response_history = None
-		self.contents_buffer = None
   
 	async def send_request(self, request=None, *args, **kwargs):
 
 		if request is None:
 			request = SHTTPRequest(**kwargs)
 
-
 		contents_buffer = io.BytesIO()
 		
-		## Request Headers
-		#if request.headers is not None:
-		#	if not isinstance(request.headers, (list, tuple)):
-		#		raise WGHTTPClientException(f'Invalid request headers')
-		#	if not all(isinstance(i, (tuple, list)) for i in request.headers):
-		#		raise WGHTTPClientException(f'Invalid request headers')
-		#	if not all(len(i) == 2 for i in request.headers):
-		#		raise WGHTTPClientException(f'Invalid request headers')
-		#	rawheaders = [f'{k}: {v}' for k, v in request.headers]
-		#else:
-		
-		request.headers = DEFAULT_REQUEST_HEADERS
+		## request Headers
+		if request.headers is not None:
+			if not isinstance(request.headers, (list, tuple)):
+				raise WGHTTPClientException(f'Invalid request headers')
+			if not all(isinstance(i, (tuple, list)) for i in request.headers):
+				raise WGHTTPClientException(f'Invalid request headers')
+			if not all(len(i) == 2 for i in request.headers):
+				raise WGHTTPClientException(f'Invalid request headers')
+			rawheaders = [f'{k}: {v}' for k, v in request.headers]
+		else:
+			request.headers = DEFAULT_REQUEST_HEADERS
 
 		# Timeout
 		if not request.timeout:
@@ -109,34 +109,27 @@ class HTTPRequest():
 			self.ssl.create_default_context(cafile=self.sslcontext)
 
 		try:
-			# Cliente Aio Session / Perform!
+			# Cliente Aio Session!
 			async with ClientSession().connect() as client:
-
 				# HTTP Method
 				if request.method == 'GET':
+					# keep or remove ? 
 					kwargs.pop('method', None)
 					kwargs.pop('sslcontext', None)
-
 					async with client.get(**kwargs) as resp:
-						return ClientResponse(**await dict_response(resp))
-
-
+						response = ClientResponse(**await dict_response(resp))
 				elif request.method == 'POST':
 					async with client.post(self.url,**kwargs) as resp:
 						response = ClientResponse(**await dict_response(resp))
-
 				elif request.method == 'PUT':
 					async with client.put(self.url,**kwargs) as resp:
 						response = ClientResponse(**await dict_response(resp))
-
 				elif request.method == 'HEAD':
 					async with client.head(self.url,**kwargs) as resp:
 						response = ClientResponse(**await dict_response(resp))
 				else:
 					raise aiohttp.errors.ClientRequestError("Método de requisição não suportado")
-
 			print(f'HTTP Server Response: {response}')
-
 			# return response
 			return response
 
