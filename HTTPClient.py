@@ -1,6 +1,7 @@
 import io
 import json
 import time
+import logging
 import asyncio
 import aiohttp
 import random
@@ -16,6 +17,27 @@ from settings import CONCURRENT_REQUESTS
 from entities import HTTPRedirectHistoryItem
 from entities import SHTTPRequest
 from entities import SClientSession, ClientResponse
+
+
+log = logging.getLogger('HTTPClient')
+
+
+class HTTPClientException(Exception):
+	pass
+
+class HTTPClientEmptyResponseException(HTTPClientException):
+	pass
+
+class HTTPClientTimeoutException(HTTPClientException):
+	pass
+
+class HTTPClientTooManyRedirectsException(HTTPClientException):
+	pass
+
+class HTTPClientResolveHostException(HTTPClientException):
+	pass
+
+
 
 class ClientSession:
 	"""
@@ -67,13 +89,15 @@ class HTTPRequest():
 		e retornar objetos de resposta.
 	"""
 	def __init__(self):
-
+		self._response = None
 		self._loop = None
   
 	async def send_request(self, request=None, *args, **kwargs):
 
 		if request is None:
 			request = SHTTPRequest(**kwargs)
+
+		log.debug(f'HTTP Client Request: {request}')
 
 		contents_buffer = io.BytesIO()
 		
@@ -99,7 +123,6 @@ class HTTPRequest():
 
 		# HTTP Proxy
 		#if request.proxy_user and request.proxy_pass:
-
 		#	print(f'Proxy Server Enabled: address="{request.proxy_host}" port="{request.proxy_port}"')
 		#	request.proxy_auth = aiohttp.BasicAuth(request.proxy_user, request.proxy_pass)
 
@@ -107,7 +130,6 @@ class HTTPRequest():
 		if request.verify_ssl and request.sslcontext:
 			# Path dos certificados exemplo '/path/to/ca-bundle.crt'
 			self.ssl.create_default_context(cafile=self.sslcontext)
-
 		try:
 			# Cliente Aio Session!
 			async with ClientSession().connect() as client:
@@ -117,21 +139,21 @@ class HTTPRequest():
 					kwargs.pop('method', None)
 					kwargs.pop('sslcontext', None)
 					async with client.get(**kwargs) as resp:
-						response = ClientResponse(**await dict_response(resp))
+						self.response = ClientResponse(**await dict_response(resp))
 				elif request.method == 'POST':
 					async with client.post(self.url,**kwargs) as resp:
-						response = ClientResponse(**await dict_response(resp))
+						self.response = ClientResponse(**await dict_response(resp))
 				elif request.method == 'PUT':
 					async with client.put(self.url,**kwargs) as resp:
-						response = ClientResponse(**await dict_response(resp))
+						self.response = ClientResponse(**await dict_response(resp))
 				elif request.method == 'HEAD':
 					async with client.head(self.url,**kwargs) as resp:
-						response = ClientResponse(**await dict_response(resp))
+						self.response = ClientResponse(**await dict_response(resp))
 				else:
 					raise aiohttp.errors.ClientRequestError("Método de requisição não suportado")
-			print(f'HTTP Server Response: {response}')
+			log.debug(f'HTTP Server Response: {self.response}')
 			# return response
-			return response
+			return self.response
 
 		except aiohttp.ClientError as exc:
 			print(f'HTTP Server Response: {response}')
@@ -149,8 +171,7 @@ class HTTPRequest():
 		kwargs.update({'url': url, 'method': 'HEAD'})
 		return self.prepare_request(**kwargs)
 
-	@property
-	def loop_generator(self):
+	def get_loop(self):
 		return asyncio.get_event_loop()
 
 	@property
@@ -163,8 +184,13 @@ class HTTPRequest():
 		return await self.send_request(**kwargs)
 
 	def prepare_request(self, **kwargs):
-		self.loop = self.loop_generator
-		return self.loop.run_until_complete(self.fetch(**kwargs))  
+		self.loop = self.get_loop()
+		return self.loop.run_until_complete(self.fetch(**kwargs))
+
+	def __repr__(self):
+		return (f'http-client ('
+		        f'{self.response.status} '
+		        f'{self.response.reason})')
 
 	def __enter__(cls):
 		return cls
@@ -175,7 +201,8 @@ class HTTPRequest():
 
 
 request = HTTPRequest()
-print(request.get('https://www.panvel.com/panvel/main.do'))
+print(request.get('https://www.panvel.com/panvel/main.do').status)
+print(request)
 
 
 
