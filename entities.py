@@ -145,46 +145,6 @@ class HTTPRequest(WBEntity):
 		self.__dict__[name] = value
 
 
-
-async def auto_decode(content):
-	for enc in ['ascii', 'utf8', 'iso-8859-1', 'cp-1252']:
-		try:
-			return await content(enc)
-		except UnicodeDecodeError:
-			pass
-
-
-
-async def dict_response(response):
-
-	res =  {
-		"content_text"        : await auto_decode(response.text),
-		"version"             : response.version,
-		"status"              : response.status,
-		"reason"              : response.reason,
-		"method"              : response.method,
-		"url"                 : response.url,
-		"real_url"            : response.real_url,
-		"connection"          : response.connection,
-		"content"             : response.content,
-		"cookies"             : response.cookies,
-		"headers"             : response.headers,
-		"raw_headers"         : response.raw_headers,
-		"links"               : response.links,
-		"content_type"        : response.content_type,
-		"charset"             : response.charset,
-		"history"	            : response.history,
-		"request_info"        : response.request_info,
-		"release"             : await response.release(),
-	}
-	return res
-
-# end-of-file #
-
-
-
-# end-of-file #
-
 from types import SimpleNamespace
 
 class ClientResponse(WBEntity):

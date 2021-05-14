@@ -9,7 +9,7 @@ import ssl
 from pprint import pprint
 from queue import Queue
 from types import SimpleNamespace
-from entities import dict_response
+
 from exceptions import FailedAIO
 from entities import ClientResponse
 from settings import DEFAULT_REQUEST_HEADERS
@@ -89,8 +89,11 @@ class ClientResponse(WBEntity):
 		O ClientResponse suporta protocolo de gerenciador de contexto assíncrono
 	"""
 	def __str__(self):
-		summary = SimpleNamespace(**{k:v for k,v in self.__dict__.items() if k not in ['content_text']})
-		return (f'<[FHTTP/{summary.status} {summary.reason}]>')
+		self.summary = SimpleNamespace(**{k:v for k,v in self.__dict__.items() if k not in ['content_text']})
+		return (f'<[FHTTP/{self.summary.status} {self.summary.reason}]>')
+
+	def request_info(self):
+		return str(self.__dict__.items())
 
 	def __repr__(self):
 		return __str__()
@@ -105,8 +108,8 @@ class ClientResponse(WBEntity):
 @dataclass
 class HTTPRequest(WBEntity):
 	"""
-		Classe de dados responsavel por representar
-		os campos de uma requisicao HTTP
+	Classe de dados responsavel por representar
+	os campos de uma requisicao HTTP
 	"""
 	url               : str 
 	method            : str
@@ -146,8 +149,8 @@ class HTTPRequest(WBEntity):
 
 class HTTPClient():
 	"""
-		Classe responsavel por executar solicitações HTTP assíncronas 
-		e retornar objetos de resposta.
+	Classe responsavel por executar solicitações HTTP assíncronas 
+	e retornar objetos de resposta.
 	"""
 	def __init__(self):
 		self._response = None
@@ -233,7 +236,7 @@ class HTTPClient():
 			async with request_callback(**vars(aio_request)) as resp:
 				try:
 					# Response Object
-					self.response = ClientResponse(
+					response = ClientResponse(
 						request=request,
 						content_text=await self.auto_decode(resp.text),
 						version=resp.version,
@@ -263,9 +266,8 @@ class HTTPClient():
 					raise aiohttp.ClientConnectorError(e)
 				except aiohttp.ClientError as e:
 					raise ClientConnectionError(e)
-			log.debug(f'HTTP Server Response: {self.response}')
-		return self.response
-
+			log.debug(f'HTTP Server Response: {response}')
+		return response
 
 	def get(self, url, **kwargs):
 		kwargs.update({"url": url, "method": "GET"})
@@ -302,21 +304,16 @@ class HTTPClient():
 		pass
 
 
-request = HTTPClient()
-response = request.get('https://www.panvel.com/panvel/main.do')
-print(response)
 
 
-
-'''
-class FastHTTP(object):
+class HTTPBoost():
 	"""
 		Classe responsável por realizar solicitações simulataneas.
 		Receber uma lista de objetos e manda brasa com thread pool
 	"""
-	def __init__(self, method, concurrent_requests, max_queue_size=0, concurrent_blocks=None): 
+	def __init__(self, concurrent_requests, max_queue_size=0, concurrent_blocks=None, **kwargs): 
 
-		self.method              = method
+		self.kwargs              = kwargs
 		self.max_queue_size      = max_queue_size
 		self.concurrent_requests = concurrent_requests
 		self.queue_block         = Queue(maxsize=self.max_queue_size)
@@ -327,14 +324,11 @@ class FastHTTP(object):
 		self.loop                = None
 		self.urls                = []
 
-	###################################################
-	#   REALIZA A MONTAGEM DOS BLOCOS DE SOLICITAÇÃO  #
-	###################################################
 	def recover_block(self):
 		for url in self.urls:
 			try:
-				request  = HTTPRequest(self.method, url)
-				future   = asyncio.ensure_future(request.fetch())
+				request  = HTTPClient()
+				future   = asyncio.ensure_future(request.fetch(**kwargs))
 				self.queue_block.put(future)
 
 			except Exception as exc:
@@ -349,9 +343,6 @@ class FastHTTP(object):
 					print("Erro inesperado {}".format(exc))
 					break
 
-	###################################################
-	#         REALIZA AS REQUISIÇÔES SIMULTANEAS      #
-	###################################################
 	def quick_response(self):
 		try:
 			self.loop = self.loop_generator
@@ -368,22 +359,12 @@ class FastHTTP(object):
 			print("Erro inesperado :{}".format(err))
 			self.close_loop
 
-	##################################################
-	#         NOVA TENTATIVA PARA OUT_QUEUE          #
-	##################################################
-	#não implementado
-
-	###################################################
-	#         INICIA O PROCESSAMENTO DAS URLS         #
-	###################################################
 	def start(self):
-		japronto = 'http://0.0.0.0:8080'
+		japronto = self.kwargs['url']
 
 		if self.urls:
 			pass
-		##################################
-		#         INICIA O TESTE         #
-		##################################
+
 		start = time.time()  
 		for _ in range(self.fake_block_size):    
 			self.urls = [japronto for _ in range(self.concurrent_requests)]
@@ -391,9 +372,7 @@ class FastHTTP(object):
 			self.quick_response()
 
 		end = time.time()
-		###################################################
-		#                RESULTADO DOS TESTES             #
-		###################################################
+		
 		print("Processamento finalizado.")
 		print("Tempo de processamento             : ", round((end - start),4),"s")
 		print("Numero requisições simultaneas     : ", self.concurrent_requests)
@@ -412,5 +391,5 @@ class FastHTTP(object):
 		if self.loop is not None:
 			self.loop()
 		raise Exception('Encerramento do loop falhou.')
-'''
+
 #end-of-file
