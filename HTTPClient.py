@@ -18,7 +18,6 @@ from settings import CONCURRENT_BLOCKS
 from settings import CONCURRENT_REQUESTS
 from dataclasses import dataclass, field
 from urllib.parse import urlencode, urlparse
-
 from entities import HTTPRedirectHistoryItem
 from entities import HTTPRequest, AIORequests
 from entities import SClientSession, ClientResponse, WBEntity
@@ -139,7 +138,7 @@ class HTTPClient():
   
 	async def send_request(self, request=None, **kwargs):
 
-		# params session
+		# AIO Request
 		aio_request = SimpleNamespace()
 
 		if request is None:
@@ -151,7 +150,7 @@ class HTTPClient():
 		log.debug(f'HTTP Client Request: {request}')
 		contents_buffer = io.BytesIO()
 
-		## request Headers
+		## Request Headers
 		if request.headers is not None:
 			if not isinstance(request.headers, (list, tuple)):
 				raise WGHTTPClientException(f'Invalid request headers')
@@ -167,8 +166,7 @@ class HTTPClient():
 
 		# Authentication
 		if request.security_web:
-			aio_request.auth = aiohttp.BasicAuth(
-					request.auth_user, request.auth_pass)
+			aio_request.auth = aiohttp.BasicAuth(request.auth_user, request.auth_pass)
 
 		# Redirects
 		aio_request.max_redirects = request.redirects
@@ -184,8 +182,7 @@ class HTTPClient():
 					aio_request.proxy_headers = request.headers
 				else:
 					aio_request.proxy_headers = request.proxy_headers
-				aio_request.proxy = aiohttp.BasicAuth(
-					request.proxy_user, request.proxy_pass)
+				aio_request.proxy = aiohttp.BasicAuth(request.proxy_user, request.proxy_pass)
 
 				log.debug(f'Proxy Server Enabled: '
 					' address="{request.proxy_host}" port="{request.proxy_port}"')
@@ -220,10 +217,10 @@ class HTTPClient():
 				request_callback = client.head
 			else:
 				raise aiohttp.errors.ClientRequestError("Método de requisição não suportado")
-
 			# realizar callback
 			async with request_callback(**vars(aio_request)) as resp:
 				try:
+					# Response Object
 					self.response = ClientResponse(**await dict_response(resp))
 				except aiohttp.ServerTimeoutError as e:
 					raise aiohttp.ServerTimeoutError(e)
@@ -268,13 +265,11 @@ class HTTPClient():
 		self.loop = self.get_loop()
 		return self.loop.run_until_complete(self.fetch(**kwargs))
 
-
 	def __enter__(cls):
 		return cls
 
 	def __exit__(cls, typ, value, tb):
 		pass
-
 
 
 request = HTTPClient()
