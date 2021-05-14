@@ -161,14 +161,16 @@ class HTTPClient():
 				pass
 
 	async def send_request(self, request=None, **kwargs):
-
-		# AIO Request
-		aio_request = SimpleNamespace()
 		if request is None:
 			request = HTTPRequest(**kwargs)
+
+		log.debug(f'HTTP Client Request: {request}')
+		# AIO Request
+		aio_request = SimpleNamespace()
+
 		# URL
 		aio_request.url = request.url
-		log.debug(f'HTTP Client Request: {request}')
+
 		contents_buffer = io.BytesIO()
 		## Request Headers
 		if request.headers is not None:
