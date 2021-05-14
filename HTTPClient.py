@@ -212,9 +212,8 @@ class HTTPClient():
 				else:
 					aio_request.proxy_headers = request.proxy_headers
 				aio_request.proxy = aiohttp.BasicAuth(request.proxy_user, request.proxy_pass)
+				log.debug(f'Proxy Server Enabled: address="{request.proxy_host}" port="{request.proxy_port}"')
 
-				log.debug(f'Proxy Server Enabled: '
-					' address="{request.proxy_host}" port="{request.proxy_port}"')
 			except aiohttp.ClientProxyConnectionError as e:
 				log.error(f"failed to connect to a proxy: {e}")
 			except aiohttp.ClientConnectorError as e:
@@ -278,7 +277,6 @@ class HTTPClient():
 					raise aiohttp.ClientConnectorError(e)
 				except aiohttp.ClientError as e:
 					raise ClientConnectionError(e)
-
 			log.debug(f'HTTP Server Response: {self.response}')
 		return self.response
 
