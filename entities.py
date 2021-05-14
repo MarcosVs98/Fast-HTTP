@@ -192,19 +192,6 @@ class ClientResponse(WBEntity):
 		Classe de Dados responsavel por encapsular respostas de requisicoes HTTP.
 		O ClientResponse suporta protocolo de gerenciador de contexto assíncrono
 	"""
-	'''
-	def __post_init__(self):
-		uri = urlparse(self.url)
-		self.domain = uri.netloc
-		self.scheme = uri.scheme
-
-	def __setattr__(self, name, value):
-		if name == 'url':
-			uri = urlparse(value)
-			self.__dict__['domain'] = uri.netloc
-			self.__dict__['scheme'] = uri.scheme
-		self.__dict__[name] = value'''
-
 	def __str__(self):
 		summary = SimpleNamespace(**{k:v for k,v in self.__dict__.items() if k not in ['content_text']})
 		return (f'<[FHTTP/'

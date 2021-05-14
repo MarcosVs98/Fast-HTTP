@@ -83,6 +83,28 @@ class ClientSession:
 
 
 
+class ClientResponse(WBEntity):
+	"""
+		Classe de Dados responsavel por encapsular respostas de requisicoes HTTP.
+		O ClientResponse suporta protocolo de gerenciador de contexto assíncrono
+	"""
+	def __str__(self):
+		summary = SimpleNamespace(**{k:v for k,v in self.__dict__.items() if k not in ['content_text']})
+		return (f'<[FHTTP/'
+				f'{summary.status} '
+				f'{summary.reason}]>')
+
+	def __repr__(self):
+		return __str__()
+
+	def __enter__(cls):
+		return cls
+
+	def __exit__(cls, typ, value, tb):
+		pass
+
+
+
 @dataclass
 class HTTPRequest(WBEntity):
 	"""
@@ -135,7 +157,14 @@ class HTTPClient():
 	def __init__(self):
 		self._response = None
 		self._loop = None
-  
+
+	async def auto_decode(self, content):
+		for enc in ['ascii', 'utf8', 'iso-8859-1', 'cp-1252']:
+			try:
+				return await content(enc)
+			except UnicodeDecodeError:
+				pass
+
 	async def send_request(self, request=None, **kwargs):
 
 		# AIO Request
@@ -221,7 +250,27 @@ class HTTPClient():
 			async with request_callback(**vars(aio_request)) as resp:
 				try:
 					# Response Object
-					self.response = ClientResponse(**await dict_response(resp))
+					self.response = ClientResponse(
+						request=request,
+						content_text=await self.auto_decode(resp.text),
+						version=resp.version,
+						status=resp.status,
+						reason=resp.reason,
+						method=resp.method,
+						url=resp.url,
+						real_url=resp.real_url,
+						connection=resp.connection,
+						content=resp.content,
+						cookies=resp.cookies,
+						headers=resp.headers,
+						raw_headers=resp.raw_headers,
+						links=resp.links,
+						content_type=resp.content_type,
+						charset=resp.charset,
+						history=resp.history,
+						request_info=resp.request_info,
+						release=await resp.release())
+
 				except aiohttp.ServerTimeoutError as e:
 					raise aiohttp.ServerTimeoutError(e)
 				except aiohttp.ClientOSError as e:
