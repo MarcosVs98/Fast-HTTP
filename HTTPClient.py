@@ -42,6 +42,48 @@ class HTTPClientResolveHostException(HTTPClientException):
 	pass
 
 
+@dataclass
+class ClientSession(WBEntity):
+	"""
+	Classe responsável por montar interface para realização de solicitações HTTP. 
+	A sessão encapsula um conjunto de conexões suportando keepalives por padrão.
+	"""
+
+#	connector            : aiohttp.BaseConnector = field(default=None)
+	loop                 : str = field(default=None)
+	cookies              : dict = field(default=None)
+	headers              : dict = field(default=None)
+	skip_auto_headers    : str = field(default=None)
+	auth                 : aiohttp.BasicAuth = field(default=None)
+	json_serialize       : dict = field(default=json.dumps)
+	cookie_jar           : aiohttp.DummyCookieJar = field(default=None)
+	conn_timeout         : float = field(default=10)
+	timeout              : int = field(default=30)
+	raise_for_status     : bool = field(default=False)
+	connector_owner      : bool = field(default=True)
+	auto_decompress      : bool = field(default=True)
+	read_bufsize         : int = field(default=2 ** 16)
+	requote_redirect_url : bool = field(default=True)
+	trust_env            : bool = field(default=False)
+	trace_configs        : bool = field(default=False)
+
+	def connect(self):
+		self.connection = aiohttp.ClientSession()
+		return self.connection
+
+	async def __aenter__(self):
+		return self.connect()
+
+	async def __aexit__(self, exc_type, exc, tb):
+		return self.connect().close()
+
+	async def __aiter__(self):
+		with aiohttp.Timeout(self.timeout):
+			return self
+
+	async def __await__(self):
+		return self.connect().__await()
+
 
 class ClientSession:
 	"""
@@ -82,6 +124,11 @@ class ClientSession:
 		return self.connect().__await()
 
 
+#aiohttp.HttpVersion11,
+
+#c = ClientSession()
+#print(c)
+
 
 class ClientResponse(WBEntity):
 	"""
@@ -90,7 +137,7 @@ class ClientResponse(WBEntity):
 	"""
 	def __str__(self):
 		self.summary = SimpleNamespace(**{k:v for k,v in self.__dict__.items() if k not in ['content_text']})
-		return (f'<[FHTTP/{self.summary.status} {self.summary.reason}]>')
+		return (f'<FHTTP Response [{self.summary.status} {self.summary.reason}]>')
 
 	def request_info(self):
 		return str(self.__dict__.items())
@@ -303,7 +350,12 @@ class HTTPClient():
 	def __exit__(cls, typ, value, tb):
 		pass
 
+	def __dell__(self):
+		del self
 
+request = HTTPClient()
+response = request.get('https://www.panvel.com/panvel/main.do')
+print(response)
 
 
 class HTTPBoost():
@@ -326,6 +378,7 @@ class HTTPBoost():
 
 	def recover_block(self):
 		for url in self.urls:
+
 			try:
 				request  = HTTPClient()
 				future   = asyncio.ensure_future(request.fetch(**kwargs))
