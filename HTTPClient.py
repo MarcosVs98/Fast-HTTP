@@ -207,34 +207,38 @@ class HTTPClient():
 		# Levanta exceção se status de resposta for >= 400.
 		aio_request.raise_for_status = request.raise_for_status
 
-		try:
-			# Cliente async session!
-			async with ClientSession().connect() as client:
+		# Cliente async session!
+		async with ClientSession().connect() as client:
+			# HTTP Method
+			if request.method == 'GET':
+				request_callback = client.get
+			elif request.method == 'POST':
+				request_callback = client.post
+			elif request.method == 'PUT':
+				request_callback = client.put
+			elif request.method == 'HEAD':
+				request_callback = client.head
+			else:
+				raise aiohttp.errors.ClientRequestError("Método de requisição não suportado")
 
-				# HTTP Method
-				if request.method == 'GET':
-					async with client.get(**vars(aio_request)) as resp:
-						self.response = ClientResponse(**await dict_response(resp))
-
-				elif request.method == 'POST':
-					async with client.post(**vars(aio_request)) as resp:
-						self.response = ClientResponse(**await dict_response(resp))
-				elif request.method == 'PUT':
-					async with client.put(**vars(aio_request)) as resp:
-						self.response = ClientResponse(**await dict_response(resp))
-				elif request.method == 'HEAD':
-					async with client.head(**vars(aio_request)) as resp:
-						self.response = ClientResponse(**await dict_response(resp))
-				else:
-					raise aiohttp.errors.ClientRequestError("Método de requisição não suportado")
+			# realizar callback
+			async with request_callback(**vars(aio_request)) as resp:
+				try:
+					self.response = ClientResponse(**await dict_response(resp))
+				except aiohttp.ServerTimeoutError as e:
+					raise aiohttp.ServerTimeoutError(e)
+				except aiohttp.ClientOSError as e:
+					raise ClientConnectorSSLError(e)
+				except aiohttp.ClientProxyConnectionError as e:
+					raise aiohttp.ClientConnectorError(e)
+				except aiohttp.ClientSSLError as e:
+					raise aiohttp.ClientConnectorError(e)
+				except aiohttp.ClientError as e:
+					raise ClientConnectionError(e)
 
 			log.debug(f'HTTP Server Response: {self.response}')
-			# return response
-			return self.response
+		return self.response
 
-		except aiohttp.ClientError as exc:
-			log.error(f'HTTP Server Response: {response}')
-			raise aiohttp.ClientError('Falha ao conectar à interface.')
 
 	def get(self, url, **kwargs):
 		kwargs.update({"url": url, "method": "GET"})
