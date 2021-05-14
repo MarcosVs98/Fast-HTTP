@@ -90,9 +90,7 @@ class ClientResponse(WBEntity):
 	"""
 	def __str__(self):
 		summary = SimpleNamespace(**{k:v for k,v in self.__dict__.items() if k not in ['content_text']})
-		return (f'<[FHTTP/'
-				f'{summary.status} '
-				f'{summary.reason}]>')
+		return (f'<[FHTTP/{summary.status} {summary.reason}]>')
 
 	def __repr__(self):
 		return __str__()
@@ -102,7 +100,6 @@ class ClientResponse(WBEntity):
 
 	def __exit__(cls, typ, value, tb):
 		pass
-
 
 
 @dataclass
@@ -134,12 +131,10 @@ class HTTPRequest(WBEntity):
 	proxy_headers     : dict = field(default=None) 
 	raise_for_status  : bool = field(default=False)
 
-
 	def __post_init__(self):
 		uri = urlparse(self.url)
 		self.domain = uri.netloc
 		self.scheme = uri.scheme
-
 
 	def __setattr__(self, name, value):
 		if name == 'url':
@@ -169,16 +164,12 @@ class HTTPClient():
 
 		# AIO Request
 		aio_request = SimpleNamespace()
-
 		if request is None:
 			request = HTTPRequest(**kwargs)
-
 		# URL
 		aio_request.url = request.url
-
 		log.debug(f'HTTP Client Request: {request}')
 		contents_buffer = io.BytesIO()
-
 		## Request Headers
 		if request.headers is not None:
 			if not isinstance(request.headers, (list, tuple)):
@@ -192,18 +183,14 @@ class HTTPClient():
 			aio_request.headers = DEFAULT_REQUEST_HEADERS
 		else:
 			request.headers = DEFAULT_REQUEST_HEADERS
-
 		# Authentication
 		if request.security_web:
 			aio_request.auth = aiohttp.BasicAuth(request.auth_user, request.auth_pass)
-
 		# Redirects
 		aio_request.max_redirects = request.redirects
-
 		# Timeout
 		if not request.timeout:
 			aio_request.timeout = aiohttp.ClientTimeout(**DEFAULT_REQUEST_TIMEOUT)
-
 		# HTTP Proxy
 		if request.proxy_user and request.proxy_pass:
 			try:
@@ -223,13 +210,10 @@ class HTTPClient():
 		if request.verify_ssl and request.sslcontext:
 			# Path dos certificados exemplo '/path/to/ca-bundle.crt'
 			aio_request.ssl = ssl.create_default_context(request.sslcontext)
-
 		# Validate ssl
 		aio_request.verify_ssl = request.verify_ssl
-
 		# Levanta exceção se status de resposta for >= 400.
 		aio_request.raise_for_status = request.raise_for_status
-
 		# Cliente async session!
 		async with ClientSession().connect() as client:
 			# HTTP Method
