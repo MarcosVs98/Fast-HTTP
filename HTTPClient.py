@@ -5,7 +5,10 @@ import logging
 import asyncio
 import aiohttp
 import random
+import ssl
+from pprint import pprint
 from queue import Queue
+from types import SimpleNamespace
 from entities import dict_response
 from exceptions import FailedAIO
 from entities import ClientResponse
@@ -13,11 +16,13 @@ from settings import DEFAULT_REQUEST_HEADERS
 from settings import DEFAULT_REQUEST_TIMEOUT
 from settings import CONCURRENT_BLOCKS
 from settings import CONCURRENT_REQUESTS
+from dataclasses import dataclass, field
+from urllib.parse import urlencode, urlparse
 
 from entities import HTTPRedirectHistoryItem
-from entities import SHTTPRequest
-from entities import SClientSession, ClientResponse
-
+from entities import HTTPRequest, AIORequests
+from entities import SClientSession, ClientResponse, WBEntity
+from aiohttp.helpers import BasicAuth
 
 log = logging.getLogger('HTTPClient')
 
@@ -41,20 +46,20 @@ class HTTPClientResolveHostException(HTTPClientException):
 
 class ClientSession:
 	"""
-		Classe responsável por montar interface para realização de solicitações HTTP. 
-		A sessão encapsula um conjunto de conexões suportando keepalives por padrão.   
+	Classe responsável por montar interface para realização de solicitações HTTP. 
+	A sessão encapsula um conjunto de conexões suportando keepalives por padrão.   
 	"""
 
 	def _init__(self, **kwargs):
 		self.connect(**kwargs)
 
 	def connect(self, **kwargs):
+		# Arrumar essa jóça kakdkda
 		kwargs.update({
 			"skip_auto_headers"    : None, 
 			"auth"                 : None, 
 			"json_serialize"       : json.dumps, 
-			"cookie_jar"           : None, 
-
+			"cookie_jar"           : None,
 			"conn_timeout"         : None,   
 			"raise_for_status"     : True, 
 			"connector_owner"      : True, 
@@ -63,8 +68,6 @@ class ClientSession:
 			"trust_env"            : False, 
 			"trace_configs"        : None
 		})
-
-
 		return aiohttp.ClientSession(**kwargs)
 
 	async def aenter__(self):
@@ -81,9 +84,51 @@ class ClientSession:
 
 
 
+@dataclass
+class HTTPRequest(WBEntity):
+	"""
+		Classe de dados responsavel por representar
+		os campos de uma requisicao HTTP
+	"""
+	url               : str 
+	method            : str
+	domain            : str = field(default=None)
+	scheme            : str = field(default=None)
+	headers           : dict = field(default=None) 
+	timeout           : int = field(default=120)
+	postdata          : bytes = field(default=None, repr=False)
+	http_version      : str = field(default='HTTP/1.1')
+	security_web      : bool = field(default=False) 
+	auth_user         : str = field(default=None)
+	auth_pass         : str = field(default=None)
+	follow_redirects  : bool = field(default=True)
+	redirects         : int = field(default=30)
+	proxy_host        : str = field(default=None)
+	proxy_port        : int = field(default=0)
+	proxy_user        : str = field(default=None)
+	proxy_pass        : str = field(default=None)
+	outbound_address  : str = field(default=None)
+	verify_ssl        : bool = field(default=False)
+	sslcontext        : str = field(default=None)
+	proxy_headers     : dict = field(default=None) 
+	raise_for_status  : bool = field(default=False)
 
 
-class HTTPRequest():
+	def __post_init__(self):
+		uri = urlparse(self.url)
+		self.domain = uri.netloc
+		self.scheme = uri.scheme
+
+
+	def __setattr__(self, name, value):
+		if name == 'url':
+			uri = urlparse(value)
+			self.__dict__['domain'] = uri.netloc
+			self.__dict__['scheme'] = uri.scheme
+		self.__dict__[name] = value
+
+
+class HTTPClient():
 	"""
 		Classe responsavel por executar solicitações HTTP assíncronas 
 		e retornar objetos de resposta.
@@ -92,15 +137,20 @@ class HTTPRequest():
 		self._response = None
 		self._loop = None
   
-	async def send_request(self, request=None, *args, **kwargs):
+	async def send_request(self, request=None, **kwargs):
+
+		# params session
+		aio_request = SimpleNamespace()
 
 		if request is None:
-			request = SHTTPRequest(**kwargs)
+			request = HTTPRequest(**kwargs)
+
+		# URL
+		aio_request.url = request.url
 
 		log.debug(f'HTTP Client Request: {request}')
-
 		contents_buffer = io.BytesIO()
-		
+
 		## request Headers
 		if request.headers is not None:
 			if not isinstance(request.headers, (list, tuple)):
@@ -110,65 +160,92 @@ class HTTPRequest():
 			if not all(len(i) == 2 for i in request.headers):
 				raise WGHTTPClientException(f'Invalid request headers')
 			rawheaders = [f'{k}: {v}' for k, v in request.headers]
+			# Arrumar depois
+			aio_request.headers = DEFAULT_REQUEST_HEADERS
 		else:
 			request.headers = DEFAULT_REQUEST_HEADERS
 
+		# Authentication
+		if request.security_web:
+			aio_request.auth = aiohttp.BasicAuth(
+					request.auth_user, request.auth_pass)
+
+		# Redirects
+		aio_request.max_redirects = request.redirects
+
 		# Timeout
 		if not request.timeout:
-			request.timeout = aiohttp.ClientTimeout(**DEFAULT_REQUEST_TIMEOUT)
-
-		# Local Address
-
-		# Open Socket Callback
+			aio_request.timeout = aiohttp.ClientTimeout(**DEFAULT_REQUEST_TIMEOUT)
 
 		# HTTP Proxy
-		#if request.proxy_user and request.proxy_pass:
-		#	print(f'Proxy Server Enabled: address="{request.proxy_host}" port="{request.proxy_port}"')
-		#	request.proxy_auth = aiohttp.BasicAuth(request.proxy_user, request.proxy_pass)
+		if request.proxy_user and request.proxy_pass:
+			try:
+				if not request.proxy_headers:
+					aio_request.proxy_headers = request.headers
+				else:
+					aio_request.proxy_headers = request.proxy_headers
+				aio_request.proxy = aiohttp.BasicAuth(
+					request.proxy_user, request.proxy_pass)
+
+				log.debug(f'Proxy Server Enabled: '
+					' address="{request.proxy_host}" port="{request.proxy_port}"')
+
+			except aiohttp.ClientProxyConnectionError as e:
+				log.error(f"failed to connect to a proxy: {e}")
+
+			except aiohttp.ClientConnectorError as e:
+				raise HTTPClientException(e)
 
 		# Certificados / SSL
 		if request.verify_ssl and request.sslcontext:
 			# Path dos certificados exemplo '/path/to/ca-bundle.crt'
-			self.ssl.create_default_context(cafile=self.sslcontext)
+			aio_request.ssl = ssl.create_default_context(request.sslcontext)
+
+		# Validate ssl
+		aio_request.verify_ssl = request.verify_ssl
+
+		# Levanta exceção se status de resposta for >= 400.
+		aio_request.raise_for_status = request.raise_for_status
+
 		try:
-			# Cliente Aio Session!
+			# Cliente async session!
 			async with ClientSession().connect() as client:
+
 				# HTTP Method
 				if request.method == 'GET':
-					# keep or remove ? 
-					kwargs.pop('method', None)
-					kwargs.pop('sslcontext', None)
-					async with client.get(**kwargs) as resp:
+					async with client.get(**vars(aio_request)) as resp:
 						self.response = ClientResponse(**await dict_response(resp))
+
 				elif request.method == 'POST':
-					async with client.post(self.url,**kwargs) as resp:
+					async with client.post(**vars(aio_request)) as resp:
 						self.response = ClientResponse(**await dict_response(resp))
 				elif request.method == 'PUT':
-					async with client.put(self.url,**kwargs) as resp:
+					async with client.put(**vars(aio_request)) as resp:
 						self.response = ClientResponse(**await dict_response(resp))
 				elif request.method == 'HEAD':
-					async with client.head(self.url,**kwargs) as resp:
+					async with client.head(**vars(aio_request)) as resp:
 						self.response = ClientResponse(**await dict_response(resp))
 				else:
 					raise aiohttp.errors.ClientRequestError("Método de requisição não suportado")
+
 			log.debug(f'HTTP Server Response: {self.response}')
 			# return response
 			return self.response
 
 		except aiohttp.ClientError as exc:
-			print(f'HTTP Server Response: {response}')
+			log.error(f'HTTP Server Response: {response}')
 			raise aiohttp.ClientError('Falha ao conectar à interface.')
 
 	def get(self, url, **kwargs):
-		kwargs.update({'url': url, 'method': 'GET'})
+		kwargs.update({"url": url, "method": "GET"})
 		return self.prepare_request(**kwargs)
 
 	def post(self, url, **kwargs):
-		kwargs.update({'url': url, 'method': 'POST'})
+		kwargs.update({"url": url, "method": "POST"})
 		return self.prepare_request(**kwargs)
 
 	def head(self, url, **kwargs):
-		kwargs.update({'url': url, 'method': 'HEAD'})
+		kwargs.update({"url": url, "method": "HEAD"})
 		return self.prepare_request(**kwargs)
 
 	def get_loop(self):
@@ -187,10 +264,6 @@ class HTTPRequest():
 		self.loop = self.get_loop()
 		return self.loop.run_until_complete(self.fetch(**kwargs))
 
-	def __repr__(self):
-		return (f'http-client ('
-		        f'{self.response.status} '
-		        f'{self.response.reason})')
 
 	def __enter__(cls):
 		return cls
@@ -200,9 +273,9 @@ class HTTPRequest():
 
 
 
-request = HTTPRequest()
-print(request.get('https://www.panvel.com/panvel/main.do').status)
-print(request)
+request = HTTPClient()
+response = request.get('https://www.panvel.com/panvel/main.do')
+print(response)
 
 
 
