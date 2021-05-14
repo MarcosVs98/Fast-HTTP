@@ -215,10 +215,8 @@ class HTTPClient():
 
 				log.debug(f'Proxy Server Enabled: '
 					' address="{request.proxy_host}" port="{request.proxy_port}"')
-
 			except aiohttp.ClientProxyConnectionError as e:
 				log.error(f"failed to connect to a proxy: {e}")
-
 			except aiohttp.ClientConnectorError as e:
 				raise HTTPClientException(e)
 
@@ -246,7 +244,7 @@ class HTTPClient():
 				request_callback = client.head
 			else:
 				raise aiohttp.errors.ClientRequestError("Método de requisição não suportado")
-			# realizar callback
+			# Request Callback
 			async with request_callback(**vars(aio_request)) as resp:
 				try:
 					# Response Object
@@ -270,7 +268,6 @@ class HTTPClient():
 						history=resp.history,
 						request_info=resp.request_info,
 						release=await resp.release())
-
 				except aiohttp.ServerTimeoutError as e:
 					raise aiohttp.ServerTimeoutError(e)
 				except aiohttp.ClientOSError as e:
