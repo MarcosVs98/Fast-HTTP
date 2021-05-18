@@ -247,7 +247,13 @@ class HTTPClient():
 		aio_request = SimpleNamespace()
 
 		# URL
-		aio_request.url = request.url
+		uri = urlparse(request.url)
+		# validate if it is a valid url
+		if not all((uri.scheme, uri.netloc, uri.path)):
+			raise aiohttp.InvalidURL(
+				"URL used for fetching is malformed, e.g. it does not contain host part"
+				"ref: https://pt.wikipedia.org/wiki/URI#RFC_3305")
+		aio_request.url = uri.geturl()
 
 		## Request Headers
 		if request.headers is not None:
