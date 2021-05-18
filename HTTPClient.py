@@ -51,6 +51,8 @@ class AsyncHTTPClientTooManyRedirectsException(AsyncHTTPClientException):
 class AsyncHTTPClientResolveHostException(AsyncHTTPClientException):
 	pass
 
+class AsyncHTTPUnsupportedMethodException(AsyncHTTPClientException):
+	pass
 
 class AsyncHTTPTimeoutException(AsyncHTTPClientException):
 	pass
@@ -275,19 +277,18 @@ class HTTPClient():
 					aio_request.proxy_headers = request.proxy_headers
 				aio_request.proxy = aiohttp.BasicAuth(request.proxy_user, request.proxy_pass)
 				log.debug(f'Proxy Server Enabled: address="{request.proxy_host}" port="{request.proxy_port}"')
-
 			except aiohttp.ClientProxyConnectionError as e:
 				log.error(f"failed to connect to a proxy: {e}")
 			except aiohttp.ClientConnectorError as e:
 				raise AsyncHTTPClientProxyException(e)
 
-		# Certificados / SSL
+		# Certificates / SSL
 		if request.verify_ssl and request.sslcontext:
 			# Path of the example certificates '/path/to/ca-bundle.crt'
 			aio_request.ssl = ssl.create_default_context(request.sslcontext)
 		# Validate ssl
 		aio_request.verify_ssl = request.verify_ssl
-		# Levanta exceção se status de resposta for >= 400.
+		# Raises exception if response status is> = 400.
 		aio_request.raise_for_status = request.raise_for_status
 		# Cliente async session!
 		async with ClientSession().connect() as client:
@@ -301,7 +302,7 @@ class HTTPClient():
 			elif request.method == 'HEAD':
 				request_callback = client.head
 			else:
-				raise aiohttp.errors.ClientRequestError("Método de requisição não suportado")
+				raise AsyncHTTPUnsupportedMethodException("Unsupported request method")
 			# Request Callback
 			async with request_callback(**vars(aio_request)) as assync_resp:
 				try:
