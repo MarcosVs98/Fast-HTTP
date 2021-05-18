@@ -154,7 +154,7 @@ class ClientSession:
 		return self.connect().__await()
 
 
-class ClientResponse(Structure):
+class AssyncHTTPResponse(Structure):
 	"""
 		Data class responsible for encapsulating responses from HTTP requests.
 		ClientResponse supports asynchronous context manager protocol.
@@ -315,7 +315,8 @@ class HTTPClient():
 
 				try:
 					# Response Object
-					response = ClientResponse(request=request,
+					response = AssyncHTTPResponse(
+						request=request,
 						content_text=contents_buffer,
 						version=assync_resp.version,
 						status=assync_resp.status,
@@ -336,12 +337,17 @@ class HTTPClient():
 						release=await assync_resp.release())
 				except aiohttp.ServerTimeoutError as e:
 					raise AsyncHTTPTimeoutException(f"Confirmation time exceeded : {e}")
+
 				except aiohttp.ClientOSError as e:
 					raise AsyncHTTPCertificateException(f"Untrusted SSL certificate error : {e}")
+
 				except aiohttp.ClientError as e:
 					raise AsyncHTTPClientError(f"Unexpected error while making request: {e}")
-			log.debug(f'HTTP Server Response: {response}')
-		return response
+
+				log.debug(f'HTTP Server Response: {response}')
+				return response
+
+		raise AsyncHTTPClientError(f"Unexpected error while making request: {e}")
 
 	def get(self, url, **kwargs):
 		kwargs.update({"url": url, "method": "GET"})
@@ -382,6 +388,9 @@ class HTTPClient():
 	
 	def __dell__(self):
 		del self
+
+
+
 
 request = HTTPClient()
 response = request.get('https://www.amazon.com.br/Bosch-061125A4D1-000-Martelo-Perfurador-Rompedor/dp/B07MCW2ZYQ')
