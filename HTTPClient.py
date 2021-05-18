@@ -1,55 +1,80 @@
+"""*********************************************************************
+*               Descrição :  Biblioteca HTTP Assincrona                *
+*                         Data:  01/02/2021                            *
+*                 Autor: Marcos Vinicios da Silveira                   *
+*                                                                      *
+*                Objetivo: Incluir Alterar e Excluir                   *
+*                                                                      *
+************************************************************************
+"""
 import io
+import ssl
 import json
 import time
+import random
 import logging
 import asyncio
 import aiohttp
-import random
-import ssl
-from pprint import pprint
 from queue import Queue
+from entities import Structure
+from dataclasses import dataclass
+from dataclasses import field
+from aiohttp.helpers import BasicAuth
+from urllib.parse import urlencode, urlparse
+
+# exceptions
+from exceptions import FailedAIO
 from types import SimpleNamespace
 
-from exceptions import FailedAIO
-from entities import ClientResponse
+# settings
 from settings import DEFAULT_REQUEST_HEADERS
 from settings import DEFAULT_REQUEST_TIMEOUT
 from settings import CONCURRENT_BLOCKS
 from settings import CONCURRENT_REQUESTS
-from dataclasses import dataclass, field
-from urllib.parse import urlencode, urlparse
-from entities import HTTPRedirectHistoryItem
-from entities import HTTPRequest, AIORequests
-from entities import SClientSession, ClientResponse, WBEntity
-from aiohttp.helpers import BasicAuth
+
 
 log = logging.getLogger('HTTPClient')
 
 
-class HTTPClientException(Exception):
+class AsyncHTTPClientException(Exception):
 	pass
 
-class HTTPClientEmptyResponseException(HTTPClientException):
+class AsyncHTTPClientEmptyResponseException(AsyncHTTPClientException):
 	pass
 
-class HTTPClientTimeoutException(HTTPClientException):
+class AsyncHTTPClientTimeoutException(AsyncHTTPClientException):
 	pass
 
-class HTTPClientTooManyRedirectsException(HTTPClientException):
+class AsyncHTTPClientTooManyRedirectsException(AsyncHTTPClientException):
 	pass
 
-class HTTPClientResolveHostException(HTTPClientException):
+class AsyncHTTPClientResolveHostException(AsyncHTTPClientException):
+	pass
+
+
+class AsyncHTTPTimeoutException(AsyncHTTPClientException):
+	pass
+
+class AsyncHTTPCertificateException(AsyncHTTPClientException):
+	pass
+
+class AsyncHTTPConnectionException(AsyncHTTPClientException):
+	pass
+
+class AsyncHTTPClientProxyException(AsyncHTTPClientException):
+	pass
+
+class AsyncHTTPClientError(AsyncHTTPClientException):
 	pass
 
 
 @dataclass
-class ClientSession(WBEntity):
+class ClientSession(Structure):
 	"""
-	Classe responsável por montar interface para realização de solicitações HTTP. 
-	A sessão encapsula um conjunto de conexões suportando keepalives por padrão.
+	Class responsible for setting up an interface for making HTTP requests.
+	The session encapsulates a set of connections supporting keepalives by default.
 	"""
-
-#	connector            : aiohttp.BaseConnector = field(default=None)
+	#connector            : aiohttp.BaseConnector = field(default=None)
 	loop                 : str = field(default=None)
 	cookies              : dict = field(default=None)
 	headers              : dict = field(default=None)
@@ -124,20 +149,16 @@ class ClientSession:
 		return self.connect().__await()
 
 
-#aiohttp.HttpVersion11,
-
-#c = ClientSession()
-#print(c)
-
-
-class ClientResponse(WBEntity):
+class ClientResponse(Structure):
 	"""
-		Classe de Dados responsavel por encapsular respostas de requisicoes HTTP.
-		O ClientResponse suporta protocolo de gerenciador de contexto assíncrono
+		Data class responsible for encapsulating responses from HTTP requests.
+		ClientResponse supports asynchronous context manager protocol.
 	"""
 	def __str__(self):
-		self.summary = SimpleNamespace(**{k:v for k,v in self.__dict__.items() if k not in ['content_text']})
-		return (f'<FHTTP Response [{self.summary.status} {self.summary.reason}]>')
+		self.summary = SimpleNamespace(**
+			{k:v for k,v in self.__dict__.items() if k not in ['content_text']})
+		return (f'<FHTTP Response [{self.summary.status} '
+				f'{self.summary.reason if not self.summary.status == 200 else "OK"}]>')
 
 	def request_info(self):
 		return str(self.__dict__.items())
@@ -153,10 +174,10 @@ class ClientResponse(WBEntity):
 
 
 @dataclass
-class HTTPRequest(WBEntity):
+class HTTPRequest(Structure):
 	"""
-	Classe de dados responsavel por representar
-	os campos de uma requisicao HTTP
+	Data class responsible for representing
+	the fields of an HTTP request.
 	"""
 	url               : str 
 	method            : str
@@ -196,8 +217,8 @@ class HTTPRequest(WBEntity):
 
 class HTTPClient():
 	"""
-	Classe responsavel por executar solicitações HTTP assíncronas 
-	e retornar objetos de resposta.
+	Class responsible for executing asynchronous HTTP requests
+	and return response objects.
 	"""
 	def __init__(self):
 		self._response = None
@@ -211,6 +232,9 @@ class HTTPClient():
 				pass
 
 	async def send_request(self, request=None, **kwargs):
+		"""
+		method responsible for handling an HTTP request.
+		"""
 		if request is None:
 			request = HTTPRequest(**kwargs)
 
@@ -221,7 +245,6 @@ class HTTPClient():
 		# URL
 		aio_request.url = request.url
 
-		contents_buffer = io.BytesIO()
 		## Request Headers
 		if request.headers is not None:
 			if not isinstance(request.headers, (list, tuple)):
@@ -256,11 +279,11 @@ class HTTPClient():
 			except aiohttp.ClientProxyConnectionError as e:
 				log.error(f"failed to connect to a proxy: {e}")
 			except aiohttp.ClientConnectorError as e:
-				raise HTTPClientException(e)
+				raise AsyncHTTPClientProxyException(e)
 
 		# Certificados / SSL
 		if request.verify_ssl and request.sslcontext:
-			# Path dos certificados exemplo '/path/to/ca-bundle.crt'
+			# Path of the example certificates '/path/to/ca-bundle.crt'
 			aio_request.ssl = ssl.create_default_context(request.sslcontext)
 		# Validate ssl
 		aio_request.verify_ssl = request.verify_ssl
@@ -280,39 +303,40 @@ class HTTPClient():
 			else:
 				raise aiohttp.errors.ClientRequestError("Método de requisição não suportado")
 			# Request Callback
-			async with request_callback(**vars(aio_request)) as resp:
+			async with request_callback(**vars(aio_request)) as assync_resp:
+				try:
+					contents_buffer = await self.auto_decode(assync_resp.text)
+				except TypeError:
+					contents_buffer = None
+
 				try:
 					# Response Object
 					response = ClientResponse(
 						request=request,
-						content_text=await self.auto_decode(resp.text),
-						version=resp.version,
-						status=resp.status,
-						reason=resp.reason,
-						method=resp.method,
-						url=resp.url,
-						real_url=resp.real_url,
-						connection=resp.connection,
-						content=resp.content,
-						cookies=resp.cookies,
-						headers=resp.headers,
-						raw_headers=resp.raw_headers,
-						links=resp.links,
-						content_type=resp.content_type,
-						charset=resp.charset,
-						history=resp.history,
-						request_info=resp.request_info,
-						release=await resp.release())
+						content_text=contents_buffer,
+						version=assync_resp.version,
+						status=assync_resp.status,
+						reason=assync_resp.reason,
+						method=assync_resp.method,
+						url=assync_resp.url,
+						real_url=assync_resp.real_url,
+						connection=assync_resp.connection,
+						content=assync_resp.content,
+						cookies=assync_resp.cookies,
+						headers=assync_resp.headers,
+						raw_headers=assync_resp.raw_headers,
+						links=assync_resp.links,
+						content_type=assync_resp.content_type,
+						charset=assync_resp.charset,
+						history=assync_resp.history,
+						request_info=assync_resp.request_info,
+						release=await assync_resp.release())
 				except aiohttp.ServerTimeoutError as e:
-					raise aiohttp.ServerTimeoutError(e)
+					raise AsyncHTTPTimeoutException(f"Confirmation time exceeded : {e}")
 				except aiohttp.ClientOSError as e:
-					raise ClientConnectorSSLError(e)
-				except aiohttp.ClientProxyConnectionError as e:
-					raise aiohttp.ClientConnectorError(e)
-				except aiohttp.ClientSSLError as e:
-					raise aiohttp.ClientConnectorError(e)
+					raise AsyncHTTPCertificateException(f"Untrusted SSL certificate error : {e}")
 				except aiohttp.ClientError as e:
-					raise ClientConnectionError(e)
+					raise AsyncHTTPClientError(f"Unexpected error while making request: {e}")
 			log.debug(f'HTTP Server Response: {response}')
 		return response
 
@@ -354,7 +378,7 @@ class HTTPClient():
 		del self
 
 request = HTTPClient()
-response = request.get('https://www.panvel.com/panvel/main.do')
+response = request.get('https://www.amazon.com.br/Bosch-061125A4D1-000-Martelo-Perfurador-Rompedor/dp/B07MCW2ZYQ')
 print(response)
 
 
