@@ -345,7 +345,7 @@ class HTTPClient():
 
 				log.debug(f'HTTP Server Response: {response}')
 				return response
-
+		log.debug("Async request failed...")
 		raise AsyncHTTPClientError(f"Unexpected error while making request: {e}")
 
 	def get(self, url, **kwargs):
