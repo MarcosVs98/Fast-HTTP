@@ -54,6 +54,9 @@ class AsyncHTTPClientResolveHostException(AsyncHTTPClientException):
 class AsyncHTTPUnsupportedMethodException(AsyncHTTPClientException):
 	pass
 
+class AsyncLoopException(Exception):
+	pass
+
 class AsyncHTTPTimeoutException(AsyncHTTPClientException):
 	pass
 
@@ -359,7 +362,7 @@ class HTTPClient():
 	def close_loop(self):
 		if self.loop is not None:
 			self.loop()
-		raise Exception('Encerramento do loop falhou.')
+		raise AsyncLoopException('Finishing event-loop..')
 
 	async def fetch(self, **kwargs):
 		return await self.send_request(**kwargs)
@@ -372,8 +375,11 @@ class HTTPClient():
 		return cls
 
 	def __exit__(cls, typ, value, tb):
-		pass
-
+		if exc_val:
+			log.warning(f'exc_type: {exc_type}')
+			log.warning(f'exc_value: {exc_val}')
+			log.warning(f'exc_traceback: {exc_tb}')
+	
 	def __dell__(self):
 		del self
 
