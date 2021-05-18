@@ -380,7 +380,6 @@ class HTTPBoost():
 
 	def recover_block(self):
 		for url in self.urls:
-
 			try:
 				request  = HTTPClient()
 				future   = asyncio.ensure_future(request.fetch(**kwargs))
@@ -391,14 +390,14 @@ class HTTPBoost():
 					code = exc.code
 				except AttributeError:
 					code = ''
-					raised_exc = FailedAIO(code=code, message=exc, 
-							 url=url,raised=exc.__class__.__name__)
+					raised_exc = FailedAIO(code=code, message=exc, url=url, raised=exc.__class__.__name__)
 				else:
 					raised_exc = None
 					print("Erro inesperado {}".format(exc))
 					break
 
 	def quick_response(self):
+
 		try:
 			self.loop = self.loop_generator
 			self.loop.run_until_complete(asyncio.wait(
@@ -414,6 +413,9 @@ class HTTPBoost():
 		except Exception as err:
 			print("Erro inesperado :{}".format(err))
 			self.close_loop
+
+
+
 
 
 	def start(self):
@@ -448,5 +450,7 @@ class HTTPBoost():
 		if self.loop is not None:
 			self.loop()
 		raise Exception('Encerramento do loop falhou.')
+
+	
 
 #end-of-file
