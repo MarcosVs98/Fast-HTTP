@@ -257,13 +257,13 @@ class HTTPClient():
 		## Request Headers
 		if request.headers is not None:
 			if not isinstance(request.headers, (list, tuple)):
-				raise WGHTTPClientException(f'Invalid request headers')
+				raise AsyncHTTPClientException(f'Invalid request headers')
 			if not all(isinstance(i, (tuple, list)) for i in request.headers):
-				raise WGHTTPClientException(f'Invalid request headers')
+				raise AsyncHTTPClientException(f'Invalid request headers')
 			if not all(len(i) == 2 for i in request.headers):
-				raise WGHTTPClientException(f'Invalid request headers')
+				raise AsyncHTTPClientException(f'Invalid request headers')
 			rawheaders = [f'{k}: {v}' for k, v in request.headers]
-			# Arrumar depois
+			# ajustar
 			aio_request.headers = DEFAULT_REQUEST_HEADERS
 		else:
 			request.headers = DEFAULT_REQUEST_HEADERS
