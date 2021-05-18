@@ -226,7 +226,6 @@ class HTTPClient():
 	and return response objects.
 	"""
 	def __init__(self):
-		self._response = None
 		self._loop = None
 
 	async def auto_decode(self, content):
