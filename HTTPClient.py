@@ -115,45 +115,6 @@ class ClientSession(Structure):
 		return self.connect().__await()
 
 
-class ClientSession:
-	"""
-	Classe responsável por montar interface para realização de solicitações HTTP. 
-	A sessão encapsula um conjunto de conexões suportando keepalives por padrão.   
-	"""
-
-	def _init__(self, **kwargs):
-		self.connect(**kwargs)
-
-	def connect(self, **kwargs):
-		# Arrumar essa jóça kakdkda
-		kwargs.update({
-			"skip_auto_headers"    : None, 
-			"auth"                 : None, 
-			"json_serialize"       : json.dumps, 
-			"cookie_jar"           : None,
-			"conn_timeout"         : None,   
-			"raise_for_status"     : True, 
-			"connector_owner"      : True, 
-			"auto_decompress"      : True, 
-			"requote_redirect_url" : False, 
-			"trust_env"            : False, 
-			"trace_configs"        : None
-		})
-		return aiohttp.ClientSession(**kwargs)
-
-	async def aenter__(self):
-		return self.session
-
-	async def aexit__(self, exc_type, exc, tb):
-		return self.connect().close()
-
-	async def aiter__(self):
-		return self
-
-	async def await__(self):
-		return self.connect().__await()
-
-
 class AssyncHTTPResponse(Structure):
 	"""
 		Data class responsible for encapsulating responses from HTTP requests.
@@ -254,7 +215,7 @@ class HTTPClient():
 			   "URL used for fetching is malformed, e.g. it does not contain host part")
 		aio_request.url = uri.geturl()
 
-		## Request Headers
+		# Request Headers
 		if request.headers is not None:
 			if not isinstance(request.headers, (list, tuple)):
 				raise AsyncHTTPClientException(f'Invalid request headers')
@@ -394,8 +355,6 @@ class HTTPClient():
 		del self
 
 
-
-
 request = HTTPClient()
 response = request.get('https://www.amazon.com.br/Bosch-061125A4D1-000-Martelo-Perfurador-Rompedor/dp/B07MCW2ZYQ')
 print(response)
@@ -451,9 +410,11 @@ class HTTPBoost():
 					self.queue_result.put(task.result())
 				except Exception as exc:
 					self.out_queue.put(task)
+
 		except Exception as err:
 			print("Erro inesperado :{}".format(err))
 			self.close_loop
+
 
 	def start(self):
 		japronto = self.kwargs['url']
