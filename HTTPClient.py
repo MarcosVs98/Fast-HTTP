@@ -251,8 +251,7 @@ class HTTPClient():
 		# validate if it is a valid url
 		if not all((uri.scheme, uri.netloc, uri.path)):
 			raise aiohttp.InvalidURL(
-				"URL used for fetching is malformed, e.g. it does not contain host part"
-				"ref: https://pt.wikipedia.org/wiki/URI#RFC_3305")
+				"URL used for fetching is malformed, e.g. it does not contain host part")
 		aio_request.url = uri.geturl()
 
 		## Request Headers
