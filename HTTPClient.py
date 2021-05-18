@@ -312,8 +312,7 @@ class HTTPClient():
 
 				try:
 					# Response Object
-					response = ClientResponse(
-						request=request,
+					response = ClientResponse(request=request,
 						content_text=contents_buffer,
 						version=assync_resp.version,
 						status=assync_resp.status,
