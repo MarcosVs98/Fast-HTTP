@@ -376,15 +376,13 @@ class HTTPBoost():
 		self.urls                = []          # AJUSTAR
 		self.kwargs = kwargs                   # AJUSTAR
 
-
-
-
 	def recover_block(self, bl):
 
 		for c, url in enumerate(self.urls, bl):
 			try:
 				self.kwargs['url'] = url + f'&count={c}'
-				request  = HTTPClient()
+
+				request  = HTTPClient() # agent and callback
 				future   = asyncio.ensure_future(request.fetch(**self.kwargs), loop=self.loop)
 				self.queue_block.put(future)
 
@@ -410,12 +408,11 @@ class HTTPBoost():
 			#self.loop.set_debug(True)
 
 			finished, pendings = self.loop.run_until_complete(
-				asyncio.wait(self.queue_block.queue,
-							 return_when=asyncio.FIRST_COMPLETED))
-
+				asyncio.wait(self.queue_block.queue, return_when=asyncio.FIRST_COMPLETED))
 			#for f in finished:
 			#	#result = f.result()
 			#	#ime.sleep(0.1)
+
 			self.finished = len(finished) + len(pendings)
 			#	self.queue_result.put(result)
 			#	#self.queue_result.put(f.result())
@@ -452,23 +449,16 @@ class HTTPBoost():
         
 
 	def run(self):
-		data = self.kwargs['url']
-
-		if self.urls:
-			pass
 
 		bl = 1
 		start = time.time()
 		for nb in range(self.fake_block_size):
-			self.urls = [data for _ in range(self.concurrent_requests)]
+			self.urls = [self.kwargs['url'] for _ in range(self.concurrent_requests)]
 			self.recover_block(bl)
 			bl = bl + len(self.urls)
 			self.quick_response()
 
-		#await self.queue_block.join()
-
 		end = time.time()
-
 		print("Processamento finalizado.")
 		print("Tempo de processamento             : ", round((end - start),4),"s")
 		print("Numero requisições simultaneas     : ", self.concurrent_requests)
@@ -478,7 +468,6 @@ class HTTPBoost():
 		print("Numero de requisições de sucesso   : ", self.finished)
 		print("Número de requisições que falharam : ", self.out_queue.qsize())
 
-
 	def get_event_loop(self):
 		return asyncio.get_event_loop()
 
@@ -487,8 +476,6 @@ class HTTPBoost():
 			self.loop.close()
 			return
 		#raise Exception('Encerramento do loop falhou.')
-
-
 
 def main():
 	# Teste unitario
