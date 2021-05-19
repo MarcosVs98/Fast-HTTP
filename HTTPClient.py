@@ -446,12 +446,11 @@ class HTTPBoost():
 			print("Erro inesperado :{} finalizando lopp shutdown_event_loop".format(err))
 			if not self.loop.is_closed():
 				self.shutdown_event_loop()
-        
 
 	def run(self):
-
 		bl = 1
 		start = time.time()
+
 		for nb in range(self.fake_block_size):
 			self.urls = [self.kwargs['url'] for _ in range(self.concurrent_requests)]
 			self.recover_block(bl)
@@ -459,14 +458,14 @@ class HTTPBoost():
 			self.quick_response()
 
 		end = time.time()
-		print("Processamento finalizado.")
-		print("Tempo de processamento             : ", round((end - start),4),"s")
-		print("Numero requisições simultaneas     : ", self.concurrent_requests)
-		print("Numero de blocos                   : ", self.fake_block_size)
-		print("Tamanho da fila                    : " ,self.max_queue_size)
-		print("Numero de conexões api(japronto)   : ", 200)
-		print("Numero de requisições de sucesso   : ", self.finished)
-		print("Número de requisições que falharam : ", self.out_queue.qsize())
+		print("Processamento finalizado.",
+		      "Tempo de processamento             : ", round((end - start),4),"s",
+			  "Numero requisições simultaneas     : ", self.concurrent_requests,
+		      "Numero de blocos                   : ", self.fake_block_size,
+		      "Tamanho da fila                    : " ,self.max_queue_size,
+		      "Numero de conexões api(japronto)   : ", 200,
+		      "Numero de requisições de sucesso   : ", self.finished,
+		      "Número de requisições que falharam : ", self.out_queue.qsize())
 
 	def get_event_loop(self):
 		return asyncio.get_event_loop()
@@ -474,8 +473,8 @@ class HTTPBoost():
 	def shutdown_event_loop(self):
 		if self.loop.is_running():
 			self.loop.close()
-			return
-		#raise Exception('Encerramento do loop falhou.')
+		return
+
 
 def main():
 	# Teste unitario
