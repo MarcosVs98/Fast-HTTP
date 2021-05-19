@@ -5,7 +5,7 @@ import logging
 # Rastreie com responsabilidade, identificando-se
 
 # Configure o máximo de blocos 
-CONCURRENT_BLOCKS   = 2
+CONCURRENT_BLOCKS   = 145
 # Configure o máximo de solicitações simultâneas executadas
 CONCURRENT_REQUESTS = 40
 

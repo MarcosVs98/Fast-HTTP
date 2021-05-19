@@ -380,7 +380,7 @@ class HTTPBoost():
 
 		for c, url in enumerate(self.urls, bl):
 			try:
-				self.kwargs['url'] = url + f'&count={c}'
+				#self.kwargs['url'] = url + f'&count={c}'
 
 				request  = HTTPClient() # agent and callback
 				future   = asyncio.ensure_future(request.fetch(**self.kwargs), loop=self.loop)
@@ -409,8 +409,10 @@ class HTTPBoost():
 
 			finished, pendings = self.loop.run_until_complete(
 				asyncio.wait(self.queue_block.queue, return_when=asyncio.FIRST_COMPLETED))
+
 			#for f in finished:
-			#	#result = f.result()
+			#	result = f.result()
+				#print(result)
 			#	#ime.sleep(0.1)
 
 			self.finished = len(finished) + len(pendings)
@@ -458,14 +460,13 @@ class HTTPBoost():
 			self.quick_response()
 
 		end = time.time()
-		print("Processamento finalizado.",
-		      "Tempo de processamento             : ", round((end - start),4),"s",
-			  "Numero requisições simultaneas     : ", self.concurrent_requests,
-		      "Numero de blocos                   : ", self.fake_block_size,
-		      "Tamanho da fila                    : " ,self.max_queue_size,
-		      "Numero de conexões api(japronto)   : ", 200,
-		      "Numero de requisições de sucesso   : ", self.finished,
-		      "Número de requisições que falharam : ", self.out_queue.qsize())
+		print("Processamento finalizado.\n",
+		      "Tempo de processamento             : ", round((end - start),4),"s\n",
+			  "Numero requisições simultaneas     : ", self.concurrent_requests,"\n",
+		      "Numero de blocos                   : ", self.fake_block_size,"\n",
+		      "Tamanho da fila                    : " ,self.max_queue_size, "\n",
+		      "Numero de requisições de sucesso   : ", self.finished,"\n",
+		      "Número de requisições que falharam : ", self.out_queue.qsize(),"\n", end="\n")
 
 	def get_event_loop(self):
 		return asyncio.get_event_loop()
@@ -477,6 +478,10 @@ class HTTPBoost():
 
 
 def main():
+
+	# Beleza ficou legal
+	#  ab -c 50 -n 1000 https://api.myip.com/
+
 	# Teste unitario
 	#request = HTTPClient()
 	#response = request.get('http://127.0.0.1:8000/api/?method=foobar.get&format=json')
@@ -486,11 +491,80 @@ def main():
 	#print(response)
 
 	# Teste assincrono
-	assincrone_res = HTTPBoost(url='http://127.0.0.1:8000/api/?method=xpto.get&format=json', method='get', concurrent_requests=10)
-	#assincrone_res = HTTPBoost(url='https://internacional.com.br/', method='get',concurrent_requests=150)
+
+	url = 'https://www.internacional.com.br/associe-se'
+	url = 'http://127.0.0.1:8000/api/?method=xpto.get'
+	#url = 'https://api.myip.com/'
+
+	assincrone_res = HTTPBoost(url=url, method='get', concurrent_requests=24)
+
 	assincrone_res.run()
 
 if __name__ == '__main__':
 	main()
 
 #end-of-file
+
+
+
+
+"""
+This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking api.myip.com (be patient)
+Completed 1000 requests
+Completed 2000 requests
+Completed 3000 requests
+Completed 4000 requests
+Completed 5000 requests
+Completed 6000 requests
+Completed 7000 requests
+Completed 8000 requests
+Completed 9000 requests
+Completed 10000 requests
+Finished 10000 requests
+
+
+Server Software:        cloudflare
+Server Hostname:        api.myip.com
+Server Port:            443
+SSL/TLS Protocol:       TLSv1.2,ECDHE-ECDSA-CHACHA20-POLY1305,256,256
+Server Temp Key:        X25519 253 bits
+TLS Server Name:        api.myip.com
+
+Document Path:          /
+Document Length:        52 bytes
+
+Concurrency Level:      24
+Time taken for tests:   148.077 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      10314014 bytes
+HTML transferred:       520000 bytes
+Requests per second:    67.53 [#/sec] (mean)
+Time per request:       355.384 [ms] (mean)
+Time per request:       14.808 [ms] (mean, across all concurrent requests)
+Transfer rate:          68.02 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:       89  194 1436.5    112   31739
+Processing:   144  160  26.9    157     908
+Waiting:      141  157  26.9    154     904
+Total:        242  354 1436.7    269   31895
+
+Percentage of the requests served within a certain time (ms)
+  50%    269
+  66%    273
+  75%    275
+  80%    277
+  90%    282
+  95%    287
+  98%    300
+  99%    604
+ 100%  31895 (longest request)
+
+
+"""
