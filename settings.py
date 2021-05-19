@@ -5,9 +5,9 @@ import logging
 # Rastreie com responsabilidade, identificando-se
 
 # Configure o máximo de blocos 
-CONCURRENT_BLOCKS   = 417
+CONCURRENT_BLOCKS   = 2
 # Configure o máximo de solicitações simultâneas executadas
-CONCURRENT_REQUESTS = 24
+CONCURRENT_REQUESTS = 40
 
 DOWNLOAD_DELAY = 0.57
 

@@ -1,9 +1,9 @@
 """*********************************************************************
-*               Descrição :  Biblioteca HTTP Assincrona                *
-*                         Data:  01/02/2021                            *
-*                 Autor: Marcos Vinicios da Silveira                   *
 *                                                                      *
-*                Objetivo: Incluir Alterar e Excluir                   *
+*            Description:  A simple asynchronous http library          *
+*                         Date:  12/02/2021                            *
+*                 Author: Marcos Vinicios da Silveira                  *
+*                                                                      *
 *                                                                      *
 ************************************************************************
 """
@@ -11,6 +11,7 @@ import io
 import ssl
 import json
 import time
+import types
 import random
 import logging
 import asyncio
@@ -169,6 +170,7 @@ class HTTPRequest(Structure):
 	raise_for_status  : bool = field(default=False)
 
 	def __post_init__(self):
+		self.method = self.method.upper()
 		uri = urlparse(self.url)
 		self.domain = uri.netloc
 		self.scheme = uri.scheme
@@ -355,10 +357,6 @@ class HTTPClient():
 		del self
 
 
-request = HTTPClient()
-response = request.get('https://www.amazon.com.br/Bosch-061125A4D1-000-Martelo-Perfurador-Rompedor/dp/B07MCW2ZYQ')
-print(response)
-
 
 class HTTPBoost():
 	"""
@@ -367,7 +365,6 @@ class HTTPBoost():
 	"""
 	def __init__(self, concurrent_requests, max_queue_size=0, concurrent_blocks=None, **kwargs): 
 
-		self.kwargs              = kwargs
 		self.max_queue_size      = max_queue_size
 		self.concurrent_requests = concurrent_requests
 		self.queue_block         = Queue(maxsize=self.max_queue_size)
@@ -375,14 +372,20 @@ class HTTPBoost():
 		self.out_queue           = Queue(maxsize=self.max_queue_size)
 		self.concurrent_blocks   = concurrent_blocks
 		self.fake_block_size     = CONCURRENT_BLOCKS
-		self.loop                = None
-		self.urls                = []
+		self.loop                = None        # AJUSTAR
+		self.urls                = []          # AJUSTAR
+		self.kwargs = kwargs                   # AJUSTAR
 
-	def recover_block(self):
-		for url in self.urls:
+
+
+
+	def recover_block(self, bl):
+
+		for c, url in enumerate(self.urls, bl):
 			try:
+				self.kwargs['url'] = url + f'&count={c}'
 				request  = HTTPClient()
-				future   = asyncio.ensure_future(request.fetch(**kwargs))
+				future   = asyncio.ensure_future(request.fetch(**self.kwargs), loop=self.loop)
 				self.queue_block.put(future)
 
 			except Exception as exc:
@@ -396,61 +399,112 @@ class HTTPBoost():
 					print("Erro inesperado {}".format(exc))
 					break
 
+	async def rnd_sleep(self, t):
+		# sleep for T seconds on average
+		await asyncio.sleep(t * 1 * 2)
+
 	def quick_response(self):
-
 		try:
-			self.loop = self.loop_generator
-			self.loop.run_until_complete(asyncio.wait(
-			self.queue_block.queue, return_when=asyncio.FIRST_COMPLETED))
-   
+			self.loop = self.get_event_loop()
+			#asyncio.set_event_loop(self.loop)
+			#self.loop.set_debug(True)
+
+			finished, pendings = self.loop.run_until_complete(
+				asyncio.wait(self.queue_block.queue,
+							 return_when=asyncio.FIRST_COMPLETED))
+
+			#for f in finished:
+			#	#result = f.result()
+			#	#ime.sleep(0.1)
+			self.finished = len(finished) + len(pendings)
+			#	self.queue_result.put(result)
+			#	#self.queue_result.put(f.result())
+
+			#print(finished)
+
+			'''
 			while not self.queue_block.empty():
+				#while True:
 				try:
+
 					task = self.queue_block.get(block=True)
-					self.queue_result.put(task.result())
-				except Exception as exc:
-					self.out_queue.put(task)
 
+
+					self.queue_block.task_done()
+
+					if not task.cancelled():
+						self.queue_result.put(task.result())
+
+				except Exception as e:
+					try:
+
+						self.loop.run_until_complete(self.loop.shutdown_asyncgens())
+					finally:
+						task.done()
+						self.out_queue.put(task)
+					continue
+
+             '''
 		except Exception as err:
-			print("Erro inesperado :{}".format(err))
-			self.close_loop
+			print("Erro inesperado :{} finalizando lopp shutdown_event_loop".format(err))
+			if not self.loop.is_closed():
+				self.shutdown_event_loop()
+        
 
-
-
-
-
-	def start(self):
-		japronto = self.kwargs['url']
+	def run(self):
+		data = self.kwargs['url']
 
 		if self.urls:
 			pass
 
-		start = time.time()  
-		for _ in range(self.fake_block_size):    
-			self.urls = [japronto for _ in range(self.concurrent_requests)]
-			self.recover_block()
+		bl = 1
+		start = time.time()
+		for nb in range(self.fake_block_size):
+			self.urls = [data for _ in range(self.concurrent_requests)]
+			self.recover_block(bl)
+			bl = bl + len(self.urls)
 			self.quick_response()
 
+		#await self.queue_block.join()
+
 		end = time.time()
-		
+
 		print("Processamento finalizado.")
 		print("Tempo de processamento             : ", round((end - start),4),"s")
 		print("Numero requisições simultaneas     : ", self.concurrent_requests)
 		print("Numero de blocos                   : ", self.fake_block_size)
 		print("Tamanho da fila                    : " ,self.max_queue_size)
 		print("Numero de conexões api(japronto)   : ", 200)
-		print("Numero de requisições de sucesso   : ", self.queue_result.qsize())
+		print("Numero de requisições de sucesso   : ", self.finished)
 		print("Número de requisições que falharam : ", self.out_queue.qsize())
 
-	@property
-	def loop_generator(self):
+
+	def get_event_loop(self):
 		return asyncio.get_event_loop()
 
-	@property
-	def close_loop(self):
-		if self.loop is not None:
-			self.loop()
-		raise Exception('Encerramento do loop falhou.')
+	def shutdown_event_loop(self):
+		if self.loop.is_running():
+			self.loop.close()
+			return
+		#raise Exception('Encerramento do loop falhou.')
 
+
+
+def main():
+	# Teste unitario
+	#request = HTTPClient()
+	#response = request.get('http://127.0.0.1:8000/api/?method=foobar.get&format=json')
+	#response = request.get('https://internacional.com.br/')
+	#print(response)
 	
+	#print(response)
+
+	# Teste assincrono
+	assincrone_res = HTTPBoost(url='http://127.0.0.1:8000/api/?method=xpto.get&format=json', method='get', concurrent_requests=10)
+	#assincrone_res = HTTPBoost(url='https://internacional.com.br/', method='get',concurrent_requests=150)
+	assincrone_res.run()
+
+if __name__ == '__main__':
+	main()
 
 #end-of-file
