@@ -1,3 +1,13 @@
+"""*********************************************************************
+*                                                                      *
+*            Description:  A simple asynchronous http library          *
+*                         Date:  12/02/2021                            *
+*                 Author: Marcos Vinicios da Silveira                  *
+*                                                                      *
+*                                                                      *
+************************************************************************
+"""
+
 class FailedAIO(Exception):
 	"""
 		Um wrapper de todas as exceções possíveis durante uma solicitação 
@@ -10,4 +20,52 @@ class FailedAIO(Exception):
 		self.code    = code
 		self.loop    = loop
 
-# end-of-file #
+
+class AsyncHTTPClientException(Exception):
+	pass
+
+
+class AsyncHTTPClientEmptyResponseException(AsyncHTTPClientException):
+	pass
+
+
+class AsyncHTTPClientTimeoutException(AsyncHTTPClientException):
+	pass
+
+
+class AsyncHTTPClientTooManyRedirectsException(AsyncHTTPClientException):
+	pass
+
+
+class AsyncHTTPClientResolveHostException(AsyncHTTPClientException):
+	pass
+
+
+class AsyncHTTPUnsupportedMethodException(AsyncHTTPClientException):
+	pass
+
+
+class AsyncLoopException(Exception):
+	pass
+
+
+class AsyncHTTPTimeoutException(AsyncHTTPClientException):
+	pass
+
+
+class AsyncHTTPCertificateException(AsyncHTTPClientException):
+	pass
+
+
+class AsyncHTTPConnectionException(AsyncHTTPClientException):
+	pass
+
+
+class AsyncHTTPClientProxyException(AsyncHTTPClientException):
+	pass
+
+
+class AsyncHTTPClientError(AsyncHTTPClientException):
+	pass
+
+# end-of-file
