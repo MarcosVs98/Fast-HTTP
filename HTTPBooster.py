@@ -67,23 +67,15 @@ class HTTPBooster():
 				future = asyncio.ensure_future(request.fetch(url=url, **self.kwargs), loop=self.loop)
 				self.queue_block.put(future)
 
-			except asyncio.InvalidStateError as exe:
-				log.error(exe)
-			except asyncio.CancelledError as exe:
-				log.error(exe)
-			except asyncio.InvalidStateError as exe:
-				log.error(exe)
-			except IOError as e:
-				raise AsyncHTTPClientException(e)
+			except asyncio.InvalidStateError as exc:
+				log.error(f"Invalid internal state of {future}. exc={exc}")
+			except asyncio.CancelledError as exc:
+				log.error(f"The operation has been cancelled. exc={exc}")
+			except asyncio.TimeoutError as exc:
+				log.error(f"The operation has exceeded the given deadline, exc={exc}")
 			except AsyncLoopException as exc:
-				try:
-					code = exc.code
-				except AttributeError:
-					raised_exc = FailedAIO(code=code, message=exc, url=url, raised=exc.__class__.__name__)
-				else:
-					raised_exc = exc
-					log.error(f"Unexpected error when blocking requests {raised_exc}")
-					break
+				log.error(f"Unexpected error when blocking requests {exc}")
+				break
 
 	async def rnd_sleep(self, t):
 		# sleep for T seconds on average
