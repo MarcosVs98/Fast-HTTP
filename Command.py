@@ -7,13 +7,15 @@
 *                                                                      *
 ************************************************************************
 """
+import json
 import sys
 import argparse
-from argparse import RawTextHelpFormatter
+import settings
+from urllib.parse import urlparse
 
-
-def validate_url(uri):
-	if not all((uri.scheme, uri.netloc, uri.path)):
+def validate_url(url):
+	uri = urlparse(url)
+	if not all((uri.scheme, uri.netloc)):
 		raise argparse.ArgumentTypeError(
 			"URL used for fetching is malformed, e.g. it does not contain host part")
 	return uri.geturl()
@@ -28,34 +30,37 @@ class Command():
 
 	def add_options(self):
 		parser = argparse.ArgumentParser(description="Fast-HTTP [options] [http[s]://]hostname[:port]/path",
-							formatter_class=RawTextHelpFormatter)
-		parser.add_argument('url', help="uRL", type=url_validator)
+							formatter_class=argparse.RawTextHelpFormatter)
+		parser.add_argument('url', help="uRL", type=validate_url)
 
-		parser.add_argument("-n", "--concurrent", help="Number of requests to perform",
-							default=1, type=int)
+		parser.add_argument("-n", "--requests", help="Number of requests to perform",
+							default=settings.CONCURRENT_REQUESTS, type=int)
 		parser.add_argument("-c", "--concurrent", help="Number of simultaneous requests",
-							default=[settings], type=int)
+							default=settings.CONCURRENT_REQUESTS, type=int)
 		parser.add_argument("-b", "--block", help="Number of request blocks",
-							default=[setting], type=int)
+							default=settings.CONCURRENT_BLOCKS, type=int)
 		parser.add_argument("-t", "--timeout", help="Number of request blocks",
-							default=[setting], type=int)
-		parser.add_argument("-b", "--bind_address", help="Address to bind to when making outgoing connections",
-							default=[setting], type=int)
-		parser.add_argument("-p", "--postdata", help="data to be sent via post",
-							default=[setting], type=int)
+							default=settings.DEFAULT_REQUEST_TIMEOUT, type=int)
+		parser.add_argument("-B", "--bind_address", help="Address to bind to when making outgoing connections",
+							default=settings.DEFAULT_ADDRESS, type=str)
+		parser.add_argument("-p", "--postdata",
+							help="data to be sent via post", type=json.dumps)
 		parser.add_argument("-H", "--header", action='store', help="add header line",
-							default=[setting], type=str)
-		parser.add_argument("-C", "--cookie", action='store', help="add cookie line",
-							default=[setting], type=str)
-		parser.add_argument("-P", "--proxy", help="Proxyserver and port number proxy:server",
-							default=[setting], type=int)
-		parser.add_argument("-S", "--ssl_disable", help="Disable SSL ceertificate",
-							default=[setting], type=bool)
-		parser.add_argument("-E", "--certfile", help="Specify optional client certificate chain and private key",
-							default=[settings], type=str)
+							default=settings.DEFAULT_REQUEST_HEADERS, type=json.dumps)
+		parser.add_argument("-C", "--cookie", action='store',
+							help="add cookie line",type=json.dumps)
+		parser.add_argument("-P", "--proxy",
+							help="Proxyserver and port number proxy:server", type=str)
+		parser.add_argument("-S", "--verify_ssl", help="Disable SSL ceertificate",
+							default=settings.VERIFY_SSL, type=bool)
+		parser.add_argument("-E", "--certfile",
+							help="Specify optional client certificate chain and private key",
+							type=str)
 		self.args = parser.parse_args()
 
 	def run(self):
-		pass
+		print(self.args)
 
+c = Command()
+c.run()
 # end-of-file

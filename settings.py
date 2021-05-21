@@ -28,7 +28,7 @@ APPLICATION_CONFIG = {
 CONCURRENT_BLOCKS = 1
 
 # Configure the maximum number of simultaneous requests
-CONCURRENT_REQUESTS = 40
+CONCURRENT_REQUESTS = 24
 
 # set delay value for downloads
 DOWNLOAD_DELAY = 0.57
@@ -82,6 +82,12 @@ DEFAULT_REQUEST_TIMEOUT = {
 	"sock_connect": AUTOTHROTTLE_SOCK_DELAY,
 	"sock_read"   : AUTOTHROTTLE_READ_DELAY
 }
+
+# Certificates / SSL
+VERIFY_SSL = False
+
+# Default address to bind socket
+DEFAULT_ADDRESS = ('0.0.0.0')
 
 # Configurações de Logging e Debugging
 

@@ -58,6 +58,7 @@ class HTTPBooster():
 		self.urls = []  # AJUSTAR
 		self.kwargs = kwargs  # AJUSTAR
 
+
 	def recover_block(self, bl):
 
 		for c, url in enumerate(self.urls, bl):
