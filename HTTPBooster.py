@@ -57,12 +57,11 @@ class HTTPBooster():
 		self._loop = None
 		self._urls = None
 		self._fragment = False
-		self._bl = 0
+		self.b = 0
 		self.kwargs = kwargs
 
-	def get_concurrent_block(self, nb):
-
-		for _ in range(nb,  (nb + self._concurrent_requests)):
+	def get_concurrent_block(self):
+		for _ in range(self.b,  (self.b + self._concurrent_requests)):
 			try:
 				request = HTTPClient()
 				future = asyncio.ensure_future(request.fetch(url=self._url, **self.kwargs), loop=self._loop)
@@ -78,14 +77,13 @@ class HTTPBooster():
 
 	def perform(self):
 
-		count = 0
-		for n in range(1, self._concurrent_blocks):
+		for n in range(1, self._concurrent_blocks + 1):
 			try:
-				self.get_concurrent_block(count)
-				count = n + self._concurrent_requests
+				self.get_concurrent_block()
+				self.b = n + self._concurrent_requests
 			except asyncio.TimeoutError as exc:
 				log.error(f"The operation has exceeded the given deadline, exc={exc}")
-			except AsyncLoopException as exc:
+			except AsyncHTTPConnectionException as exc:
 				log.error(f"Unexpected error when blocking requests {exc}")
 		try:
 			# get new event loop!
@@ -96,7 +94,6 @@ class HTTPBooster():
 				asyncio.wait(self._queue_block.queue, return_when=asyncio.FIRST_COMPLETED))
 			# statistics
 			self._finished = len(finished) + len(pendings)
-
 		except AsyncLoopException as exc:
 			log.error(f"Unexpected error: {exc} terminating lopp shutdown_event_loop")
 			if not self._loop.is_closed():
