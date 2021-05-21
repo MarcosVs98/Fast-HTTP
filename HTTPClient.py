@@ -15,6 +15,7 @@ import random
 import logging
 import asyncio
 import aiohttp
+import settings
 from aiohttp.helpers import BasicAuth
 from types import SimpleNamespace
 from queue import Queue
@@ -22,10 +23,6 @@ from utils import Structure
 from dataclasses import dataclass
 from dataclasses import field
 from urllib.parse import urlencode, urlparse
-from settings import DEFAULT_REQUEST_HEADERS
-from settings import DEFAULT_REQUEST_TIMEOUT
-from settings import CONCURRENT_BLOCKS
-from settings import CONCURRENT_REQUESTS
 from exceptions import FailedAIO
 from exceptions import AsyncHTTPClientException
 from exceptions import AsyncHTTPClientEmptyResponseException
@@ -193,10 +190,10 @@ class HTTPClient():
 			if not all(len(i) == 2 for i in request.headers):
 				raise AsyncHTTPClientException(f'Invalid request headers')
 			rawheaders = [f'{k}: {v}' for k, v in request.headers]
-			# ajustar
-			aio_request.headers = DEFAULT_REQUEST_HEADERS
+
+			aio_request.headers = settings.DEFAULT_REQUEST_HEADERS
 		else:
-			request.headers = DEFAULT_REQUEST_HEADERS
+			request.headers = settings.DEFAULT_REQUEST_HEADERS
 		# Authentication
 		if request.security_web:
 			aio_request.auth = aiohttp.BasicAuth(request.auth_user, request.auth_pass)
@@ -204,7 +201,7 @@ class HTTPClient():
 		aio_request.max_redirects = request.redirects
 		# Timeout
 		if not request.timeout:
-			aio_request.timeout = aiohttp.ClientTimeout(**DEFAULT_REQUEST_TIMEOUT)
+			aio_request.timeout = aiohttp.ClientTimeout(**settings.DEFAULT_REQUEST_TIMEOUT)
 		# HTTP Proxy
 		if request.proxy_user and request.proxy_pass:
 			try:
@@ -227,26 +224,28 @@ class HTTPClient():
 		aio_request.verify_ssl = request.verify_ssl
 		# Raises exception if response status is> = 400.
 		aio_request.raise_for_status = request.raise_for_status
+
+		# HTTP Method
+		if request.method == 'GET':
+			request_callback = client.get
+		elif request.method == 'POST':
+			request_callback = client.post
+		elif request.method == 'PUT':
+			request_callback = client.put
+		elif request.method == 'HEAD':
+			request_callback = client.head
+		else:
+			raise AsyncHTTPUnsupportedMethodException(
+				"Unsupported request method"
+			)
 		# Cliente async session!
 		async with ClientSession().connect() as client:
-			# HTTP Method
-			if request.method == 'GET':
-				request_callback = client.get
-			elif request.method == 'POST':
-				request_callback = client.post
-			elif request.method == 'PUT':
-				request_callback = client.put
-			elif request.method == 'HEAD':
-				request_callback = client.head
-			else:
-				raise AsyncHTTPUnsupportedMethodException("Unsupported request method")
 			# Request Callback
 			async with request_callback(**vars(aio_request)) as assync_resp:
 				try:
 					contents_buffer = await self.auto_decode(assync_resp.text)
 				except TypeError:
 					contents_buffer = None
-
 				try:
 					# Response Object
 					response = AssyncHTTPResponse(

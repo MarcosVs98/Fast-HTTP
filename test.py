@@ -7,36 +7,60 @@
 *                                                                      *
 ************************************************************************
 """
+import sys
 import argparse
-
-def copyright(uri):
-	return f"{name}, Version {version}\nTesting.... {uri}"}
+from argparse import RawTextHelpFormatter
 
 
-def humanbytes(b):
-
-	b = float(b)
-	kb = float(1024)
-	mb = float(kb ** 2) # 1,048,576
-	gb = float(kb ** 3) # 1,073,741,824
-	tb = float(kb ** 4) # 1,099,511,627,776
-
-	if b < kb:
-		return '{0} {1}'.format(b,'Bytes' if 0 == b > 1 else 'Byte')
-	elif kb <= b < mb:
-		return '{0:.2f} KB'.format(b/kb)
-	elif mb <= b < GB:
-		return '{0:.2f} MB'.format(b/mb)
-	elif gb <= b < tb:
-		return '{0:.2f} GB'.format(b/gb)
-	elif tb <= b:
-		return '{0:.2f} TB'.format(b/tb)
+def validate_url(uri):
+	if not all((uri.scheme, uri.netloc, uri.path)):
+		raise argparse.ArgumentTypeError(
+			"URL used for fetching is malformed, e.g. it does not contain host part")
+	return uri.geturl()
 
 
 class Command():
-	
+	"""
+	Class responsible for implementing a command pattern.
+	ref: https://en.wikipedia.org/wiki/Command_pattern.
+	"""
+	def __init__(self):
+		self.add_options()
 
-class HTTPBoost():
+	def add_options(self):
+		parser = argparse.ArgumentParser(description="Fast-HTTP [options] [http[s]://]hostname[:port]/path",
+							formatter_class=RawTextHelpFormatter)
+		parser.add_argument('url', help="uRL", type=url_validator)
+
+		parser.add_argument("-n", "--concurrent", help="Number of requests to perform",
+							default=1, type=int)
+		parser.add_argument("-c", "--concurrent", help="Number of simultaneous requests",
+							default=[settings], type=int)
+		parser.add_argument("-b", "--block", help="Number of request blocks",
+							default=[setting], type=int)
+		parser.add_argument("-t", "--timeout", help="Number of request blocks",
+							default=[setting], type=int)
+		parser.add_argument("-b", "--bind_address", help="Address to bind to when making outgoing connections",
+							default=[setting], type=int)
+		parser.add_argument("-p", "--postdata", help="data to be sent via post",
+							default=[setting], type=int)
+		parser.add_argument("-H", "--header", action='store', help="add header line",
+							default=[setting], type=str)
+		parser.add_argument("-C", "--cookie", action='store', help="add cookie line",
+							default=[setting], type=str)
+		parser.add_argument("-P", "--proxy", help="Proxyserver and port number proxy:server",
+							default=[setting], type=int)
+		parser.add_argument("-S", "--ssl_disable", help="Disable SSL ceertificate",
+							default=[setting], type=bool)
+		parser.add_argument("-E", "--certfile", help="Specify optional client certificate chain and private key",
+							default=[settings], type=str)
+		self.args = parser.parse_args()
+
+	def run(self):
+		pass
+
+
+class HTTBooster():
 	"""
 		Classe responsável por realizar solicitações simulataneas.
 		Receber uma lista de objetos e manda brasa com thread pool
@@ -171,7 +195,7 @@ def main():
 	#print(response)
 
 	# Teste assincrono
-
+	# ab -c 50 -n 100 http://127.0.0.1:8000/api/?method=xpto.get
 	url = 'https://www.internacional.com.br/associe-se'
 	url = 'http://127.0.0.1:8000/api/?method=xpto.get'
 	#url = 'https://api.myip.com/'
