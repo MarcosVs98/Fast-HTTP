@@ -225,21 +225,21 @@ class HTTPClient():
 		# Raises exception if response status is> = 400.
 		aio_request.raise_for_status = request.raise_for_status
 
-		# HTTP Method
-		if request.method == 'GET':
-			request_callback = client.get
-		elif request.method == 'POST':
-			request_callback = client.post
-		elif request.method == 'PUT':
-			request_callback = client.put
-		elif request.method == 'HEAD':
-			request_callback = client.head
-		else:
-			raise AsyncHTTPUnsupportedMethodException(
-				"Unsupported request method"
-			)
 		# Cliente async session!
 		async with ClientSession().connect() as client:
+			# HTTP Method
+			if request.method == 'GET':
+				request_callback = client.get
+			elif request.method == 'POST':
+				request_callback = client.post
+			elif request.method == 'PUT':
+				request_callback = client.put
+			elif request.method == 'HEAD':
+				request_callback = client.head
+			else:
+				raise AsyncHTTPUnsupportedMethodException(
+					"Unsupported request method"
+				)
 			# Request Callback
 			async with request_callback(**vars(aio_request)) as assync_resp:
 				try:
