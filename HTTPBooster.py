@@ -48,6 +48,7 @@ class HTTPBooster():
 	def __init__(self, url, concurrent_requests, max_queue_size=0, concurrent_blocks=None, **kwargs):
 
 		self._url = url
+		self.b = 0
 		self._max_queue_size = max_queue_size
 		self._concurrent_requests = concurrent_requests
 		self._concurrent_blocks = concurrent_blocks
@@ -55,9 +56,6 @@ class HTTPBooster():
 		self._queue_result = queue.Queue(maxsize=self._max_queue_size)
 		self._out_queue = queue.Queue(maxsize=self._max_queue_size)
 		self._loop = None
-		self._urls = None
-		self._fragment = False
-		self.b = 0
 		self.kwargs = kwargs
 
 	def get_concurrent_block(self):
