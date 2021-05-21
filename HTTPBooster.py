@@ -47,37 +47,42 @@ class HTTPBooster():
 
 	def __init__(self, concurrent_requests, max_queue_size=0, concurrent_blocks=None, **kwargs):
 
-		self.max_queue_size = max_queue_size
-		self.concurrent_requests = concurrent_requests
-		self.queue_block = Queue(maxsize=self.max_queue_size)
-		self.queue_result = Queue(maxsize=self.max_queue_size)
-		self.out_queue = Queue(maxsize=self.max_queue_size)
-		self.concurrent_blocks = concurrent_blocks
-		self.fake_block_size = settings.CONCURRENT_BLOCKS
-		self.loop = None  # AJUSTAR
-		self.urls = []  # AJUSTAR
-		self.kwargs = kwargs  # AJUSTAR
+		self._max_queue_size = max_queue_size
+		self._concurrent_requests = concurrent_requests
+		self._concurrent_blocks = concurrent_blocks
+		self._queue_block = queue.Queue(maxsize=self.max_queue_size)
+		self._queue_result = queue.Queue(maxsize=self.max_queue_size)
+		self._out_queue = queue.Queue(maxsize=self.max_queue_size)
+		self._loop = None
+		self._urls = None
+		self._fragment = False
+		self.kwargs = kwargs
 
+	def get_concurrent_block(self, n):
 
-	def recover_block(self, bl):
-
-		for c, url in enumerate(self.urls, bl):
+		for c, url in enumerate(self.urls, n):
 			try:
-				# self.kwargs['url'] = url + f'&count={c}'
-
-				request = HTTPClient()  # agent and callback
-				future = asyncio.ensure_future(request.fetch(**self.kwargs), loop=self.loop)
+				self._add_fragment(url)
+				request = HTTPClient()
+				future = asyncio.ensure_future(request.fetch(url=url, **self.kwargs), loop=self.loop)
 				self.queue_block.put(future)
 
-			except Exception as exc:
+			except asyncio.InvalidStateError as exe:
+				log.error(exe)
+			except asyncio.CancelledError as exe:
+				log.error(exe)
+			except asyncio.InvalidStateError as exe:
+				log.error(exe)
+			except IOError as e:
+				raise AsyncHTTPClientException(e)
+			except AsyncLoopException as exc:
 				try:
 					code = exc.code
 				except AttributeError:
-					code = ''
 					raised_exc = FailedAIO(code=code, message=exc, url=url, raised=exc.__class__.__name__)
 				else:
-					raised_exc = None
-					print("Erro inesperado {}".format(exc))
+					raised_exc = exc
+					log.error(f"Unexpected error when blocking requests {raised_exc}")
 					break
 
 	async def rnd_sleep(self, t):
@@ -131,6 +136,16 @@ class HTTPBooster():
 			print("Erro inesperado :{} finalizando lopp shutdown_event_loop".format(err))
 			if not self.loop.is_closed():
 				self.shutdown_event_loop()
+
+	def _add_fragment(self, url):
+		if self._fragment:
+			if url.endswith('/'):
+				url += '?'
+			elif not url.endswith('?'):
+				url += '&'
+			url += "#count={c}".format(c=c)
+		return url
+
 
 	def run(self):
 		bl = 1
