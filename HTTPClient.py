@@ -16,13 +16,12 @@ import logging
 import asyncio
 import aiohttp
 import settings
-from aiohttp.helpers import BasicAuth
-from types import SimpleNamespace
-from queue import Queue
 from utils import Structure
-from dataclasses import dataclass
 from dataclasses import field
+from types import SimpleNamespace
+from dataclasses import dataclass
 from urllib.parse import urlencode, urlparse
+from aiohttp.helpers import BasicAuth
 from exceptions import FailedAIO
 from exceptions import AsyncHTTPClientException
 from exceptions import AsyncHTTPClientEmptyResponseException
