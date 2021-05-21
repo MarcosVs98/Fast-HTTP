@@ -11,6 +11,7 @@ import io
 import ssl
 import json
 import time
+import queue
 import random
 import logging
 import asyncio
@@ -18,7 +19,6 @@ import aiohttp
 import settings
 from aiohttp.helpers import BasicAuth
 from types import SimpleNamespace
-from queue import Queue
 from utils import Structure
 from dataclasses import dataclass
 from dataclasses import field
@@ -45,27 +45,28 @@ class HTTPBooster():
 		Receber uma lista de objetos e manda brasa com thread pool
 	"""
 
-	def __init__(self, concurrent_requests, max_queue_size=0, concurrent_blocks=None, **kwargs):
+	def __init__(self, url, concurrent_requests, max_queue_size=0, concurrent_blocks=None, **kwargs):
 
+		self._url = url
 		self._max_queue_size = max_queue_size
 		self._concurrent_requests = concurrent_requests
 		self._concurrent_blocks = concurrent_blocks
-		self._queue_block = queue.Queue(maxsize=self.max_queue_size)
-		self._queue_result = queue.Queue(maxsize=self.max_queue_size)
-		self._out_queue = queue.Queue(maxsize=self.max_queue_size)
+		self._queue_block = queue.Queue(maxsize=self._max_queue_size)
+		self._queue_result = queue.Queue(maxsize=self._max_queue_size)
+		self._out_queue = queue.Queue(maxsize=self._max_queue_size)
 		self._loop = None
 		self._urls = None
 		self._fragment = False
+		self._bl = 0
 		self.kwargs = kwargs
 
-	def get_concurrent_block(self, n):
+	def get_concurrent_block(self, nb):
 
-		for c, url in enumerate(self.urls, n):
+		for _ in range(nb,  (nb + self._concurrent_requests)):
 			try:
-				self._add_fragment(url)
 				request = HTTPClient()
-				future = asyncio.ensure_future(request.fetch(url=url, **self.kwargs), loop=self.loop)
-				self.queue_block.put(future)
+				future = asyncio.ensure_future(request.fetch(url=self._url, **self.kwargs), loop=self._loop)
+				self._queue_block.put(future)
 
 			except asyncio.InvalidStateError as exc:
 				log.error(f"Invalid internal state of {future}. exc={exc}")
@@ -73,99 +74,53 @@ class HTTPBooster():
 				log.error(f"The operation has been cancelled. exc={exc}")
 			except asyncio.TimeoutError as exc:
 				log.error(f"The operation has exceeded the given deadline, exc={exc}")
-			except AsyncLoopException as exc:
-				log.error(f"Unexpected error when blocking requests {exc}")
 				break
 
-	async def rnd_sleep(self, t):
-		# sleep for T seconds on average
-		await asyncio.sleep(t * 1 * 2)
+	def perform(self):
 
-	def quick_response(self):
+		count = 0
+		for n in range(1, self._concurrent_blocks):
+			try:
+				self.get_concurrent_block(count)
+				count = n + self._concurrent_requests
+			except asyncio.TimeoutError as exc:
+				log.error(f"The operation has exceeded the given deadline, exc={exc}")
+			except AsyncLoopException as exc:
+				log.error(f"Unexpected error when blocking requests {exc}")
 		try:
-			self.loop = self.get_event_loop()
-			# asyncio.set_event_loop(self.loop)
-			# self.loop.set_debug(True)
+			# get new event loop!
+			self._loop = self.get_event_loop()
+			asyncio.set_event_loop(self._loop)
 
-			finished, pendings = self.loop.run_until_complete(
-				asyncio.wait(self.queue_block.queue, return_when=asyncio.FIRST_COMPLETED))
+			finished, pendings = self._loop.run_until_complete(
+				asyncio.wait(self._queue_block.queue, return_when=asyncio.FIRST_COMPLETED))
+			# statistics
+			self._finished = len(finished) + len(pendings)
 
-			# for f in finished:
-			#	result = f.result()
-			# print(result)
-			#	#ime.sleep(0.1)
-
-			self.finished = len(finished) + len(pendings)
-			#	self.queue_result.put(result)
-			#	#self.queue_result.put(f.result())
-
-			# print(finished)
-
-			'''
-			while not self.queue_block.empty():
-				#while True:
-				try:
-
-					task = self.queue_block.get(block=True)
-
-
-					self.queue_block.task_done()
-
-					if not task.cancelled():
-						self.queue_result.put(task.result())
-
-				except Exception as e:
-					try:
-
-						self.loop.run_until_complete(self.loop.shutdown_asyncgens())
-					finally:
-						task.done()
-						self.out_queue.put(task)
-					continue
-
-             '''
-		except Exception as err:
-			print("Erro inesperado :{} finalizando lopp shutdown_event_loop".format(err))
-			if not self.loop.is_closed():
+		except AsyncLoopException as exc:
+			log.error(f"Unexpected error: {exc} terminating lopp shutdown_event_loop")
+			if not self._loop.is_closed():
 				self.shutdown_event_loop()
 
-	def _add_fragment(self, url):
-		if self._fragment:
-			if url.endswith('/'):
-				url += '?'
-			elif not url.endswith('?'):
-				url += '&'
-			url += "#count={c}".format(c=c)
-		return url
-
-
 	def run(self):
-		bl = 1
 		start = time.time()
-
-		for nb in range(self.fake_block_size):
-			self.urls = [self.kwargs['url'] for _ in range(self.concurrent_requests)]
-			self.recover_block(bl)
-			bl = bl + len(self.urls)
-			self.quick_response()
-
+		self.perform()
 		end = time.time()
 		print("Processamento finalizado.\n",
 			  "Tempo de processamento             : ", round((end - start), 4), "s\n",
-			  "Numero requisições simultaneas     : ", self.concurrent_requests, "\n",
-			  "Numero de blocos                   : ", self.fake_block_size, "\n",
-			  "Tamanho da fila                    : ", self.max_queue_size, "\n",
-			  "Numero de requisições de sucesso   : ", self.finished, "\n",
-			  "Número de requisições que falharam : ", self.out_queue.qsize(), "\n", end="\n")
+			  "Numero requisições simultaneas     : ", self._concurrent_requests, "\n",
+			  "Numero de blocos                   : ", self._concurrent_blocks, "\n",
+			  "Tamanho da fila                    : ", self._max_queue_size, "\n",
+			  "Numero de requisições de sucesso   : ", self._finished, "\n",
+			  "Número de requisições que falharam : ", self._out_queue.qsize(), "\n", end="\n")
 
 	def get_event_loop(self):
 		return asyncio.get_event_loop()
 
 	def shutdown_event_loop(self):
-		if self.loop.is_running():
-			self.loop.close()
+		if self._loop.is_running():
+			self._loop.close()
 		return
-
 
 def main():
 	# Beleza ficou legal
@@ -187,8 +142,8 @@ def main():
 	url = 'https://www.internacional.com.br/associe-se'
 	url = 'http://127.0.0.1:8000/api/?method=xpto.get'
 	url = 'http://127.0.0.1:8000/api/?method=xpto.get'
-	# url = 'https://api.myip.com/'
-	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=24)
+	#url = 'https://api.myip.com/'
+	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=25, concurrent_blocks=40)
 	assincrone_res.run()
 
 
