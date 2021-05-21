@@ -22,6 +22,8 @@ from types import SimpleNamespace
 from dataclasses import dataclass
 from urllib.parse import urlencode, urlparse
 from aiohttp.helpers import BasicAuth
+from aiohttp import HttpVersion10
+from aiohttp import HttpVersion11
 from exceptions import FailedAIO
 from exceptions import AsyncHTTPClientException
 from exceptions import AsyncHTTPClientEmptyResponseException
