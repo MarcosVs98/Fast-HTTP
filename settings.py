@@ -43,6 +43,7 @@ HTTP_SERVER_ERROR   = range(500, 512)
 CONCURRENT_REQUESTS_PER_DOMAIN = 10000
 CONCURRENT_REQUESTS_PER_IP = 100000
 
+
 # Ajustar isso
 AUTOTHROTTLE_MAX_DELAY   = 0.00026
 AUTOTHROTTLE_START_DELAY = 0.00002
@@ -60,7 +61,8 @@ DEFAULT_REQUEST_HEADERS = {
 
    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
    'Accept-Language': 'en',
-   'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
+   'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+	'X': 'A imaginação vale mais que o conhecimento.....'
 }
 
 # Distribute http requests via network interface using round robin algorithm

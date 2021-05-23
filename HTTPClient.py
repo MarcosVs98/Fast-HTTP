@@ -72,7 +72,8 @@ class ClientSession(Structure):
 		return self.connect()
 
 	async def __aexit__(self, exc_type, exc, tb):
-		return self.connect().close()
+		with aiohttp.Timeout(self.timeout):
+			return self.connect().close()
 
 	async def __aiter__(self):
 		with aiohttp.Timeout(self.timeout):
@@ -82,7 +83,7 @@ class ClientSession(Structure):
 		return self.connect().__await()
 
 
-class AssyncHTTPResponse(Structure):
+class AsyncHTTPResponse(Structure):
 	"""
 		Data class responsible for encapsulating responses from HTTP requests.
 		ClientResponse supports asynchronous context manager protocol.
@@ -242,33 +243,33 @@ class HTTPClient():
 					"Unsupported request method"
 				)
 			# Request Callback
-			async with request_callback(**vars(aio_request)) as assync_resp:
+			async with request_callback(**vars(aio_request)) as async_resp:
 				try:
-					contents_buffer = await self.auto_decode(assync_resp.text)
+					contents_buffer = await self.auto_decode(async_resp.text)
 				except TypeError:
 					contents_buffer = None
 				try:
 					# Response Object
-					response = AssyncHTTPResponse(
+					response = AsyncHTTPResponse(
 						request=request,
 						content_text=contents_buffer,
-						version=assync_resp.version,
-						status=assync_resp.status,
-						reason=assync_resp.reason,
-						method=assync_resp.method,
-						url=assync_resp.url,
-						real_url=assync_resp.real_url,
-						connection=assync_resp.connection,
-						content=assync_resp.content,
-						cookies=assync_resp.cookies,
-						headers=assync_resp.headers,
-						raw_headers=assync_resp.raw_headers,
-						links=assync_resp.links,
-						content_type=assync_resp.content_type,
-						charset=assync_resp.charset,
-						history=assync_resp.history,
-						request_info=assync_resp.request_info,
-						release=await assync_resp.release())
+						version=async_resp.version,
+						status=async_resp.status,
+						reason=async_resp.reason,
+						method=async_resp.method,
+						url=async_resp.url,
+						real_url=async_resp.real_url,
+						connection=async_resp.connection,
+						content=async_resp.content,
+						cookies=async_resp.cookies,
+						headers=async_resp.headers,
+						raw_headers=async_resp.raw_headers,
+						links=async_resp.links,
+						content_type=async_resp.content_type,
+						charset=async_resp.charset,
+						history=async_resp.history,
+						request_info=async_resp.request_info,
+						release=await async_resp.release())
 				except aiohttp.ServerTimeoutError as e:
 					raise AsyncHTTPTimeoutException(f"Confirmation time exceeded : {e}")
 

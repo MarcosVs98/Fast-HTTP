@@ -74,13 +74,15 @@ class HTTPBooster():
 				break
 
 	def perform(self):
-
 		for n in range(1, self._concurrent_blocks + 1):
 			try:
 				self.get_concurrent_block()
 				self.b = n + self._concurrent_requests
-			except asyncio.TimeoutError as exc:
-				log.error(f"The operation has exceeded the given deadline, exc={exc}")
+
+			except (BrokenPipeError, ConnectionAbortedError) as exc:
+				log.warning('Error writing to a closed socket')
+			except (ConnectionRefusedError, ConnectionError) as exc:
+				raise OSError("except")
 			except AsyncHTTPConnectionException as exc:
 				log.error(f"Unexpected error when blocking requests {exc}")
 		try:
@@ -90,8 +92,12 @@ class HTTPBooster():
 
 			finished, pendings = self._loop.run_until_complete(
 				asyncio.wait(self._queue_block.queue, return_when=asyncio.FIRST_COMPLETED))
+
+			for f in finished:
+				print(f.result())
 			# statistics
 			self._finished = len(finished) + len(pendings)
+
 		except AsyncLoopException as exc:
 			log.error(f"Unexpected error: {exc} terminating lopp shutdown_event_loop")
 			if not self._loop.is_closed():
@@ -137,8 +143,14 @@ def main():
 	url = 'https://www.internacional.com.br/associe-se'
 	url = 'http://127.0.0.1:8000/api/?method=xpto.get'
 	url = 'http://127.0.0.1:8000/api/?method=xpto.get'
-	#url = 'https://api.myip.com/'
-	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=25, concurrent_blocks=40)
+	#url = 'https://api.myip.com/
+	url = 'https://croquistands.com.br/'
+	url = 'https://diaxcapital.com.br/'
+	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=24, concurrent_blocks=817)
+	assincrone_res.run()
+
+	url = 'https://www.gooplex.com.br/'
+	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=24, concurrent_blocks=817)
 	assincrone_res.run()
 
 
@@ -269,4 +281,5 @@ Porcentagem das solicitações atendidas dentro de um determinado tempo (ms)
   99% 604
  100% 31895 (solicitação mais longa)
 
+aiohttp.client_exceptions.ClientPayloadError:
 """
