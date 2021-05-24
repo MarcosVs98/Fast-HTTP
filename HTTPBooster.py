@@ -60,7 +60,9 @@ def get_http_result(r):
 		if not min(settings.HTTP_SERVER_ERROR) in ret:
 			ret[min(settings.HTTP_SERVER_ERROR)] = 0
 		ret[min(settings.HTTP_SERVER_ERROR)] += 1
-	return ret
+	return {k: v for k, v in sorted(ret.items(),
+			 key=lambda item: item[1], reverse=True)}
+
 
 class HTTPBooster():
 	"""
