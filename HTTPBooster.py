@@ -39,6 +39,29 @@ from exceptions import AsyncHTTPClientError
 from HTTPClient import HTTPClient
 
 
+log = logging.getLogger('http-booster')
+
+
+def get_http_result(r):
+	ret = {}
+	if r.status_code in settings.HTTP_HTTP_SUCESS:
+		if not min(settings.HTTP_HTTP_SUCESS) in ret:
+			ret[min(settings.HTTP_HTTP_SUCESS)] = 0
+		ret[min(settings.HTTP_HTTP_SUCESS)] += 1
+	elif r.status_code in settings.HTTP_REDIRECTION:
+		if not min(settings.HTTP_REDIRECTION) in ret:
+			ret[min(settings.HTTP_REDIRECTION)] = 0
+		ret[min(settings.HTTP_REDIRECTION)] += 1
+	elif r.status_code in settings.HTTP_CLIENT_ERROR:
+		if not min(settings.HTTP_CLIENT_ERROR) in ret:
+			ret[min(settings.HTTP_CLIENT_ERROR)] = 0
+		ret[min(settings.HTTP_CLIENT_ERROR)] += 1
+	elif r.status_code in settings.HTTP_SERVER_ERROR:
+		if not min(settings.HTTP_SERVER_ERROR) in ret:
+			ret[min(settings.HTTP_SERVER_ERROR)] = 0
+		ret[min(settings.HTTP_SERVER_ERROR)] += 1
+	return ret
+
 class HTTPBooster():
 	"""
 		Classe responsável por realizar solicitações simulataneas.
@@ -57,47 +80,57 @@ class HTTPBooster():
 		self._out_queue = queue.Queue(maxsize=self._max_queue_size)
 		self._loop = None
 		self.kwargs = kwargs
+		self._finished = 0
 
 	def get_concurrent_block(self):
-		for _ in range(self.b,  (self.b + self._concurrent_requests)):
+
+		for n in range(self.b,  (self.b + self._concurrent_requests)):
 			try:
 				request = HTTPClient()
 				future = asyncio.ensure_future(request.fetch(url=self._url, **self.kwargs), loop=self._loop)
 				self._queue_block.put(future)
 
 			except asyncio.InvalidStateError as exc:
-				log.error(f"Invalid internal state of {future}. exc={exc}")
+				log.error(f"Invalid internal state of {future}. bl={n} exc={exc}")
 			except asyncio.CancelledError as exc:
-				log.error(f"The operation has been cancelled. exc={exc}")
+				log.error(f"The operation has been cancelled. bl={n} exc={exc}")
 			except asyncio.TimeoutError as exc:
-				log.error(f"The operation has exceeded the given deadline, exc={exc}")
-				break
+				log.error(f"The operation has exceeded the given deadline,  bl={n} exc={exc}")
 
-	def perform(self):
+	def _perform(self):
 		for n in range(1, self._concurrent_blocks + 1):
 			try:
 				self.get_concurrent_block()
+				log.debug(f'processed block="{n}/{self._concurrent_blocks}"')
 				self.b = n + self._concurrent_requests
 
+			except AsyncHTTPConnectionException as exc:
+				log.error(f"Unexpected error when blocking requests {exc}")
 			except (BrokenPipeError, ConnectionAbortedError) as exc:
 				log.warning('Error writing to a closed socket')
 			except (ConnectionRefusedError, ConnectionError) as exc:
-				raise OSError("except")
-			except AsyncHTTPConnectionException as exc:
-				log.error(f"Unexpected error when blocking requests {exc}")
+				log.warning('Error trying to connect to the client')
+
 		try:
 			# get new event loop!
 			self._loop = self.get_event_loop()
 			asyncio.set_event_loop(self._loop)
 
-			finished, pendings = self._loop.run_until_complete(
-				asyncio.wait(self._queue_block.queue, return_when=asyncio.FIRST_COMPLETED))
+			try:
+				#print(self._queue_block.queue)
+				finished, pendings = self._loop.run_until_complete(
+					asyncio.wait(self._queue_block.queue, return_when=asyncio.FIRST_COMPLETED, timeout=5))
+				self._finished += len(finished) + len(pendings)
 
-			for f in finished:
-				print(f.result())
-			# statistics
-			self._finished = len(finished) + len(pendings)
+				print(len(finished))
+				print(len(pendings))
+				for i in pendings:
+					print(i)
 
+			except aiohttp.client_exceptions.ClientConnectorError as e:
+				log.error(e)
+
+			self.shutdown_event_loop()
 		except AsyncLoopException as exc:
 			log.error(f"Unexpected error: {exc} terminating lopp shutdown_event_loop")
 			if not self._loop.is_closed():
@@ -105,8 +138,22 @@ class HTTPBooster():
 
 	def run(self):
 		start = time.time()
-		self.perform()
+		self._perform()
 		end = time.time()
+
+		"""
+		while not self._queue_result.empty():
+			res = self._queue_result.get(block=False)
+			for r in res:
+				try:
+					print(r.result())
+				except asyncio.exceptions.InvalidStateError:
+					pass
+		"""
+
+		
+
+
 		print("Processamento finalizado.\n",
 			  "Tempo de processamento             : ", round((end - start), 4), "s\n",
 			  "Numero requisições simultaneas     : ", self._concurrent_requests, "\n",
@@ -123,7 +170,14 @@ class HTTPBooster():
 			self._loop.close()
 		return
 
+import settings
+import logging
+
 def main():
+
+	#logging.basicConfig(**settings.LOGGING_CONFIG['console_color_debug'])
+
+
 	# Beleza ficou legal
 	#  ab -c 50 -n 1000 https://api.myip.com/
 	# ab -c 50 -n 100 https://croquistands.com.br/
@@ -138,27 +192,28 @@ def main():
 
 	# print(response)
 
+	from HTTPClient import HTTPRequest
 	# Teste assincrono
 	# ab -c 50 -n 100 http://127.0.0.1:8000/api/?method=xpto.get
 	url = 'https://www.internacional.com.br/associe-se'
 	url = 'http://127.0.0.1:8000/api/?method=xpto.get'
 	url = 'http://127.0.0.1:8000/api/?method=xpto.get'
-	#url = 'https://api.myip.com/
-	url = 'https://croquistands.com.br/'
-	url = 'https://diaxcapital.com.br/'
-	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=24, concurrent_blocks=817)
+	#url = 'https://api.myip.com/'
+	#url = 'https://croquistands.com.br/'
+	#url = 'https://diaxcapital.com.br/'
+
+	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=24, concurrent_blocks=10)
 	assincrone_res.run()
 
-	url = 'https://www.gooplex.com.br/'
-	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=24, concurrent_blocks=817)
-	assincrone_res.run()
+	#url = 'https://www.gooplex.com.br/'
+	#assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=24, concurrent_blocks=817)
+	#assincrone_res.run()
 
 
 if __name__ == '__main__':
 	main()
 
 # end-of-file
-
 
 """
 This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
@@ -283,3 +338,7 @@ Porcentagem das solicitações atendidas dentro de um determinado tempo (ms)
 
 aiohttp.client_exceptions.ClientPayloadError:
 """
+
+
+
+#print(aiohttp.client_exceptions.ClientPayloadError())

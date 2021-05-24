@@ -148,6 +148,10 @@ class HTTPRequest(Structure):
 			self.__dict__['scheme'] = uri.scheme
 		self.__dict__[name] = value
 
+	def __str__(self):
+		return f'HTTP-Request(domain="{self.domain}", ' \
+			   f'method="{self.method}")'
+
 
 class HTTPClient():
 	"""
@@ -171,7 +175,7 @@ class HTTPClient():
 		if request is None:
 			request = HTTPRequest(**kwargs)
 
-		log.debug(f'HTTP Client Request: {request}')
+		#log.debug(f'HTTP Client Request: {request}')
 		# AIO Request
 		aio_request = SimpleNamespace()
 
@@ -306,7 +310,10 @@ class HTTPClient():
 		raise AsyncLoopException('Finishing event-loop..')
 
 	async def fetch(self, **kwargs):
-		return await self.send_request(**kwargs)
+		try:
+			return await self.send_request(**kwargs)
+		except aiohttp.client_exceptions.ClientConnectorError as exc:
+			log.debug(f"connection {exc.host}:{exc.port} - {exc.os_error}")
 
 	def prepare_request(self, **kwargs):
 		self.loop = self.get_loop()
