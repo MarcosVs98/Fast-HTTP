@@ -1,11 +1,15 @@
 # Fast-HTTP
-Aplicação em python utilizando aiohttp e japronto para realização de testes de performance http.
 
-Todos testes foram realizados sobre a api de teste utilizando japronto com 200 conexões abertas. A api "hello_world.py" se encontra na raiz do projeto. Para realizar os testes dos exemplos abaixo é necessário iniciar o micro server.
+Python library for making asynchronous HTTP requests. 
 
 ![Web-Trader Block Diagram](https://github.com/MarcosVs98/Fast-HTTP/blob/main/example.png)
 
 ### Exemplo utilizando HTTPRequest
+
+Aplicação em python utilizando aiohttp e japronto para realização de testes de performance http.
+
+Todos testes foram realizados sobre a api de teste utilizando japronto com 200 conexões abertas. A api "hello_world.py" se encontra na raiz do projeto. Para realizar os testes dos exemplos abaixo é necessário iniciar o micro server.
+
 
 ```
     *****************************************************************
