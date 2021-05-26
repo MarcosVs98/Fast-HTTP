@@ -38,8 +38,6 @@ class Command():
 		parser.add_argument("-rpi", "--max_requests_per_ip", help="Number of requests per ip",
 		                    default=settings.CONCURRENT_REQUESTS_PER_IP, type=int)
 		parser.add_argument("-d", "--max_delay", help="Maximum delay on request",
-		                    default=settings.CONCURRENT_REQUESTS, type=float)
-		parser.add_argument("-d", "--max_delay", help="Maximum delay on request",
 		                    default=settings.AUTOTHROTTLE_MAX_DELAY, type=float)
 		parser.add_argument("-s", "--start_delay", help="Delay at the start of the request",
 		                    default=settings.AUTOTHROTTLE_START_DELAY, type=float)
