@@ -113,8 +113,8 @@ class HTTPBooster():
 				asyncio.set_event_loop(self._loop)
 				try:
 					self.finished, self.pendings = self._loop.run_until_complete(
-						asyncio.wait(self._queue_block.queue, return_when=asyncio.FIRST_COMPLETED, timeout=15))
-					print(len(self.pendings))
+						asyncio.wait(self._queue_block.queue,
+						return_when=asyncio.FIRST_COMPLETED, timeout=15))
 				except aiohttp.client_exceptions.ClientConnectorError as e:
 					log.error(e)
 			self.shutdown_event_loop()
