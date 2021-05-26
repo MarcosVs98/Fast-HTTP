@@ -53,7 +53,7 @@ AUTOTHROTTLE_READ_DELAY  = 0.00100
 # Disable cookies (enabled by default)
 COOKIES_ENABLED = False
 
-# Desativar console Telnet (ativado por padrão)
+# Disable Telnet console (enabled by default)
 TELNETCONSOLE_ENABLED = False
 
 # Defaut Headers
@@ -65,12 +65,11 @@ DEFAULT_REQUEST_HEADERS = {
 	'X': 'A imaginação vale mais que o conhecimento.....'
 }
 
-# Distribute http requests via network interface using round robin algorithm
+# Distribute http requests via network interface using round robin algoritm
 ROUNDROBIN_ACTIVE = False
 
 # The average number of HTTPRequest requests must
 # send in parallel to each remote server
-
 AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0 #to control
 
 # Enable the display of optimization logs for each response received:

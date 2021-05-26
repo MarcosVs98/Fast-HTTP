@@ -42,28 +42,6 @@ from HTTPClient import HTTPClient
 log = logging.getLogger('http-booster')
 
 
-def get_http_result(r):
-	ret = {}
-	if r.status_code in settings.HTTP_HTTP_SUCESS:
-		if not min(settings.HTTP_HTTP_SUCESS) in ret:
-			ret[min(settings.HTTP_HTTP_SUCESS)] = 0
-		ret[min(settings.HTTP_HTTP_SUCESS)] += 1
-	elif r.status_code in settings.HTTP_REDIRECTION:
-		if not min(settings.HTTP_REDIRECTION) in ret:
-			ret[min(settings.HTTP_REDIRECTION)] = 0
-		ret[min(settings.HTTP_REDIRECTION)] += 1
-	elif r.status_code in settings.HTTP_CLIENT_ERROR:
-		if not min(settings.HTTP_CLIENT_ERROR) in ret:
-			ret[min(settings.HTTP_CLIENT_ERROR)] = 0
-		ret[min(settings.HTTP_CLIENT_ERROR)] += 1
-	elif r.status_code in settings.HTTP_SERVER_ERROR:
-		if not min(settings.HTTP_SERVER_ERROR) in ret:
-			ret[min(settings.HTTP_SERVER_ERROR)] = 0
-		ret[min(settings.HTTP_SERVER_ERROR)] += 1
-	return {k: v for k, v in sorted(ret.items(),
-			 key=lambda item: item[1], reverse=True)}
-
-
 class HTTPBooster():
 	"""
 		Classe responsável por realizar solicitações simulataneas.
@@ -83,9 +61,29 @@ class HTTPBooster():
 		self._loop = None
 		self.kwargs = kwargs
 		self._finished = 0
+		self._results = {}
+
+	def _get_http_result(self, r):
+		if r.status_code in settings.HTTP_HTTP_SUCESS:
+			if not min(settings.HTTP_HTTP_SUCESS) in self.ret:
+				self.ret[min(settings.HTTP_HTTP_SUCESS)] = 0
+			self.ret[min(settings.HTTP_HTTP_SUCESS)] += 1
+		elif r.status_code in settings.HTTP_REDIRECTION:
+			if not min(settings.HTTP_REDIRECTION) in self.ret:
+				self.ret[min(settings.HTTP_REDIRECTION)] = 0
+			self.ret[min(settings.HTTP_REDIRECTION)] += 1
+		elif r.status_code in settings.HTTP_CLIENT_ERROR:
+			if not min(settings.HTTP_CLIENT_ERROR) in self.ret:
+				self.ret[min(settings.HTTP_CLIENT_ERROR)] = 0
+			self.ret[min(settings.HTTP_CLIENT_ERROR)] += 1
+		elif r.status_code in settings.HTTP_SERVER_ERROR:
+			if not min(settings.HTTP_SERVER_ERROR) in self.ret:
+				self.ret[min(settings.HTTP_SERVER_ERROR)] = 0
+			self.ret[min(settings.HTTP_SERVER_ERROR)] += 1
+		return {k: v for k, v in sorted(self.ret.items(),
+			 		key=lambda item: item[1], reverse=True)}
 
 	def get_concurrent_block(self):
-
 		for n in range(self.b,  (self.b + self._concurrent_requests)):
 			try:
 				request = HTTPClient()
@@ -112,23 +110,18 @@ class HTTPBooster():
 				log.warning('Error writing to a closed socket')
 			except (ConnectionRefusedError, ConnectionError) as exc:
 				log.warning('Error trying to connect to the client')
-
 		try:
 			# get new event loop!
 			self._loop = self.get_event_loop()
 			asyncio.set_event_loop(self._loop)
-
 			try:
-				#print(self._queue_block.queue)
 				finished, pendings = self._loop.run_until_complete(
 					asyncio.wait(self._queue_block.queue, return_when=asyncio.FIRST_COMPLETED, timeout=5))
 				self._finished += len(finished) + len(pendings)
-
 				print(len(finished))
 				print(len(pendings))
 				for i in pendings:
 					print(i)
-
 			except aiohttp.client_exceptions.ClientConnectorError as e:
 				log.error(e)
 
@@ -142,19 +135,6 @@ class HTTPBooster():
 		start = time.time()
 		self._perform()
 		end = time.time()
-
-		"""
-		while not self._queue_result.empty():
-			res = self._queue_result.get(block=False)
-			for r in res:
-				try:
-					print(r.result())
-				except asyncio.exceptions.InvalidStateError:
-					pass
-		"""
-
-		
-
 
 		print("Processamento finalizado.\n",
 			  "Tempo de processamento             : ", round((end - start), 4), "s\n",
