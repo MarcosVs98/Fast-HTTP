@@ -44,12 +44,9 @@ log = logging.getLogger('http-booster')
 
 class HTTPBooster():
 	"""
-		Classe responsável por realizar solicitações simulataneas.
-		Receber uma lista de objetos e manda brasa com thread pool
+	class responsible for performing the AsyncHTTPClient benchmark
 	"""
-
 	def __init__(self, url, concurrent_requests, max_queue_size=0, concurrent_blocks=None, **kwargs):
-
 		self._url = url
 		self.b = 0
 		self._max_queue_size = max_queue_size
