@@ -58,22 +58,22 @@ class HTTPBooster():
 		self._loop = None
 		self.kwargs = kwargs
 		self._finished = 0
-		self._results = {}
+		self.ret = {}
 
 	def _get_http_result(self, r):
-		if r.status_code in settings.HTTP_HTTP_SUCESS:
+		if r.status in settings.HTTP_HTTP_SUCESS:
 			if not min(settings.HTTP_HTTP_SUCESS) in self.ret:
 				self.ret[min(settings.HTTP_HTTP_SUCESS)] = 0
 			self.ret[min(settings.HTTP_HTTP_SUCESS)] += 1
-		elif r.status_code in settings.HTTP_REDIRECTION:
+		elif r.status in settings.HTTP_REDIRECTION:
 			if not min(settings.HTTP_REDIRECTION) in self.ret:
 				self.ret[min(settings.HTTP_REDIRECTION)] = 0
 			self.ret[min(settings.HTTP_REDIRECTION)] += 1
-		elif r.status_code in settings.HTTP_CLIENT_ERROR:
+		elif r.status in settings.HTTP_CLIENT_ERROR:
 			if not min(settings.HTTP_CLIENT_ERROR) in self.ret:
 				self.ret[min(settings.HTTP_CLIENT_ERROR)] = 0
 			self.ret[min(settings.HTTP_CLIENT_ERROR)] += 1
-		elif r.status_code in settings.HTTP_SERVER_ERROR:
+		elif r.status in settings.HTTP_SERVER_ERROR:
 			if not min(settings.HTTP_SERVER_ERROR) in self.ret:
 				self.ret[min(settings.HTTP_SERVER_ERROR)] = 0
 			self.ret[min(settings.HTTP_SERVER_ERROR)] += 1
@@ -106,20 +106,17 @@ class HTTPBooster():
 			except (ConnectionRefusedError, ConnectionError) as exc:
 				log.warning('Error trying to connect to the client')
 		try:
-			# get new event loop!
-			self._loop = self.get_event_loop()
-			asyncio.set_event_loop(self._loop)
-			try:
-				finished, pendings = self._loop.run_until_complete(
-					asyncio.wait(self._queue_block.queue, return_when=asyncio.FIRST_COMPLETED, timeout=5))
-				self._finished += len(finished) + len(pendings)
-				print(len(finished))
-				print(len(pendings))
-				for i in pendings:
-					print(i)
-			except aiohttp.client_exceptions.ClientConnectorError as e:
-				log.error(e)
-
+			self.pendings = [1]
+			while len(self.pendings) != 0:
+				# get new event loop!
+				self._loop = self.get_event_loop()
+				asyncio.set_event_loop(self._loop)
+				try:
+					self.finished, self.pendings = self._loop.run_until_complete(
+						asyncio.wait(self._queue_block.queue, return_when=asyncio.FIRST_COMPLETED, timeout=15))
+					print(len(self.pendings))
+				except aiohttp.client_exceptions.ClientConnectorError as e:
+					log.error(e)
 			self.shutdown_event_loop()
 		except AsyncLoopException as exc:
 			log.error(f"Unexpected error: {exc} terminating lopp shutdown_event_loop")
@@ -131,12 +128,16 @@ class HTTPBooster():
 		self._perform()
 		end = time.time()
 
+		for i in self.finished:
+			self._get_http_result(i.result())
+
+		print(self.ret)
 		print("Processamento finalizado.\n",
 			  "Tempo de processamento             : ", round((end - start), 4), "s\n",
 			  "Numero requisições simultaneas     : ", self._concurrent_requests, "\n",
 			  "Numero de blocos                   : ", self._concurrent_blocks, "\n",
 			  "Tamanho da fila                    : ", self._max_queue_size, "\n",
-			  "Numero de requisições de sucesso   : ", self._finished, "\n",
+			  "Numero de requisições de sucesso   : ", self.ret[200], "\n",
 			  "Número de requisições que falharam : ", self._out_queue.qsize(), "\n", end="\n")
 
 	def get_event_loop(self):
@@ -166,7 +167,6 @@ def main():
 	# response = request.get('http://127.0.0.1:8000/api/?method=foobar.get&format=json')
 	# response = request.get('https://internacional.com.br/')
 	# print(response)
-
 	# print(response)
 
 	from HTTPClient import HTTPRequest
@@ -175,11 +175,13 @@ def main():
 	url = 'https://www.internacional.com.br/associe-se'
 	url = 'http://127.0.0.1:8000/api/?method=xpto.get'
 	url = 'http://127.0.0.1:8000/api/?method=xpto.get'
-	#url = 'https://api.myip.com/'
+	url = 'https://api.myip.com/'
+	url= 'http://0.0.0.0:9000/'
 	#url = 'https://croquistands.com.br/'
 	#url = 'https://diaxcapital.com.br/'
+	#url ='https://reqres.in/api/users?page=1'
 
-	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=24, concurrent_blocks=10)
+	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=50, concurrent_blocks=417)
 	assincrone_res.run()
 
 	#url = 'https://www.gooplex.com.br/'
@@ -189,6 +191,26 @@ def main():
 
 if __name__ == '__main__':
 	main()
+
+'''	
+from japronto import Application
+
+
+def hello(request):
+    return request.Response(text='H')
+
+
+app = Application()
+
+r = app.router
+r.add_route('/', hello, method='GET')
+
+
+app.run(port=9000, worker_num=200, debug=True)
+'''
+
+
+
 
 # end-of-file
 
