@@ -107,6 +107,8 @@ class HTTPBooster():
 				log.warning('Error trying to connect to the client')
 		try:
 			self.pendings = [1]
+
+			self.start = time.time()
 			while len(self.pendings) != 0:
 				# get new event loop!
 				self._loop = self.get_event_loop()
@@ -114,26 +116,28 @@ class HTTPBooster():
 				try:
 					self.finished, self.pendings = self._loop.run_until_complete(
 						asyncio.wait(self._queue_block.queue,
-						return_when=asyncio.FIRST_COMPLETED, timeout=15))
+							return_when=asyncio.FIRST_COMPLETED, timeout=15))
 				except aiohttp.client_exceptions.ClientConnectorError as e:
 					log.error(e)
 			self.shutdown_event_loop()
+			self.end = time.time()
 		except AsyncLoopException as exc:
 			log.error(f"Unexpected error: {exc} terminating lopp shutdown_event_loop")
 			if not self._loop.is_closed():
 				self.shutdown_event_loop()
 
 	def run(self):
-		start = time.time()
+
 		self._perform()
-		end = time.time()
+
 
 		for i in self.finished:
-			self._get_http_result(i.result())
+
+			self._get_http_result(i.result)
 
 		print(self.ret)
 		print("Processamento finalizado.\n",
-			  "Tempo de processamento             : ", round((end - start), 4), "s\n",
+			  "Tempo de processamento             : ", round((self.end - self.start), 4), "s\n",
 			  "Numero requisições simultaneas     : ", self._concurrent_requests, "\n",
 			  "Numero de blocos                   : ", self._concurrent_blocks, "\n",
 			  "Tamanho da fila                    : ", self._max_queue_size, "\n",
@@ -181,7 +185,7 @@ def main():
 	#url = 'https://diaxcapital.com.br/'
 	#url ='https://reqres.in/api/users?page=1'
 
-	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=50, concurrent_blocks=417)
+	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=25, concurrent_blocks=400)
 	assincrone_res.run()
 
 	#url = 'https://www.gooplex.com.br/'
