@@ -43,7 +43,7 @@ log = logging.getLogger('http-booster')
 
 
 class HTTPBenchmark():
-	"""
+    """
     *****************************************************************
     class responsible for performing the AsyncHTTPClient benchmark
     *****************************************************************
