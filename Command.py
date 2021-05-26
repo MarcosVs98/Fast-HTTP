@@ -36,23 +36,21 @@ class Command():
 		parser.add_argument("-rpd", "--max_requests_per_domain", help="Number of requests per domain",
 		                    default=settings.CONCURRENT_REQUESTS_PER_DOMAIN, type=int)
 		parser.add_argument("-rpi", "--max_requests_per_ip", help="Number of requests per ip",
-							default=settings.CONCURRENT_REQUESTS_PER_IP, type=int)
+		                    default=settings.CONCURRENT_REQUESTS_PER_IP, type=int)
 		parser.add_argument("-d", "--max_delay", help="Maximum delay on request",
-							default=settings.CONCURRENT_REQUESTS, type=float)
+		                    default=settings.CONCURRENT_REQUESTS, type=float)
 		parser.add_argument("-d", "--max_delay", help="Maximum delay on request",
-							default=settings.AUTOTHROTTLE_MAX_DELAY, type=float)
+		                    default=settings.AUTOTHROTTLE_MAX_DELAY, type=float)
 		parser.add_argument("-s", "--start_delay", help="Delay at the start of the request",
-							default=settings.AUTOTHROTTLE_START_DELAY, type=float)
+		                    default=settings.AUTOTHROTTLE_START_DELAY, type=float)
 		parser.add_argument("-sd", "--sock_delay", help="Delay on socket request",
-							default=settings.AUTOTHROTTLE_SOCK_DELAY, type=float)
+		                    default=settings.AUTOTHROTTLE_SOCK_DELAY, type=float)
 		parser.add_argument("-rd", "--read_delay", help="Delay for reading request",
-							default=settings.AUTOTHROTTLE_READ_DELAY, type=float)
+		                    default=settings.AUTOTHROTTLE_READ_DELAY, type=float)
 		parser.add_argument("-T", "--telnet", help="Telnet console (enabled by default)",
-							default=settings.TELNETCONSOLE_ENABLED, type=bool)
+		                    default=settings.TELNETCONSOLE_ENABLED, type=bool)
 		parser.add_argument("-R", "--roundrobin", help="Distribute http requests via network interface",
-							default=settings.ROUNDROBIN_ACTIVE, type=bool)
-		parser.add_argument("-A", "--address", help="Default address to bind socket",
-							default=settings.DEFAULT_ADDRESS, type=bool)
+		                    default=settings.ROUNDROBIN_ACTIVE, type=bool)
 		parser.add_argument("-c", "--concurrent", help="Number of simultaneous requests",
 		                    default=settings.CONCURRENT_REQUESTS, type=int)
 		parser.add_argument("-b", "--block", help="Number of request blocks",
