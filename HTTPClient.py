@@ -4,7 +4,6 @@
 *                         Date:  12/02/2021                            *
 *                 Author: Marcos Vinicios da Silveira                  *
 *                                                                      *
-*                                                                      *
 ************************************************************************
 """
 import io
@@ -175,7 +174,7 @@ class HTTPClient():
 		if request is None:
 			request = HTTPRequest(**kwargs)
 
-		#log.debug(f'HTTP Client Request: {request}')
+		log.debug(f'HTTP Client Request: {request}')
 		# AIO Request
 		aio_request = SimpleNamespace()
 
@@ -290,24 +289,18 @@ class HTTPClient():
 
 	def get(self, url, **kwargs):
 		kwargs.update({"url": url, "method": "GET"})
-		return self.prepare_request(**kwargs)
+		return self.dispatch(**kwargs)
 
 	def post(self, url, **kwargs):
 		kwargs.update({"url": url, "method": "POST"})
-		return self.prepare_request(**kwargs)
+		return self.dispatch(**kwargs)
 
 	def head(self, url, **kwargs):
 		kwargs.update({"url": url, "method": "HEAD"})
-		return self.prepare_request(**kwargs)
+		return self.dispatch(**kwargs)
 
 	def get_loop(self):
 		return asyncio.get_event_loop()
-
-	@property
-	def close_loop(self):
-		if self.loop is not None:
-			self.loop()
-		raise AsyncLoopException('Finishing event-loop..')
 
 	async def fetch(self, **kwargs):
 		try:
@@ -315,9 +308,15 @@ class HTTPClient():
 		except aiohttp.client_exceptions.ClientConnectorError as exc:
 			log.debug(f"connection {exc.host}:{exc.port} - {exc.os_error}")
 
-	def prepare_request(self, **kwargs):
+	def dispatch(self, **kwargs):
 		self.loop = self.get_loop()
 		return self.loop.run_until_complete(self.fetch(**kwargs))
+
+	@property
+	def close_loop(self):
+		if self.loop is not None:
+			self.loop()
+		raise AsyncLoopException('Finishing event-loop..')
 
 	def __enter__(cls):
 		return cls

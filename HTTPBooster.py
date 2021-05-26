@@ -44,7 +44,42 @@ log = logging.getLogger('http-booster')
 
 class HTTPBenchmark():
 	"""
+	*****************************************************************
 	class responsible for performing the AsyncHTTPClient benchmark
+    *****************************************************************
+	*                       ┬────┬────┬───┬                         *
+    *                       |    |    |   |                         *
+    *                       |    QUEUE    |                         *
+    *                       |    |    |   |                         *
+    *                       └────└────└───┘                         *
+    *                              ||                               *
+    *                       ┬──────┘└───────┬                       *
+    *                       | Request Block |                       *
+    *                       └───────┬───────┘                       *
+	*    	    					|		                        *
+	*      ┬────────────────────────└────────────────────────┬      *
+	*      |        ┬───────────────┬───────────────┬        |      *
+    *      |   ┬────└────┬     ┬────└────┬     ┬────└────┬   |      *
+    *      |   |    |    |     |    |    |     |    |    |   |      *
+    *      |   v    v    v     v    v    v     v    v    v   |      *
+    *      |   ┬─────────┬     ┬─────────┬     ┬─────────┬   |      *
+    *      |   | *target |     | #target |     | target  |   |      *
+    *      |   └─────────┘     └─────────┘     └─────────┘   |      *
+    *      |   |    |    |     |    |    |     |    |    |   |      *
+    *      |   v    v    v     v    v    v     v    v    v   |      *
+    *      |   ┬─────────┬     ┬─────────┬     ┬─────────┬   |      *
+    *      |   |*Response|     |*Response|     |*Response|   |      *
+    *      |   └─────────┘     └─────────┘     └─────────┘   |      *
+    *      |   |    |    |     |    |    |     |    |    |   |      *
+    *      |   v    v    v     v    v    v     v    v    v   |      *
+    *      └───────────────────────┬┬────────────────────────┘      *
+    *                              ||                               *
+    *                    ┬─────────┘└──────────┬                    *
+    *       			 |    Response block   |                    *
+    *       			 └─────────────────────┘                    *
+    *****************************************************************
+    params>
+    *****************************************************************
 	"""
 	def __init__(self, url, concurrent_requests, max_queue_size=0, concurrent_blocks=None, **kwargs):
 		self._url = url
@@ -62,26 +97,26 @@ class HTTPBenchmark():
 		self.ret = {}
 
 	def _get_http_result(self, r):
-		if r.status in settings.HTTP_HTTP_SUCESS:
+		if response.status in settings.HTTP_HTTP_SUCESS:
 			if not min(settings.HTTP_HTTP_SUCESS) in self.ret:
 				self.ret[min(settings.HTTP_HTTP_SUCESS)] = 0
 			self.ret[min(settings.HTTP_HTTP_SUCESS)] += 1
-		elif r.status in settings.HTTP_REDIRECTION:
+		elif response.status in settings.HTTP_REDIRECTION:
 			if not min(settings.HTTP_REDIRECTION) in self.ret:
 				self.ret[min(settings.HTTP_REDIRECTION)] = 0
 			self.ret[min(settings.HTTP_REDIRECTION)] += 1
-		elif r.status in settings.HTTP_CLIENT_ERROR:
+		elif response.status in settings.HTTP_CLIENT_ERROR:
 			if not min(settings.HTTP_CLIENT_ERROR) in self.ret:
 				self.ret[min(settings.HTTP_CLIENT_ERROR)] = 0
 			self.ret[min(settings.HTTP_CLIENT_ERROR)] += 1
-		elif r.status in settings.HTTP_SERVER_ERROR:
+		elif response.status in settings.HTTP_SERVER_ERROR:
 			if not min(settings.HTTP_SERVER_ERROR) in self.ret:
 				self.ret[min(settings.HTTP_SERVER_ERROR)] = 0
 			self.ret[min(settings.HTTP_SERVER_ERROR)] += 1
 		return {k: v for k, v in sorted(self.ret.items(),
 			 		key=lambda item: item[1], reverse=True)}
 
-	def get_concurrent_block(self):
+	def get_block_requests(self):
 		for n in range(self.b,  (self.b + self._concurrent_requests)):
 			try:
 				request = HTTPClient()
@@ -97,7 +132,7 @@ class HTTPBenchmark():
 	def _perform(self):
 		for n in range(1, self._concurrent_blocks + 1):
 			try:
-				self.get_concurrent_block()
+				self.get_block_requests()
 				log.debug(f'processed block="{n}/{self._concurrent_blocks}"')
 				self.b = n + self._concurrent_requests
 			except AsyncHTTPConnectionException as exc:
@@ -132,30 +167,30 @@ class HTTPBenchmark():
 	def run(self):
 		self._perform()
 
-		'''
-		for i in self.finished:
-			r = i.result()
+		for f in self.finished:
 			try:
-				if r.status in settings.HTTP_HTTP_SUCESS:
+				response = i.result()
+				if response.status in settings.HTTP_HTTP_SUCESS:
 					if not min(settings.HTTP_HTTP_SUCESS) in self.ret:
 						self.ret[min(settings.HTTP_HTTP_SUCESS)] = 0
 					self.ret[min(settings.HTTP_HTTP_SUCESS)] += 1
-				elif r.status in settings.HTTP_REDIRECTION:
+				elif response.status in settings.HTTP_REDIRECTION:
 					if not min(settings.HTTP_REDIRECTION) in self.ret:
 						self.ret[min(settings.HTTP_REDIRECTION)] = 0
 					self.ret[min(settings.HTTP_REDIRECTION)] += 1
-				elif r.status in settings.HTTP_CLIENT_ERROR:
+				elif response.status in settings.HTTP_CLIENT_ERROR:
 					if not min(settings.HTTP_CLIENT_ERROR) in self.ret:
 						self.ret[min(settings.HTTP_CLIENT_ERROR)] = 0
 					self.ret[min(settings.HTTP_CLIENT_ERROR)] += 1
-				elif r.status in settings.HTTP_SERVER_ERROR:
+				elif response.status in settings.HTTP_SERVER_ERROR:
 					if not min(settings.HTTP_SERVER_ERROR) in self.ret:
 						self.ret[min(settings.HTTP_SERVER_ERROR)] = 0
 					self.ret[min(settings.HTTP_SERVER_ERROR)] += 1
 			except AttributeError:
 				continue
-
-		self.rees = {k: v for k, v in sorted(self.ret.items(), key=lambda item: item[1], reverse=True)}
+		# 
+		result = {k: v for k, v in sorted(self.ret.items(),
+				key=lambda item: item[1], reverse=True)}
         '''
 
 		#
@@ -179,7 +214,9 @@ import settings
 import logging
 
 def main():
-
+	# proxy-list https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt
+	# https://github.com/clarketm/proxy-list
+	
 	#logging.basicConfig(**settings.LOGGING_CONFIG['console_color_debug'])
 	# Beleza ficou legal
 	#  ab -c 50 -n 1000 https://api.myip.com/
@@ -206,7 +243,7 @@ def main():
 	#url = 'https://diaxcapital.com.br/'
 	#url ='https://reqres.in/api/users?page=1'
 
-	assincrone_res = HTTPBenchmark(url=url, method='get', concurrent_requests=25, concurrent_blocks=40000)
+	assincrone_res = HTTPBenchmark(url=url, method='get', concurrent_requests=25, concurrent_blocks=4000)
 	assincrone_res.run()
 
 
