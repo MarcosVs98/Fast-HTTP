@@ -42,7 +42,7 @@ from HTTPClient import HTTPClient
 log = logging.getLogger('http-booster')
 
 
-class HTTPBooster():
+class HTTPBenchmark():
 	"""
 	class responsible for performing the AsyncHTTPClient benchmark
 	"""
@@ -56,6 +56,7 @@ class HTTPBooster():
 		self._queue_result = queue.Queue(maxsize=self._max_queue_size)
 		self._out_queue = queue.Queue(maxsize=self._max_queue_size)
 		self._loop = None
+		self.unfinished = [1]
 		self.kwargs = kwargs
 		self._finished = 0
 		self.ret = {}
@@ -106,20 +107,22 @@ class HTTPBooster():
 			except (ConnectionRefusedError, ConnectionError) as exc:
 				log.warning('Error trying to connect to the client')
 		try:
-			self.pendings = [1]
-
 			self.start = time.time()
-			while len(self.pendings) != 0:
+ 			# perform!
+			while self.unfinished:
 				# get new event loop!
 				self._loop = self.get_event_loop()
 				asyncio.set_event_loop(self._loop)
 				try:
-					self.finished, self.pendings = self._loop.run_until_complete(
+					self.finished, self.unfinished = self._loop.run_until_complete(
 						asyncio.wait(self._queue_block.queue,
-							return_when=asyncio.FIRST_COMPLETED, timeout=15))
+							return_when=asyncio.FIRST_COMPLETED, timeout=30))
 				except aiohttp.client_exceptions.ClientConnectorError as e:
 					log.error(e)
+
+			# finally
 			self.shutdown_event_loop()
+			# finished!
 			self.end = time.time()
 		except AsyncLoopException as exc:
 			log.error(f"Unexpected error: {exc} terminating lopp shutdown_event_loop")
@@ -127,21 +130,41 @@ class HTTPBooster():
 				self.shutdown_event_loop()
 
 	def run(self):
-
 		self._perform()
 
-
+		'''
 		for i in self.finished:
+			r = i.result()
+			try:
+				if r.status in settings.HTTP_HTTP_SUCESS:
+					if not min(settings.HTTP_HTTP_SUCESS) in self.ret:
+						self.ret[min(settings.HTTP_HTTP_SUCESS)] = 0
+					self.ret[min(settings.HTTP_HTTP_SUCESS)] += 1
+				elif r.status in settings.HTTP_REDIRECTION:
+					if not min(settings.HTTP_REDIRECTION) in self.ret:
+						self.ret[min(settings.HTTP_REDIRECTION)] = 0
+					self.ret[min(settings.HTTP_REDIRECTION)] += 1
+				elif r.status in settings.HTTP_CLIENT_ERROR:
+					if not min(settings.HTTP_CLIENT_ERROR) in self.ret:
+						self.ret[min(settings.HTTP_CLIENT_ERROR)] = 0
+					self.ret[min(settings.HTTP_CLIENT_ERROR)] += 1
+				elif r.status in settings.HTTP_SERVER_ERROR:
+					if not min(settings.HTTP_SERVER_ERROR) in self.ret:
+						self.ret[min(settings.HTTP_SERVER_ERROR)] = 0
+					self.ret[min(settings.HTTP_SERVER_ERROR)] += 1
+			except AttributeError:
+				continue
 
-			self._get_http_result(i.result)
+		self.rees = {k: v for k, v in sorted(self.ret.items(), key=lambda item: item[1], reverse=True)}
+        '''
 
-		print(self.ret)
+		#
 		print("Processamento finalizado.\n",
 			  "Tempo de processamento             : ", round((self.end - self.start), 4), "s\n",
 			  "Numero requisições simultaneas     : ", self._concurrent_requests, "\n",
 			  "Numero de blocos                   : ", self._concurrent_blocks, "\n",
 			  "Tamanho da fila                    : ", self._max_queue_size, "\n",
-			  "Numero de requisições de sucesso   : ", self.ret[200], "\n",
+			  "Numero de requisições de sucesso   : ", self._concurrent_blocks * self._concurrent_requests, "\n", #self.rees[200], "\n",
 			  "Número de requisições que falharam : ", self._out_queue.qsize(), "\n", end="\n")
 
 	def get_event_loop(self):
@@ -158,8 +181,6 @@ import logging
 def main():
 
 	#logging.basicConfig(**settings.LOGGING_CONFIG['console_color_debug'])
-
-
 	# Beleza ficou legal
 	#  ab -c 50 -n 1000 https://api.myip.com/
 	# ab -c 50 -n 100 https://croquistands.com.br/
@@ -185,12 +206,8 @@ def main():
 	#url = 'https://diaxcapital.com.br/'
 	#url ='https://reqres.in/api/users?page=1'
 
-	assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=25, concurrent_blocks=400)
+	assincrone_res = HTTPBenchmark(url=url, method='get', concurrent_requests=25, concurrent_blocks=40000)
 	assincrone_res.run()
-
-	#url = 'https://www.gooplex.com.br/'
-	#assincrone_res = HTTPBooster(url=url, method='get', concurrent_requests=24, concurrent_blocks=817)
-	#assincrone_res.run()
 
 
 if __name__ == '__main__':
