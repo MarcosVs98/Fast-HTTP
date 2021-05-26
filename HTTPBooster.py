@@ -86,7 +86,6 @@ class HTTPBooster():
 				request = HTTPClient()
 				future = asyncio.ensure_future(request.fetch(url=self._url, **self.kwargs), loop=self._loop)
 				self._queue_block.put(future)
-
 			except asyncio.InvalidStateError as exc:
 				log.error(f"Invalid internal state of {future}. bl={n} exc={exc}")
 			except asyncio.CancelledError as exc:
@@ -100,7 +99,6 @@ class HTTPBooster():
 				self.get_concurrent_block()
 				log.debug(f'processed block="{n}/{self._concurrent_blocks}"')
 				self.b = n + self._concurrent_requests
-
 			except AsyncHTTPConnectionException as exc:
 				log.error(f"Unexpected error when blocking requests {exc}")
 			except (BrokenPipeError, ConnectionAbortedError) as exc:
