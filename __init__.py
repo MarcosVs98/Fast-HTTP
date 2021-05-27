@@ -16,14 +16,23 @@ app.run(port=9000, worker_num=200, debug=True)
 '''
 
 
-
+# validar
+#https://github.com/clarketm/proxy-list
+#
 
 # end-of-file
 
-"""
+"""# validar 
+# https://github.com/clarketm/proxy-list
+# https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt
+https://pawelmhm.github.io/asyncio/python/aiohttp/2016/04/22/asyncio-aiohttp.html
+
+
 This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
 Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
 Licensed to The Apache Software Foundation, http://www.apache.org/
+https://julien.danjou.info/python-and-fast-http-clients/
+https://github.com/mcollina/autocannon/blob/master/README.md
 
 Benchmarking api.myip.com (be patient)
 Completed 1000 requests
@@ -143,3 +152,4 @@ Porcentagem das solicitações atendidas dentro de um determinado tempo (ms)
 
 aiohttp.client_exceptions.ClientPayloadError:
 """
+
