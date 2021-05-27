@@ -4,16 +4,39 @@ Python library for making asynchronous HTTP requests.
  ![Web-Trader Block Diagram](https://github.com/MarcosVs98/Fast-HTTP/blob/main/example.png)
 
 ***
-Fast-HTTP is a library packaged with an asynchronous HTTP client, which allows a parallelization of the execution, in order to optimize and improve the persistent persistent with the target service. All of this is due to the fact that the HTTP protocol offers
-pipelining, allowing the sending of multiple occurrences on the same connection without waiting for answers. So the call is not blocked or closed while the HTTP server responds.
+
+## Sobre
+Fast-HTTP é uma biblioteca empacotada com um cliente HTTP assíncrono, que permite uma paralelização da execução, a fim 
+de otimizar e melhorar a persistência com o servidor destino.Tudo isso porque o protocolo HTTP oferece pipelining, 
+permitindo o envio de múltiplas ocorrências na mesma conexão sem esperar por respostas.Portanto, a chamada não é bloqueada ou fechada enquanto o servidor HTTP responde.
+
+## Assincronicidade
+
+As solicitações são totalmente síncronas.Isso bloqueia o cliente enquanto espera alguma resposta, tornando o programa   
+lento. Fazer solicitações HTTP em encadeamentos é uma solução, porém encadeamentos têm uma sobrecarga e isso implica em paralelismo.
+
+### Assincrono em Python
+Se torna função/método assíncrono usando a palavra reservada async antes da definição e também utilizando outra palavra 
+reservada chamada "await" na implementação, para que assim possa saber esperar por algo. 
+
+## Benchmark Tool
+A biblioteca possuí uma ferramenta para benchmarking suportando HTTP/1.0/1.1 escrita em python, com suporte para pipelining HTTP e HTTPS.
+
+O HTTPBenchmark utiliza o cliente AsyncFastHTTP enviando blocos de solicitações a fim de usar o melhor das pipelines, podendo simular solicitações longas
+ 
+## Testando os limites
+
+## Performance
+
+Para tornar mais fácil, vamos começar com o básico - simples HTTP hello world - apenas fazendo GET e obtendo uma única resposta HTTP.
 
 ***
    
-## Requirements
+## Requisitos
  - Python : Python >= 3.5
  
 ***
-## Install
+## Instalação
 
 ```
 python setup.py install
@@ -25,12 +48,13 @@ $ git clone https://github.com/WebGlobal/Renova-Cookies.git
 ```
 
 ***
-## Usage
+## Utilização
 
-### Command Line
+### Linha de Comando
 
 
-ferramen para benchmarking HTTP/1.0 e 1.1 escrita em python, com suporte para pipelining HTTP e HTTPS. Na minha caixa, o canhão automático pode produzir mais carga do que wrke wrk2, consulte as limitações para obter mais detalhes.
+
+
 ```
                 *****************************************************************
                 *                       ┬────┬────┬───┬                         *
