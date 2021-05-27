@@ -1,12 +1,12 @@
+ ![Web-Trader Block Diagram](https://github.com/MarcosVs98/Fast-HTTP/blob/main/example.png)
+
 # Fast-HTTP
 
-Python library for making asynchronous HTTP requests. 
+Python library for making asynchronous HTTP requests.
 
-![Web-Trader Block Diagram](https://github.com/MarcosVs98/Fast-HTTP/blob/main/example.png)
-
-
-Fast-HTTP é uma biblioteca empacotada com um cliente HTTP assíncrono, que permite a paralelização de solicitações, com intuito de otimizar e aprimorar conexões persistente com o serviço alvo. Tudo isso se da pelo fato, que o protocolo HTTP fornece
-pipelining, permitindo o envio de multiplas solicitações em uma mesma conexão sem esperar por respostas.Portanto a chamada não é bloqueada ou fechada enquanto o servidor HTTP responde.
+***
+Fast-HTTP is a library packaged with an asynchronous HTTP client, which allows a parallelization of the execution, in order to optimize and improve the persistent persistent with the target service. All of this is due to the fact that the HTTP protocol offers
+pipelining, allowing the sending of multiple occurrences on the same connection without waiting for answers. So the call is not blocked or closed while the HTTP server responds.
 
 ***
    
