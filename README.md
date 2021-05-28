@@ -27,14 +27,12 @@ Exemplo simples do uso cliente HTTP.
 >>>
 ```
 
-## Parametros
+### Parametros
 A parametrização base da aplicação foi baseada nos próprios parametros já utilizados pela biblioteca núcleo [aiohttp](https://docs.aiohttp.org/en/stable/) utilizado neste projeto.
 
 Para controle de envio, os parametros foram armazenados em estruturas de dados específicas utilizando decoradores de nível de múdulo da [dataclasses](https://docs.python.org/3/library/dataclasses.html).
 
----
-
-### Resquest
+#### Resquest
 
 Estrutura de dados responsável por encapsular os dados de solicitação.
 
@@ -63,7 +61,9 @@ Estrutura de dados responsável por encapsular os dados de solicitação.
 www.python.org
 >>> request.scheme
 https
->>>```
+>>>
+```
+
 ---
  
 ### ClientSession
@@ -87,13 +87,14 @@ Estrutura de dados responsável por configurar uma interface para fazer solicita
 * `trust_env`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 * `trace_configs`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 
-##### Example
 ```
+# Example
 async with ClientSession() as client:    
     ......  await implementation     
 ```
 
 ----
+
 ##### Response
 
 * `request`: 
@@ -114,7 +115,8 @@ async with ClientSession() as client:
 * `charset`: 
 * `history`: 
 * `request_info`: 
-* `release`:                               
+* `release`:
+                               
 ---
   
 ## Benchmark Tool
