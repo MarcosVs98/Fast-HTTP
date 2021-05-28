@@ -19,6 +19,8 @@ reservada chamada "await" na implementação, para que assim possa saber esperar
 
 Exemplo simples do uso cliente HTTP.
 ```
+>>> from HTTPClient import AssyncHTTPClient
+>>>
 >>> client = AssyncHTTPClient()
 >>> response = client.get("https://www.python.org/")
 <FHTTP Response [200 OK]>
