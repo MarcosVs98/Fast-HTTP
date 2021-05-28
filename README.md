@@ -28,6 +28,55 @@ Exemplo simples do uso cliente HTTP.
 >>>
 ```
 
+#### Command Line
+
+```
+Fast-HTTP [options] [http[s]://]hostname[:port]/path
+
+positional arguments:
+  url                   uRL
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -rpd MAX_REQUESTS_PER_DOMAIN, --max_requests_per_domain MAX_REQUESTS_PER_DOMAIN
+                        Number of requests per domain
+  -rpi MAX_REQUESTS_PER_IP, --max_requests_per_ip MAX_REQUESTS_PER_IP
+                        Number of requests per ip
+  -d MAX_DELAY, --max_delay MAX_DELAY
+                        Maximum delay on request
+  -s START_DELAY, --start_delay START_DELAY
+                        Delay at the start of the request
+  -sd SOCK_DELAY, --sock_delay SOCK_DELAY
+                        Delay on socket request
+  -rd READ_DELAY, --read_delay READ_DELAY
+                        Delay for reading request
+  -T TELNET, --telnet TELNET
+                        Telnet console (enabled by default)
+  -R ROUNDROBIN, --roundrobin ROUNDROBIN
+                        Distribute http requests via network interface
+  -c CONCURRENT, --concurrent CONCURRENT
+                        Number of simultaneous requests
+  -b BLOCK, --block BLOCK
+                        Number of request blocks
+  -t TIMEOUT, --timeout TIMEOUT
+                        Number of request blocks
+  -B BIND_ADDRESS, --bind_address BIND_ADDRESS
+                        Address to bind to when making outgoing connections
+  -p POSTDATA, --postdata POSTDATA
+                        data to be sent via post
+  -H HEADER, --header HEADER
+                        add header line
+  -C COOKIE, --cookie COOKIE
+                        add cookie line
+  -P PROXY, --proxy PROXY
+                        Proxyserver and port number proxy:server
+  -S VERIFY_SSL, --verify_ssl VERIFY_SSL
+                        Disable SSL ceertificate
+  -E CERTFILE, --certfile CERTFILE
+                        Specify optional client certificate chain and private key
+
+```
+
 ### Parametros
 A parametrização base da aplicação foi baseada nos próprios parametros já utilizados pela biblioteca núcleo [aiohttp](https://docs.aiohttp.org/en/stable/) utilizado neste projeto.
 
@@ -54,32 +103,7 @@ Estrutura de dados responsável por encapsular os dados de solicitação.
 * `proxy_headers`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 * `raise_for_status`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 
-### Programmatically
-
-##### HTTPRequest
-
-```pycon
-from fasthttp.HTTPClient import HTTPRequest
-
-request = HTTPRequest(url="https://www.python.org/", method='get')
-```
-
-##### ClientSession
-```pycon
-# Example
-async with ClientSession() as client:    
-    ......  await implementation     
-```
-
-##### AssyncHTTPClient
-```pycon
-from fasthttp.HTTPClient import AssyncHTTPClient
-
-client = AssyncHTTPClient()
-response = client.get("https://www.python.org/")
-```
- 
-### ClientSession
+#### ClientSession
 Estrutura de dados responsável por configurar uma interface para fazer solicitações HTTP.A sessão encapsula um conjunto de conexões que suportam keepalives por padrão.
 
 * `connector`: Configuration options for the autocannon instance. This can have the following attributes. _REQUIRED_.
@@ -99,10 +123,6 @@ Estrutura de dados responsável por configurar uma interface para fazer solicita
 * `requote_redirect_url`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 * `trust_env`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 * `trace_configs`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
-
-
-
-----
 
 ##### Response
 
@@ -126,6 +146,34 @@ Estrutura de dados responsável por configurar uma interface para fazer solicita
 * `request_info`: 
 * `release`:
                                
+---
+
+### Programmatically
+
+##### HTTPRequest
+
+```pycon
+from fasthttp.HTTPClient import HTTPRequest
+
+request = HTTPRequest(url="https://www.python.org/", method='get')
+```
+
+##### ClientSession
+```pycon
+from fasthttp.HTTPClient import ClientSession
+
+async with ClientSession() as client:    
+    ......  await implementation     
+```
+
+##### AssyncHTTPClient
+```pycon
+from fasthttp.HTTPClient import AssyncHTTPClient
+
+client = AssyncHTTPClient()
+response = client.get("https://www.python.org/")
+```
+
 ---
   
 ## Benchmark Tool
@@ -199,54 +247,6 @@ $ git clone https://github.com/WebGlobal/Renova-Cookies.git
                 *****************************************************************
 ```
 
-### Command Line
-
-```
-Fast-HTTP [options] [http[s]://]hostname[:port]/path
-
-positional arguments:
-  url                   uRL
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -rpd MAX_REQUESTS_PER_DOMAIN, --max_requests_per_domain MAX_REQUESTS_PER_DOMAIN
-                        Number of requests per domain
-  -rpi MAX_REQUESTS_PER_IP, --max_requests_per_ip MAX_REQUESTS_PER_IP
-                        Number of requests per ip
-  -d MAX_DELAY, --max_delay MAX_DELAY
-                        Maximum delay on request
-  -s START_DELAY, --start_delay START_DELAY
-                        Delay at the start of the request
-  -sd SOCK_DELAY, --sock_delay SOCK_DELAY
-                        Delay on socket request
-  -rd READ_DELAY, --read_delay READ_DELAY
-                        Delay for reading request
-  -T TELNET, --telnet TELNET
-                        Telnet console (enabled by default)
-  -R ROUNDROBIN, --roundrobin ROUNDROBIN
-                        Distribute http requests via network interface
-  -c CONCURRENT, --concurrent CONCURRENT
-                        Number of simultaneous requests
-  -b BLOCK, --block BLOCK
-                        Number of request blocks
-  -t TIMEOUT, --timeout TIMEOUT
-                        Number of request blocks
-  -B BIND_ADDRESS, --bind_address BIND_ADDRESS
-                        Address to bind to when making outgoing connections
-  -p POSTDATA, --postdata POSTDATA
-                        data to be sent via post
-  -H HEADER, --header HEADER
-                        add header line
-  -C COOKIE, --cookie COOKIE
-                        add cookie line
-  -P PROXY, --proxy PROXY
-                        Proxyserver and port number proxy:server
-  -S VERIFY_SSL, --verify_ssl VERIFY_SSL
-                        Disable SSL ceertificate
-  -E CERTFILE, --certfile CERTFILE
-                        Specify optional client certificate chain and private key
-
-```
 
 ### Exemplo utilizando FastHTTP 
 Classe responsável por realizar solicitações simulataneas.
