@@ -113,13 +113,10 @@ class HTTPRequest(Structure):
 	"""
 	url               : str 
 	method            : str
-	domain            : str = field(default=None)
-	scheme            : str = field(default=None)
 	headers           : dict = field(default=None) 
 	timeout           : int = field(default=120)
 	postdata          : bytes = field(default=None, repr=False)
 	http_version      : str = field(default='HTTP/1.1')
-	security_web      : bool = field(default=False) 
 	auth_user         : str = field(default=None)
 	auth_pass         : str = field(default=None)
 	follow_redirects  : bool = field(default=True)

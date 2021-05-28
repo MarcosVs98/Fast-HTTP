@@ -6,15 +6,10 @@ Python library for making asynchronous HTTP requests.
 ***
 
 ## Sobre
-Fast-HTTP é uma biblioteca empacotada com um cliente HTTP assíncrono, que permite paralelizar execução, a fim de 
+Fast-HTTP é uma biblioteca empacotada com um cliente HTTP assíncrono, que permite paralelizar solicitações, a fim de 
 otimizar e melhorar a persistência com o servidor destino.Tudo isso porque o protocolo HTTP oferece pipelining, 
 permitindo o envio de múltiplas ocorrências na mesma conexão sem esperar por respostas.Portanto, a chamada não é 
 bloqueada ou fechada enquanto o servidor HTTP responde.
-
-## Assincronicidade
-As solicitações são totalmente síncronas.Isso bloqueia o cliente enquanto espera alguma resposta, tornando o programa   
-lento. Fazer solicitações HTTP em encadeamentos é uma solução, porém encadeamentos têm uma sobrecarga e isso implica 
-em concorrência.
 
 ### Assincrono em Python
 Se torna uma função/método assíncrono usando a palavra reservada "async" antes da definição e também utilizando outra palavra 
@@ -29,45 +24,98 @@ Exemplo simples do uso cliente HTTP.
 <FHTTP Response [200 OK]>
 >>> response.status
 200
->>> response.raw_headers
-((b'Connection', b'keep-alive'), (b'Content-Length', b'50806'), (b'Server', b'nginx'), (b'Content-Type', b'text/html; charset=utf-8'), (b'X-Frame-Options', b'DENY'), (b'Via', b'1.1 vegur, 1.1 varnish, 1.1 varnish'), (b'Accept-Ranges', b'bytes'), (b'Date', b'Thu, 27 May 2021 03:41:06 GMT'), (b'Age', b'1966'), (b'X-Served-By', b'cache-bwi5153-BWI, cache-gru17123-GRU'), (b'X-Cache', b'HIT, HIT'), (b'X-Cache-Hits', b'1, 2'), (b'X-Timer', b'S1622086867.516104,VS0,VE0'), (b'Vary', b'Cookie'), (b'Strict-Transport-Security', b'max-age=63072000; includeSubDomains'))
 >>>
 ```
 
 ## Parametros
+A parametrização base da aplicação foi baseada nos próprios parametros já utilizados pela biblioteca núcleo [aiohttp](https://docs.aiohttp.org/en/stable/) utilizado neste projeto.
+
+Para controle de envio, os parametros foram armazenados em estruturas de dados específicas utilizando decoradores de nível de múdulo da [dataclasses](https://docs.python.org/3/library/dataclasses.html).
+
+---
 
 ### Resquest
 
+Estrutura de dados responsável por encapsular os dados de solicitação.
+
 * `url`: Configuration options for the autocannon instance. This can have the following attributes. _REQUIRED_.
 * `method`: The given target. Can be http or https. More than one url is allowed, but it is recommended that the number of connections be an integer multiple of the url. _REQUIRED_.
-* `domaim`: A path to a Unix Domain Socket or a Windows Named Pipe. A `url` is still required in order to send the correct Host header and path. _OPTIONAL_.
-* `workers`: Number of worker threads to use to fire requests.
-* `connections`: The number of concurrent connections. _OPTIONAL_ default: `10`.
-* `duration`: The number of seconds to run the autocannon. Can be a [timestring](https://www.npmjs.com/package/timestring). _OPTIONAL_ default: `10`.
-* `amount`: A `Number` stating the amount of requests to make before ending the test. This overrides duration and takes precedence, so the test won't end until the amount of requests needed to be completed are completed. _OPTIONAL_.
-* `timeout`: The number of seconds to wait for a response before . _OPTIONAL_ default: `10`.
-* `pipelining`: The number of [pipelined requests](https://en.wikipedia.org/wiki/HTTP_pipelining) for each connection. Will cause the `Client` API to throw when greater than 1. _OPTIONAL_ default: `1`.
-* `bailout`: The threshold of the number of errors when making the requests to the server before this instance bail's out. This instance will take all existing results so far and aggregate them into the results. If none passed here, the instance will ignore errors and never bail out. _OPTIONAL_ default: `undefined`.
-* `method`: The http method to use. _OPTIONAL_ `default: 'GET'`.
-* `title`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
-* `body`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
+* `headers`: A path to a Unix Domain Socket or a Windows Named Pipe. A `url` is still required in order to send the correct Host header and path. _OPTIONAL_.
+* `timeout`: Number of worker threads to use to fire requests.
+* `postdata`: The number of concurrent connections. _OPTIONAL_ default: `10`.
+* `http_version`: The number of seconds to run the autocannon. Can be a [timestring](https://www.npmjs.com/package/timestring). _OPTIONAL_ default: `10`.
+* `auth_user`: A `Number` stating the amount of requests to make before ending the test. This overrides duration and takes precedence, so the test won't end until the amount of requests needed to be completed are completed. _OPTIONAL_.
+* `auth_pass`: The number of seconds to wait for a response before . _OPTIONAL_ default: `10`.
+* `follow_redirects`: The number of [pipelined requests](https://en.wikipedia.org/wiki/HTTP_pipelining) for each connection. Will cause the `Client` API to throw when greater than 1. _OPTIONAL_ default: `1`.
+* `redirects`: The threshold of the number of errors when making the requests to the server before this instance bail's out. This instance will take all existing results so far and aggregate them into the results. If none passed here, the instance will ignore errors and never bail out. _OPTIONAL_ default: `undefined`.
+* `proxy_host`: The http method to use. _OPTIONAL_ `default: 'GET'`.
+* `proxy_pass`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
+* `outbound_address`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
+* `sslcontext`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
+* `proxy_headers`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
+* `raise_for_status`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
+
+##### Example
+```
+>>> # Example
+>>> request = HTTPRequest(url="https://www.python.org/", method='get')
+>>> request.domain
+www.python.org
+>>> request.scheme
+https
+>>>```
+---
  
-### Session
+### ClientSession
+Estrutura de dados responsável por configurar uma interface para fazer solicitações HTTP.A sessão encapsula um conjunto de conexões que suportam keepalives por padrão.
 
- * `url`: Configuration options for the autocannon instance. This can have the following attributes. _REQUIRED_.
-* `method`: The given target. Can be http or https. More than one url is allowed, but it is recommended that the number of connections be an integer multiple of the url. _REQUIRED_.
-* `domaim`: A path to a Unix Domain Socket or a Windows Named Pipe. A `url` is still required in order to send the correct Host header and path. _OPTIONAL_.
-* `workers`: Number of worker threads to use to fire requests.
-* `connections`: The number of concurrent connections. _OPTIONAL_ default: `10`.
-* `duration`: The number of seconds to run the autocannon. Can be a [timestring](https://www.npmjs.com/package/timestring). _OPTIONAL_ default: `10`.
-* `amount`: A `Number` stating the amount of requests to make before ending the test. This overrides duration and takes precedence, so the test won't end until the amount of requests needed to be completed are completed. _OPTIONAL_.
-* `timeout`: The number of seconds to wait for a response before . _OPTIONAL_ default: `10`.
-* `pipelining`: The number of [pipelined requests](https://en.wikipedia.org/wiki/HTTP_pipelining) for each connection. Will cause the `Client` API to throw when greater than 1. _OPTIONAL_ default: `1`.
-* `bailout`: The threshold of the number of errors when making the requests to the server before this instance bail's out. This instance will take all existing results so far and aggregate them into the results. If none passed here, the instance will ignore errors and never bail out. _OPTIONAL_ default: `undefined`.
-* `method`: The http method to use. _OPTIONAL_ `default: 'GET'`.
-* `title`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
-* `body`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
+* `connector`: Configuration options for the autocannon instance. This can have the following attributes. _REQUIRED_.
+* `loop`: The given target. Can be http or https. More than one url is allowed, but it is recommended that the number of connections be an integer multiple of the url. _REQUIRED_.
+* `cookies`: A path to a Unix Domain Socket or a Windows Named Pipe. A `url` is still required in order to send the correct Host header and path. _OPTIONAL_.
+* `headers`: Number of worker threads to use to fire requests.
+* `skip_auto_headers`: The number of concurrent connections. _OPTIONAL_ default: `10`.
+* `auth`: The number of seconds to run the autocannon. Can be a [timestring](https://www.npmjs.com/package/timestring). _OPTIONAL_ default: `10`.
+* `json_serialize`: A `Number` stating the amount of requests to make before ending the test. This overrides duration and takes precedence, so the test won't end until the amount of requests needed to be completed are completed. _OPTIONAL_.
+* `cookie_jar`: The number of seconds to wait for a response before . _OPTIONAL_ default: `10`.
+* `conn_timeout`: The number of [pipelined requests](https://en.wikipedia.org/wiki/HTTP_pipelining) for each connection. Will cause the `Client` API to throw when greater than 1. _OPTIONAL_ default: `1`.
+* `timeout`: The threshold of the number of errors when making the requests to the server before this instance bail's out. This instance will take all existing results so far and aggregate them into the results. If none passed here, the instance will ignore errors and never bail out. _OPTIONAL_ default: `undefined`.
+* `raise_for_status`: The http method to use. _OPTIONAL_ `default: 'GET'`.
+* `connector_owner`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
+* `auto_decompress`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
+* `read_bufsize`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
+* `requote_redirect_url`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
+* `trust_env`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
+* `trace_configs`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 
+##### Example
+```
+async with ClientSession() as client:    
+    ......  await implementation     
+```
+
+----
+##### Response
+
+* `request`: 
+* `content_text`: 
+* `version`: 
+* `status`: 
+* `reason`: 
+* `method`: 
+* `url`: 
+* `real_url`: 
+* `connection`: 
+* `content`: 
+* `cookies`: 
+* `headers`: 
+* `raw_headers`: 
+* `links`: 
+* `content_type`: 
+* `charset`: 
+* `history`: 
+* `request_info`: 
+* `release`:                               
+---
   
 ## Benchmark Tool
 A biblioteca possuí uma ferramenta para benchmarking suportando HTTP/1.0/1.1 escrita em python, com suporte para pipelining HTTP e HTTPS.
