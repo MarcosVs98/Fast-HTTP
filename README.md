@@ -3,7 +3,7 @@
 Python library for making asynchronous HTTP requests.
  ![Web-Trader Block Diagram](https://github.com/MarcosVs98/Fast-HTTP/blob/main/example.png)
 
-***
+
 
 ## Sobre
 Fast-HTTP é uma biblioteca empacotada com um cliente HTTP assíncrono, que permite paralelizar solicitações, a fim de 
