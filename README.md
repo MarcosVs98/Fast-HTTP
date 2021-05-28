@@ -59,10 +59,13 @@ Estrutura de dados responsável por encapsular os dados de solicitação.
 
 ##### Example
 ```pycon
->>> # Example
+>>> from fasthttp.HTTPClient import HTTPRequest
+>>>
+>>> # exemple
 >>> request = HTTPRequest(url="https://www.python.org/", method='get')
 >>> request.domain
 www.python.org
+>>> 
 >>> request.scheme
 https
 >>>
