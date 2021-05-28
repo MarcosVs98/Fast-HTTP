@@ -18,12 +18,14 @@ reservada chamada "await" na implementação, para que assim possa saber esperar
 ### Utilização
 
 Exemplo simples do uso cliente HTTP.
-```
->>> from HTTPClient import AssyncHTTPClient
+```pycon
+>>> from fasthttp.HTTPClient import AssyncHTTPClient
 >>>
 >>> client = AssyncHTTPClient()
 >>> response = client.get("https://www.python.org/")
+>>> response 
 <FHTTP Response [200 OK]>
+>>>
 >>> response.status
 200
 >>>
@@ -56,7 +58,7 @@ Estrutura de dados responsável por encapsular os dados de solicitação.
 * `raise_for_status`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 
 ##### Example
-```
+```pycon
 >>> # Example
 >>> request = HTTPRequest(url="https://www.python.org/", method='get')
 >>> request.domain
