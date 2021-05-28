@@ -26,9 +26,6 @@ Exemplo simples do uso cliente HTTP.
 >>> response 
 <FHTTP Response [200 OK]>
 >>>
->>> response.status
-200
->>>
 ```
 
 ### Parametros
@@ -57,21 +54,30 @@ Estrutura de dados responsável por encapsular os dados de solicitação.
 * `proxy_headers`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 * `raise_for_status`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 
-##### Example
+### Programmatically
+
+##### HTTPRequest
+
 ```pycon
->>> from fasthttp.HTTPClient import HTTPRequest
->>>
->>> # exemple
->>> request = HTTPRequest(url="https://www.python.org/", method='get')
->>> request.domain
-www.python.org
->>> 
->>> request.scheme
-https
->>>
+from fasthttp.HTTPClient import HTTPRequest
+
+request = HTTPRequest(url="https://www.python.org/", method='get')
 ```
 
----
+##### ClientSession
+```pycon
+# Example
+async with ClientSession() as client:    
+    ......  await implementation     
+```
+
+##### AssyncHTTPClient
+```pycon
+from fasthttp.HTTPClient import AssyncHTTPClient
+
+client = AssyncHTTPClient()
+response = client.get("https://www.python.org/")
+```
  
 ### ClientSession
 Estrutura de dados responsável por configurar uma interface para fazer solicitações HTTP.A sessão encapsula um conjunto de conexões que suportam keepalives por padrão.
@@ -94,11 +100,7 @@ Estrutura de dados responsável por configurar uma interface para fazer solicita
 * `trust_env`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 * `trace_configs`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
 
-```
-# Example
-async with ClientSession() as client:    
-    ......  await implementation     
-```
+
 
 ----
 
