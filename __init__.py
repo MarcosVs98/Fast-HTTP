@@ -28,6 +28,10 @@ class ProxyParsed():
 	def get_proxy(self):
 		return f"{self.scheme}://{self.ip}:{self.port}/"
 
+
+class InvalidProxyToParser(Exception):
+	pass
+
 def parse_public_proxies(proxy):
 	"""
 	ref: https://github.com/clarketm/proxy-list
@@ -65,50 +69,52 @@ def parse_public_proxies(proxy):
 	   + = Yes
 	   – = No
 	"""
-	proxy_raw = proxy.split(' ')
-
-	address_info = proxy_raw[0].split(':')
-	ip = address_info[0] 
-	port = address_info[1]
-	proxy_info  = proxy_raw[1].split('-')
-
-	proxy_contry    = proxy_info[0]  
-	proxy_anonymity = proxy_info[1]
-
-	if proxy_anonymity.startswith('N'):
-		level_anonymity = 0
-	elif proxy_anonymity.startswith('A'):
-		level_anonymity = 1
-	elif proxy_anonymity.startswith('H'):
-		level_anonymity = 2
 	try:
-		proxy_type = proxy_info[2]
-	except (IndexError):
-		proxy_type = proxy_info[1]
+		proxy_raw = proxy.split(' ')
+		address_info = proxy_raw[0].split(':')
+		ip = address_info[0] 
+		port = address_info[1]
+		proxy_info  = proxy_raw[1].split('-')
 
-	if proxy_type.startswith('S'):
-		scheme = 'https'
-	else:
-		scheme = 'http'
+		proxy_contry    = proxy_info[0]  
+		proxy_anonymity = proxy_info[1]
 
-	if proxy_type.endswith('!'):
-		outgoing_ip = True
-	else:
-		outgoing_ip = False
+		if proxy_anonymity.startswith('N'):
+			level_anonymity = 0
+		elif proxy_anonymity.startswith('A'):
+			level_anonymity = 1
+		elif proxy_anonymity.startswith('H'):
+			level_anonymity = 2
+		try:
+			proxy_type = proxy_info[2]
+		except IndexError:
+			proxy_type = proxy_info[1]
 
-	if proxy.endswith('+'):
-		proxy_google_passed = True
-	else:
-		proxy_google_passed = False
+		if proxy_type.startswith('S'):
+			scheme = 'https'
+		else:
+			scheme = 'http'
 
-	proxy_parsed = ProxyParsed(
-		ip=ip, port=port, scheme=scheme,
-		level_anonymity=level_anonymity,
-		proxy_contry=proxy_contry,
-		proxy_google_passed=proxy_google_passed,
-		outgoing_ip=outgoing_ip)
+		if proxy_type.endswith('!'):
+			outgoing_ip = True
+		else:
+			outgoing_ip = False
 
-	return proxy_parsed
+		if proxy.endswith('+'):
+			proxy_google_passed = True
+		else:
+			proxy_google_passed = False
+
+		proxy_parsed = ProxyParsed(
+			ip=ip, port=port, scheme=scheme,
+			level_anonymity=level_anonymity,
+			proxy_contry=proxy_contry,
+			proxy_google_passed=proxy_google_passed,
+			outgoing_ip=outgoing_ip)
+
+		return proxy_parsed
+	except IndexError as e:
+		raise InvalidProxyToParser(e)
 
 
 print(parse_public_proxies('190.92.9.162:999 HN-N-S -').get_proxy())
