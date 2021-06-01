@@ -47,21 +47,34 @@ def parse_public_proxies(proxy):
 	|   |_ _ _ _ _    |  | |  |
 	|             |   |  | |  |
 	200.2.125.90:8080 AR-N-S! +
+
+	# Definitions
+
+	1. IP address
+	2. Port number
+	3. Country code
+	4. Anonymity
+	   N = No anonymity
+	   A = Anonymity
+	   H = High anonymity
+	5. Type
+		 = HTTP
+	   S = HTTP/HTTPS
+	   ! = incoming IP different from outgoing IP
+	6. Google passed
+	   + = Yes
+	   – = No
 	"""
 	proxy_raw = proxy.split(' ')
+
 	address_info = proxy_raw[0].split(':')
-	ip = address_info[0] # 1. IP address
-	port = address_info[1] # 2. Port number
+	ip = address_info[0] 
+	port = address_info[1]
 	proxy_info  = proxy_raw[1].split('-')
 
-	proxy_contry    = proxy_info[0]  # 3. Country code
+	proxy_contry    = proxy_info[0]  
 	proxy_anonymity = proxy_info[1]
-	"""
-	4. Anonymity
-		N = No anonymity
-		A = Anonymity
-		H = High anonymity
-	"""
+
 	if proxy_anonymity.startswith('N'):
 		level_anonymity = 0
 	elif proxy_anonymity.startswith('A'):
@@ -72,28 +85,18 @@ def parse_public_proxies(proxy):
 		proxy_type = proxy_info[2]
 	except (IndexError):
 		proxy_type = proxy_info[1]
-	"""
-	5. Type
-     	  = HTTP
-   		S = HTTP/HTTPS
-   		! = incoming IP different from outgoing IP	
-	"""
+
 	if proxy_type.startswith('S'):
 		scheme = 'https'
+	else:
+		scheme = 'http'
 
 	if proxy_type.endswith('!'):
 		outgoing_ip = True
 	else:
 		outgoing_ip = False
 
-	scheme = 'http'
-
 	if proxy.endswith('+'):
-		"""
-		6. Google passed
-		   	+ = Yes
-		   	– = No
-		"""
 		proxy_google_passed = True
 	else:
 		proxy_google_passed = False
@@ -104,6 +107,7 @@ def parse_public_proxies(proxy):
 		proxy_contry=proxy_contry,
 		proxy_google_passed=proxy_google_passed,
 		outgoing_ip=outgoing_ip)
+
 	return proxy_parsed
 
 
