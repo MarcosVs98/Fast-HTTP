@@ -3,13 +3,6 @@
 Python library for making asynchronous HTTP requests.
  ![Web-Trader Block Diagram](https://github.com/MarcosVs98/Fast-HTTP/blob/main/example.png)
 
-
-* [Installation](#install)
-* [Usage](#usage)
-* [API](#api)
-* [Acknowledgements](#acknowledgements)
-* [License](#license)
-
 ## Sobre
 Fast-HTTP é uma biblioteca empacotada com um cliente HTTP assíncrono, que permite paralelizar solicitações http, a fim de 
 otimizar e melhorar a persistência com o servidor destino.Tudo isso porque o protocolo HTTP oferece pipelining, 
