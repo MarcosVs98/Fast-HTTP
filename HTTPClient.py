@@ -40,7 +40,7 @@ from exceptions import AsyncHTTPClientError
 log = logging.getLogger('HTTPClient')
 
 @dataclass
-class ClientSession(Structure):
+class AsyncSession(Structure):
 	"""
 	Class responsible for setting up an interface for making HTTP requests.
 	The session encapsulates a set of connections supporting keepalives by default.
@@ -106,7 +106,7 @@ class AsyncHTTPResponse(Structure):
 
 
 @dataclass
-class HTTPRequest(Structure):
+class AsyncHTTPRequest(Structure):
 	"""
 	Data class responsible for representing
 	the fields of an HTTP request.
@@ -115,11 +115,12 @@ class HTTPRequest(Structure):
 	method            : str
 	headers           : dict = field(default=None) 
 	timeout           : int = field(default=120)
+	security_web      : bool = field(default=False)
 	postdata          : bytes = field(default=None, repr=False)
 	http_version      : str = field(default='HTTP/1.1')
 	auth_user         : str = field(default=None)
 	auth_pass         : str = field(default=None)
-	follow_redirects  : bool = field(default=True)
+	allow_redirects   : bool = field(default=True)
 	redirects         : int = field(default=30)
 	proxy_host        : str = field(default=None)
 	proxy_port        : int = field(default=0)
@@ -169,7 +170,7 @@ class HTTPClient():
 		method responsible for handling an HTTP request.
 		"""
 		if request is None:
-			request = HTTPRequest(**kwargs)
+			request = AsyncHTTPRequest(**kwargs)
 
 		log.debug(f'HTTP Client Request: {request}')
 		# AIO Request
@@ -228,7 +229,7 @@ class HTTPClient():
 		aio_request.raise_for_status = request.raise_for_status
 
 		# Cliente async session!
-		async with ClientSession().connect() as client:
+		async with AsyncSession().connect() as client:
 			# HTTP Method
 			if request.method == 'GET':
 				request_callback = client.get

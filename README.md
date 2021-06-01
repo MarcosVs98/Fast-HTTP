@@ -4,9 +4,14 @@ Python library for making asynchronous HTTP requests.
  ![Web-Trader Block Diagram](https://github.com/MarcosVs98/Fast-HTTP/blob/main/example.png)
 
 
+* [Installation](#install)
+* [Usage](#usage)
+* [API](#api)
+* [Acknowledgements](#acknowledgements)
+* [License](#license)
 
 ## Sobre
-Fast-HTTP é uma biblioteca empacotada com um cliente HTTP assíncrono, que permite paralelizar solicitações, a fim de 
+Fast-HTTP é uma biblioteca empacotada com um cliente HTTP assíncrono, que permite paralelizar solicitações http, a fim de 
 otimizar e melhorar a persistência com o servidor destino.Tudo isso porque o protocolo HTTP oferece pipelining, 
 permitindo o envio de múltiplas ocorrências na mesma conexão sem esperar por respostas.Portanto, a chamada não é 
 bloqueada ou fechada enquanto o servidor HTTP responde.
@@ -15,7 +20,7 @@ bloqueada ou fechada enquanto o servidor HTTP responde.
 Se torna uma função/método assíncrono usando a palavra reservada "async" antes da definição e também utilizando outra palavra 
 reservada chamada "await" na implementação, para que assim possa saber esperar algo. 
 
-### Utilização
+### Cliente HTTP
 
 Exemplo simples do uso cliente HTTP.
 ```pycon
@@ -28,7 +33,111 @@ Exemplo simples do uso cliente HTTP.
 >>>
 ```
 
-#### Command Line
+## Instalação
+
+```
+python setup.py install
+```
+
+### Clonando o repositório
+```
+$ git clone https://github.com/MarcosVs98/Fast-HTTP.git
+```
+
+## Parametros
+A parametrização base da aplicação foi baseada nos próprios parametros já utilizados pela biblioteca núcleo [aiohttp](https://docs.aiohttp.org/en/stable/) utilizado neste projeto.
+
+Para controle de envio, os parametros foram armazenados em estruturas de dados específicas utilizando decoradores de nível de múdulo da [dataclasses](https://docs.python.org/3/library/dataclasses.html).
+
+### Resquest (AsyncHTTPRequest)
+
+Estrutura de dados responsável por encapsular os dados de solicitação. 
+
+* `url`: Atríbuto obrigátorio para instância do AsyncHTTPClient. [ref](https://pt.wikipedia.org/wiki/URI)
+* `method`: Método de requisição responsável por indicar a ação a ser executada para um dado recurso. [ref](https://pt.wikipedia.org/wiki/Hypertext_Transfer_Protocol)
+* `headers`: Adicão de cabeçalho arbitrário. Cabeçalhos contendo mais informação sobre o recurso a ser obtido ou sobre o próprio cliente. [ref](https://en.wikipedia.org/wiki/List_of_HTTP_header_fields)
+* `timeout`: Tempo máximo em segundos para o aguardo de resposta http.
+* `postdata`: Conteúdo a ser enviado ao servidor alvo.
+* `http_version`: Versão http para utilização. Disponíveis HTTP/1.0 e 1.1.
+* `auth_user`: Login para autenticação do cliente.
+* `auth_pass`: Senha para autenticação do cliente.
+* `allow_redirects`: Cliente http, permite redirecionamento pelo servidor. 
+* `redirects`: Número máximo de redirecionamentos permitidos.
+* `proxy_host`: Login para autenticação do cliente utilizando proxy.
+* `proxy_pass`: Senha para autenticação do cliente utilizando proxy.
+* `outbound_address`: Endereço de IP utilizado para saída.Por default é definido  `0.0.0.0` .
+* `sslcontext`: Endereço do arquivo de certificação para criação de contexto SSL.
+* `proxy_headers`: Adicão de cabeçalho arbitrário. Cabeçalhos contendo mais informação sobre o recurso a ser obtido ou sobre o próprio cliente utilizando proxy.
+* `raise_for_status`: Levantar exceção para códigos de status diferente de 200.
+
+### Session (AsyncSession)
+Estrutura de dados responsável por configurar uma interface para fazer solicitações HTTP.A sessão encapsula um conjunto de conexões que suportam keepalives por padrão.
+
+* `connector`: Conector personalizado para camada de transporte de solicitações.
+* `loop`: Loop de eventos para execução de tarefas assíncronas. ref [asyncio](https://docs.python.org/3/library/asyncio-eventloop.html).
+* `cookies`: Cookies para compartilhação entre várias solicitações.
+* `headers`: Cabeçalhos padrão para todas as solicitações de sessão.
+* `skip_auto_headers`: Conjunto de cabeçalhos HTTP para os quais a geração automática deve ser ignorada.
+* `auth`: Tupla contendo `(user, pass)` para autenticação padrão para todas solicitações.
+* `cookie_jar`: Passar o processamento de cookies ao aiohttp.DummyCookieJarinstância para a sessão do cliente. [ref](https://docs.aiohttp.org/en/stable/client_advanced.html#dummy-cookie-jar).
+* `conn_timeout`: The number of [pipelined requests](https://en.wikipedia.org/wiki/HTTP_pipelining) for each connection. Will cause the `Client` API to throw when greater than 1. _OPTIONAL_ default: `1`.
+* `timeout`: Tempo limite para operações de IO utilizados pelo cliente.
+* `raise_for_status`: Levantar exceção http para status diferente de 200 em todas solicitações configuradas para o cliente.
+* `connector_owner`: Indica se o conector deve ser fechado no fechamento da sessão.
+* `auto_decompress`: A resposta do corpo deve ser descompactada automaticamente.
+* `read_bufsize`: Tamanho máximo do buffer de leitura permitido por solicitação.
+* `requote_redirect_url`: Permitir recotação de URL para URLs de redirecionamento.
+* `trust_env`: Obter proxies informações de HTTP_PROXY/ https_proxy variáveis de ambiente se o parâmetro for verdadeiro.
+* `trace_configs`: Uma lista de instâncias de TraceConfig's usadas para rastreamento de cliente. 
+
+### Response (AsyncHTTPResponse)
+
+A Fast-Http usa um objeto de resposta padrão `ClientResponse` utilizado pelo cliente aiohttp. ref [ClientResponse](https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp.ClientResponse), realizando algumas tratativas para usabilidade do mesmo.
+
+* `request`: Objeto de solicitação HTTPRequest utilizado pelo Fast-HTTP. Cont
+* `content_text`: Conteúdo de texto retornado pela solicitação. A mesma é autodecodificada com base no tipo de conteúdo.
+* `version`: Versão da resposta.
+* `status`: Código de status HTTP de resposta.
+* `reason`: Razão status HTTP de resposta.
+* `method`: Método utilizado na solicitação HTTP.
+* `ok`: Representação booleana do código de status HTTP.  
+* `url`:  Url utilizada na solicitação.
+* `real_url`: URL não modificado da solicitação com fragmento de URL não removido ( URL).
+* `connection`: [Connection]() usado para lidar com a resposta.
+* `content`:  Conteúdo [StreamReader](https://docs.aiohttp.org/en/stable/streams.html#aiohttp.StreamReader) de resposta. 
+* `cookies`:  Cookies de resposta HTTP (cabeçalho Set-Cookie HTTP, [SimpleCookie](https://docs.python.org/3/library/http.cookies.html#http.cookies.SimpleCookie).
+* `headers`:  Cabeçalhos de resposta HTTP  (Instância de [CIMultiDictProxy.](https://multidict.readthedocs.io/en/stable/multidict.html#multidict.CIMultiDictProxy)).
+* `raw_headers`: Cabeçalhos de resposta HTTP não modificados como bytes não convertidos, uma sequência de pares.(key, value)
+* `links`: Cabeçalho HTTP do link analisado em um [CIMultiDictProxy.](https://multidict.readthedocs.io/en/stable/multidict.html#multidict.MultiDictProxy).
+* `content_type`: Especificação do conteúdo retornado por parte do cabeçalho `Content-Type`.
+* `charset`: Especificação da codificação do conteúdo restornado na solicitação
+* `history`: Uma sequência de objetos HTTPHistory contendo instâncias de `ClientResponse` das solicitações anteriores (a solicitação mais antiga primeiro) se houver redirecionamentos, caso contrário, uma sequência vazia.
+* `request_info`: Um namedtuple com URL de solicitação e cabeçalhos de `ClientRequest` objeto, [aiohttp.RequestInfoinstância](https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp.RequestInfo). 
+* `release`:  Libera um obketo de resposta quando a carga é finalizada.
+                               
+---
+  
+## Benchmark Tool
+A biblioteca possuí uma ferramenta para benchmarking suportando HTTP/1.0/1.1 escrita em python, com suporte para pipelining HTTP e HTTPS.
+
+
+### HTTPBenchmark 
+
+A ferramenta utiliza o cliente assincrono Fast-HTTP enviando blocos de solicitações a fim de balancear melhor as pipelines, podendo simular solicitações longas, utilizando recursos internos promovidos pela [aiohttp](https://docs.aiohttp.org/en/stable/) e pela própria Fast-HTTP.
+
+#### Recursos Disponíveis
+
+* [Balancemento de cargas]()
+* [Auto Binding Utilizando Interface de Rêdes](#usage)
+* [Distruibuição Controlada com algoritimo de Round-robin](#usage)
+* [Pool de proxies controlados](#api)
+* [Limpeza de cache DNS](#api)
+* [Testes automatizados via linha de comando](#acknowledgements)
+* [Arquivo de configuração manual](#acknowledgements)
+* [Geração de statísticas HTTP](#acknowledgements)
+ 
+## Utilização
+### Command Line
 
 ```
 Fast-HTTP [options] [http[s]://]hostname[:port]/path
@@ -74,81 +183,59 @@ optional arguments:
                         Disable SSL ceertificate
   -E CERTFILE, --certfile CERTFILE
                         Specify optional client certificate chain and private key
+```
+## Testando os limites
+
+## Performance
+
+Para tornar mais fácil, vamos começar com o básico - simples HTTP hello world - apenas fazendo GET e obtendo uma única resposta HTTP.
 
 ```
+Fast-HTTP Versão 1.0
+Benchmarking 0.0.0.0:8000
 
-### Parametros
-A parametrização base da aplicação foi baseada nos próprios parametros já utilizados pela biblioteca núcleo [aiohttp](https://docs.aiohttp.org/en/stable/) utilizado neste projeto.
+10000 requests divided into 417 blocks with 24 simultaneous requests
+.....
+40/417 blocks completed with 1000 requests
+80/417 blocks completed with 960 requests
+120/417 blocks completed with 960 requests
+160/417 blocks completed with 960 requests
+200/417 blocks completed with 960 requests
+.....
 
-Para controle de envio, os parametros foram armazenados em estruturas de dados específicas utilizando decoradores de nível de múdulo da [dataclasses](https://docs.python.org/3/library/dataclasses.html).
+Server : cloudflare | 
+Host: 0.0.0.0 | Port: 8000
+Protocol : HTTP 
+SSL/TLS : TLSv1.1 
+Chipers : , ECDHE-ECDSA-CHACHA20-POLY1305, 256, 256
+Name server TLS: 0.0.0.0
+Path: /test
+Document Size: 3 bytes
 
-#### Resquest
+Concurrent requests: 24
+Benchmark time: 12,077 seconds
+Completed Requests: 10.000
+Failed Requests: 0
+Content Buffer Size: 30000 Byte's / 0.03 Mega's
 
-Estrutura de dados responsável por encapsular os dados de solicitação.
+Average requests per second: 959,53 / sec (average)
+Time per Request: 0,0027 [ms] (average on all simultaneous requests)
+Transfer rate: 01,02 [Kbytes / s] received
+Tempos de conexão (ms) mínimo médio [+/- dp] mediano máximo
 
-* `url`: Configuration options for the autocannon instance. This can have the following attributes. _REQUIRED_.
-* `method`: The given target. Can be http or https. More than one url is allowed, but it is recommended that the number of connections be an integer multiple of the url. _REQUIRED_.
-* `headers`: A path to a Unix Domain Socket or a Windows Named Pipe. A `url` is still required in order to send the correct Host header and path. _OPTIONAL_.
-* `timeout`: Number of worker threads to use to fire requests.
-* `postdata`: The number of concurrent connections. _OPTIONAL_ default: `10`.
-* `http_version`: The number of seconds to run the autocannon. Can be a [timestring](https://www.npmjs.com/package/timestring). _OPTIONAL_ default: `10`.
-* `auth_user`: A `Number` stating the amount of requests to make before ending the test. This overrides duration and takes precedence, so the test won't end until the amount of requests needed to be completed are completed. _OPTIONAL_.
-* `auth_pass`: The number of seconds to wait for a response before . _OPTIONAL_ default: `10`.
-* `follow_redirects`: The number of [pipelined requests](https://en.wikipedia.org/wiki/HTTP_pipelining) for each connection. Will cause the `Client` API to throw when greater than 1. _OPTIONAL_ default: `1`.
-* `redirects`: The threshold of the number of errors when making the requests to the server before this instance bail's out. This instance will take all existing results so far and aggregate them into the results. If none passed here, the instance will ignore errors and never bail out. _OPTIONAL_ default: `undefined`.
-* `proxy_host`: The http method to use. _OPTIONAL_ `default: 'GET'`.
-* `proxy_pass`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
-* `outbound_address`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
-* `sslcontext`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
-* `proxy_headers`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
-* `raise_for_status`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
+Percentage of requests fulfilled within a given time (ms)
+  1 - 50% 954
+  2 - 66% 948
+  3 - 75% 972
+  4 - 80% 948
+  5 - 90% 989
+  6 - 95% 1190
+  7 - 98% 1010
+  8 - 99% 1749
+  9 - 100% 31895 (solicitação mais longa)
+```                 
 
-#### ClientSession
-Estrutura de dados responsável por configurar uma interface para fazer solicitações HTTP.A sessão encapsula um conjunto de conexões que suportam keepalives por padrão.
-
-* `connector`: Configuration options for the autocannon instance. This can have the following attributes. _REQUIRED_.
-* `loop`: The given target. Can be http or https. More than one url is allowed, but it is recommended that the number of connections be an integer multiple of the url. _REQUIRED_.
-* `cookies`: A path to a Unix Domain Socket or a Windows Named Pipe. A `url` is still required in order to send the correct Host header and path. _OPTIONAL_.
-* `headers`: Number of worker threads to use to fire requests.
-* `skip_auto_headers`: The number of concurrent connections. _OPTIONAL_ default: `10`.
-* `auth`: The number of seconds to run the autocannon. Can be a [timestring](https://www.npmjs.com/package/timestring). _OPTIONAL_ default: `10`.
-* `json_serialize`: A `Number` stating the amount of requests to make before ending the test. This overrides duration and takes precedence, so the test won't end until the amount of requests needed to be completed are completed. _OPTIONAL_.
-* `cookie_jar`: The number of seconds to wait for a response before . _OPTIONAL_ default: `10`.
-* `conn_timeout`: The number of [pipelined requests](https://en.wikipedia.org/wiki/HTTP_pipelining) for each connection. Will cause the `Client` API to throw when greater than 1. _OPTIONAL_ default: `1`.
-* `timeout`: The threshold of the number of errors when making the requests to the server before this instance bail's out. This instance will take all existing results so far and aggregate them into the results. If none passed here, the instance will ignore errors and never bail out. _OPTIONAL_ default: `undefined`.
-* `raise_for_status`: The http method to use. _OPTIONAL_ `default: 'GET'`.
-* `connector_owner`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
-* `auto_decompress`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
-* `read_bufsize`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
-* `requote_redirect_url`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
-* `trust_env`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
-* `trace_configs`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
-
-##### Response
-
-* `request`: 
-* `content_text`: 
-* `version`: 
-* `status`: 
-* `reason`: 
-* `method`: 
-* `url`: 
-* `real_url`: 
-* `connection`: 
-* `content`: 
-* `cookies`: 
-* `headers`: 
-* `raw_headers`: 
-* `links`: 
-* `content_type`: 
-* `charset`: 
-* `history`: 
-* `request_info`: 
-* `release`:
-                               
----
-
-### Programmatically
+### Programmatically Examples
 
 ##### HTTPRequest
 
@@ -174,175 +261,26 @@ client = AssyncHTTPClient()
 response = client.get("https://www.python.org/")
 ```
 
----
-  
-## Benchmark Tool
-A biblioteca possuí uma ferramenta para benchmarking suportando HTTP/1.0/1.1 escrita em python, com suporte para pipelining HTTP e HTTPS.
-
-O HTTPBenchmark utiliza o cliente AsyncFastHTTP enviando blocos de solicitações a fim de usar o melhor das pipelines, podendo simular solicitações longas
- 
-## Testando os limites
-
-## Performance
-
-Para tornar mais fácil, vamos começar com o básico - simples HTTP hello world - apenas fazendo GET e obtendo uma única resposta HTTP.
-
-***
-   
-## Requisitos
- - Python : Python >= 3.5
- 
-***
-## Instalação
-
-```
-python setup.py install
-```
-
-#### Instalando via [GitHub](https://github.com/WebGlobal/Renova-Cookies.git)
-```
-$ git clone https://github.com/WebGlobal/Renova-Cookies.git
-```
-
-***
-## Utilização
-
-### Linha de Comando
-
-
-
-
-```
-                *****************************************************************
-                *                       ┬────┬────┬───┬                         *
-                *                       |    |    |   |                         *
-                *                       |    QUEUE    |                         *
-                *                       |    |    |   |                         *
-                *                       └────└────└───┘                         *
-                *                              ||                               *
-                *                       ┬──────┘└───────┬                       *
-                *                       | Request Block |                       *
-                *                       └───────┬───────┘                       *
-                *                               |                               *
-                *      ┬────────────────────────└────────────────────────┬      *
-                *      |        ┬───────────────┬───────────────┬        |      *
-                *      |   ┬────└────┬     ┬────└────┬     ┬────└────┬   |      *
-                *      |   |    |    |     |    |    |     |    |    |   |      *
-                *      |   v    v    v     v    v    v     v    v    v   |      *
-                *      |   ┬─────────┬     ┬─────────┬     ┬─────────┬   |      *
-                *      |   | #target |     | #target |     | #target |   |      *
-                *      |   └─────────┘     └─────────┘     └─────────┘   |      *
-                *      |   |    |    |     |    |    |     |    |    |   |      *
-                *      |   v    v    v     v    v    v     v    v    v   |      *
-                *      |   ┬─────────┬     ┬─────────┬     ┬─────────┬   |      *
-                *      |   |#Response|     |#Response|     |#Response|   |      *
-                *      |   └─────────┘     └─────────┘     └─────────┘   |      *
-                *      |   |    |    |     |    |    |     |    |    |   |      *
-                *      |   v    v    v     v    v    v     v    v    v   |      *
-                *      └───────────────────────┬┬────────────────────────┘      *
-                *                              ||                               *
-                *                    ┬─────────┘└──────────┬                    *
-                *                    |    Response block   |                    *
-                *                    └─────────────────────┘                    *
-                *****************************************************************
-```
-
-
-### Exemplo utilizando FastHTTP 
+##### Benchmark for coding   
 Classe responsável por realizar solicitações simulataneas.
 ```pycon
->>> from fastRequest import FastHTTP
+>>> from Benchmark import HTTPBenchmark
 >>> 
->>> assincrone_res = FastHTTP(method='get',concurrent_requests=24, 417)
->>> assincrone_res.start()
+>>> benchmark = HTTPBenchmark(method='get', concurrent_requests=24, 417)
+>>> responses = benchmark.start()
 >>>
-Processamento finalizado.
-Tempo de processamento             :  13.9957 s
-Número requisições simultaneas     :  24
-Número de blocos                   :  417
-Tamanho da fila                    :  0
-Número de conexões api(japronto)   :  200
-Número de requisições de sucesso   :  10008
-Número de requisições que falharam :  0
+>>> responses.total_time
+13.9957 s
+>>>
+>>> responses.sucess
+10008 
+>>> responses.downloaded_content
+130M
+>>> 
+>>> responses
+< FastHTTP [Benchmark(success=10008, total_time=13.995]>
 >>> 
 ```
-### Exemplo 2 FastHTTP
-```pycon
->>> from fastRequest import FastHTTP
->>> 
->>> assincrone_res = FastHTTP(method='get',concurrent_requests=24, 834)
->>> assincrone_res.start()
->>>
-Processamento finalizado.
-Tempo de processamento             :  31.8837 s
-Número requisições simultaneas     :  24
-Número de blocos                   :  834
-Tamanho da fila                    :  0
-Número de conexões api(japronto)   :  200
-Número de requisições de sucesso   :  20016
-Número de requisições que falharam :  0
->>> 
-```
-
-### Exemplo utilizando ClientSession
-Classe responsável por montar interface para realização de solicitações HTTP. A sessão encapsula um conjunto de conexões suportando keepalives por padrão.
-```pycon
-from fastRequest import ClientSession
->>> 
->>> client = ClientSession()
->>> client.connect()
-<aiohttp.client.ClientSession object at 0x7f73edcb8080>
->>>
-```
-
-### autocannon(opts[, cb])
-
-Start autocannon against the given target.
-
-* `opts`: Configuration options for the autocannon instance. This can have the following attributes. _REQUIRED_.
-    * `url`: The given target. Can be http or https. More than one url is allowed, but it is recommended that the number of connections be an integer multiple of the url. _REQUIRED_.
-    * `socketPath`: A path to a Unix Domain Socket or a Windows Named Pipe. A `url` is still required in order to send the correct Host header and path. _OPTIONAL_.
-    * `workers`: Number of worker threads to use to fire requests.
-    * `connections`: The number of concurrent connections. _OPTIONAL_ default: `10`.
-    * `duration`: The number of seconds to run the autocannon. Can be a [timestring](https://www.npmjs.com/package/timestring). _OPTIONAL_ default: `10`.
-    * `amount`: A `Number` stating the amount of requests to make before ending the test. This overrides duration and takes precedence, so the test won't end until the amount of requests needed to be completed are completed. _OPTIONAL_.
-    * `timeout`: The number of seconds to wait for a response before . _OPTIONAL_ default: `10`.
-    * `pipelining`: The number of [pipelined requests](https://en.wikipedia.org/wiki/HTTP_pipelining) for each connection. Will cause the `Client` API to throw when greater than 1. _OPTIONAL_ default: `1`.
-    * `bailout`: The threshold of the number of errors when making the requests to the server before this instance bail's out. This instance will take all existing results so far and aggregate them into the results. If none passed here, the instance will ignore errors and never bail out. _OPTIONAL_ default: `undefined`.
-    * `method`: The http method to use. _OPTIONAL_ `default: 'GET'`.
-    * `title`: A `String` to be added to the results for identification. _OPTIONAL_ default: `undefined`.
-    * `body`: A `String` or a `Buffer` containing the body of the request. Insert one or more randomly generated IDs into the body by including `[<id>]` where the randomly generated ID should be inserted (Must also set idReplacement to true). This can be useful in soak testing POST endpoints where one or more fields must be unique. Leave undefined for an empty body. _OPTIONAL_ default: `undefined`.
-    * `form`: A `String` or an `Object` containing the multipart/form-data options or a path to the JSON file containing them
-    * `headers`: An `Object` containing the headers of the request. _OPTIONAL_ default: `{}`.
-    * `initialContext`: An object that you'd like to initialize your context with. Checkout [an example of initializing context](./samples/init-context.js). _OPTIONAL_
-    * `setupClient`: A `Function` which will be passed the `Client` object for each connection to be made. This can be used to customise each individual connection headers and body using the API shown below. The changes you make to the client in this function will take precedence over the default `body` and `headers` you pass in here. There is an example of this in the samples folder. _OPTIONAL_ default: `function noop () {}`. When using `workers`, you need to supply a file path that default exports a function instead (Check out [workers](#workers) section for more details).
-    * `maxConnectionRequests`: A `Number` stating the max requests to make per connection. `amount` takes precedence if both are set. _OPTIONAL_
-    * `maxOverallRequests`: A `Number` stating the max requests to make overall. Can't be less than `connections`. `maxConnectionRequests` takes precedence if both are set. _OPTIONAL_
-    * `connectionRate`: A `Number` stating the rate of requests to make per second from each individual connection. No rate limiting by default. _OPTIONAL_
-    * `overallRate`: A `Number` stating the rate of requests to make per second from all connections. `connectionRate` takes precedence if both are set. No rate limiting by default. _OPTIONAL_
-    * `ignoreCoordinatedOmission`: A `Boolean` which disable the correction of latencies to compensate the coordinated omission issue. Does not make sense when no rate of requests has been specified (`connectionRate` or `overallRate`). _OPTIONAL_ default: `false`.
-    * `reconnectRate`: A `Number` which makes the individual connections disconnect and reconnect to the server whenever it has sent that number of requests. _OPTIONAL_
-    * `requests`: An `Array` of `Object`s which represents the sequence of requests to make while benchmarking. Can be used in conjunction with the `body`, `headers` and `method` params above. Check the samples folder for an example of how this might be used. _OPTIONAL_. Contained objects can have these attributes:
-       * `body`: When present, will override `opts.body`. _OPTIONAL_
-       * `headers`: When present, will override `opts.headers`. _OPTIONAL_
-       * `method`: When present, will override `opts.method`. _OPTIONAL_
-       * `path`: When present, will override `opts.path`. _OPTIONAL_
-       * `setupRequest`: A `Function` you may provide to mutate the raw `request` object, e.g. `request.method = 'GET'`. It takes `request` (Object) and `context` (Object) parameters, and must return the modified request. When it returns a falsey value, autocannon will restart from first request. When using `workers`, you need to supply a file path that default exports a function instead (Check out [workers](#workers) section for more details) _OPTIONAL_
-       * `onResponse`: A `Function` you may provide to process the received response. It takes `status` (Number), `body` (String) `context` (Object) parameters and `headers` (Key-Value Object). When using `workers`, you need to supply a file path that default exports a function instead (Check out [workers](#workers) section for more details) _OPTIONAL_
-    * `har`: an `Object` of parsed [HAR](https://w3c.github.io/web-performance/specs/HAR/Overview.html) content. Autocannon will extra and use `entries.request`: `requests`, `method`, `form` and `body` options will be ignored. _NOTE_: you must ensure that entries are targeting the same domain as `url` option. _OPTIONAL_
-    * `idReplacement`: A `Boolean` which enables the replacement of `[<id>]` tags within the request body with a randomly generated ID, allowing for unique fields to be sent with requests. Check out [an example of programmatic usage](./samples/using-id-replacement.js) can be found in the samples. _OPTIONAL_ default: `false`
-    * `forever`: A `Boolean` which allows you to setup an instance of autocannon that restarts indefinitely after emiting results with the `done` event. Useful for efficiently restarting your instance. To stop running forever, you must cause a `SIGINT` or call the `.stop()` function on your instance. _OPTIONAL_ default: `false`
-    * `servername`: A `String` identifying the server name for the SNI (Server Name Indication) TLS extension. _OPTIONAL_ default: Defaults to the hostname of the URL when it is not an IP address.
-    * `excludeErrorStats`: A `Boolean` which allows you to disable tracking non 2xx code responses in latency and bytes per second calculations. _OPTIONAL_ default: `false`.
-    * `expectBody`: A `String` representing the expected response body. Each request whose response body is not equal to `expectBody`is counted in `mismatches`. If enabled, mismatches count towards bailout. _OPTIONAL_
-    * `tlsOptions`: An `Object` that is passed into `tls.connect` call ([Full list of options](https://nodejs.org/api/tls.html#tls_tls_connect_port_host_options_callback)). Note: this only applies if your url is secure.
-* `cb`: The callback which is called on completion of a benchmark. Takes the following params. _OPTIONAL_.
-    * `err`: If there was an error encountered with the run.
-    * `results`: The results of the run.
-
-**Returns** an instance/event emitter for tracking progress, etc. If cb omitted, the return value can also be used as a Promise.
-
-### Customizing sent requests
 
 ### License
 ```

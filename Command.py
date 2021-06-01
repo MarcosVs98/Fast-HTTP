@@ -113,15 +113,15 @@ class Command():
 			print(e)
 
 
-#c = Command()
-#c.execute()
-from HTTPClient import HTTPClient
+c = Command()
+c.execute()
+#from HTTPClient import HTTPClient
 
-r = HTTPClient()
-resp = r.get('https://www.python.org/')
+#r = HTTPClient()
+#resp = r.get('https://www.python.org/')
 
-print(resp.links)
+#print(resp.links)
 
-print(resp.raw_headers)
+#print(resp.raw_headers)
 
 # end-of-file
