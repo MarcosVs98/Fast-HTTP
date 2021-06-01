@@ -15,6 +15,10 @@ response = client.get(settings.PUBLIC_PROXIES_RAW)
 #print(proxies_raw)
 
 
+PUBLIC_PROXIES_RAW = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt'
+PUBLIC_PROXIES_LIST = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list.txt'
+PUBLIC_PROXIES_STATUS = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-status.txt'
+
 @dataclass
 class ProxyParsed():
 	ip                   : str
@@ -31,6 +35,27 @@ class ProxyParsed():
 
 class InvalidProxyToParser(Exception):
 	pass
+
+
+"""
+	# Definitions
+
+	1. IP address
+	2. Port number
+	3. Country code
+	4. Anonymity
+	   N = No anonymity
+	   A = Anonymity
+	   H = High anonymity
+	5. Type
+		 = HTTP
+	   S = HTTP/HTTPS
+	   ! = incoming IP different from outgoing IP
+	6. Google passed
+	   + = Yes
+	   – = No
+"""
+
 
 def parse_public_proxies(proxy):
 	"""
@@ -51,23 +76,6 @@ def parse_public_proxies(proxy):
 	|   |_ _ _ _ _    |  | |  |
 	|             |   |  | |  |
 	200.2.125.90:8080 AR-N-S! +
-
-	# Definitions
-
-	1. IP address
-	2. Port number
-	3. Country code
-	4. Anonymity
-	   N = No anonymity
-	   A = Anonymity
-	   H = High anonymity
-	5. Type
-		 = HTTP
-	   S = HTTP/HTTPS
-	   ! = incoming IP different from outgoing IP
-	6. Google passed
-	   + = Yes
-	   – = No
 	"""
 	try:
 		proxy_raw = proxy.split(' ')
