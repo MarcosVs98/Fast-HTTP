@@ -78,6 +78,12 @@ class HTTPBenchmark():
 		self.retult = {}
 
 	def _get_http_result(self):
+		"""
+		Método responsável por montar um histograma de solicitações
+		inserir um time para validar quantas solicitações sucesso em
+		um periodo de tempo.
+		
+		"""
 		for f in self.finished:
 			try:
 				response = f.result()

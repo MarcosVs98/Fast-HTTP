@@ -58,11 +58,9 @@ TELNETCONSOLE_ENABLED = False
 
 # Defaut Headers
 DEFAULT_REQUEST_HEADERS = {
-
    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
    'Accept-Language': 'en',
-   'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
-	'X': 'A imaginação vale mais que o conhecimento.....'
+   'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
 }
 
 # Distribute http requests via network interface using round robin algoritm
@@ -83,6 +81,11 @@ DEFAULT_REQUEST_TIMEOUT = {
 	"sock_connect": AUTOTHROTTLE_SOCK_DELAY,
 	"sock_read"   : AUTOTHROTTLE_READ_DELAY
 }
+
+
+PUBLIC_PROXIES_RAW = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt'
+PUBLIC_PROXIES_LIST = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list.txt'
+
 
 # Certificates / SSL
 VERIFY_SSL = False

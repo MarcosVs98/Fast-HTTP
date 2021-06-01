@@ -1,6 +1,5 @@
 from meinheld import server
 
-
 def hello(environ, start_response):
     if(environ['PATH_INFO'] == '/' and environ['REQUEST_METHOD'] == 'GET'):
         status = '200 OK'
@@ -15,7 +14,6 @@ def hello(environ, start_response):
         ('Content-Length', str(len(body)))]
     start_response(status, response_headers)
     return [body]
-
 
 server.listen(('0.0.0.0', 8080))
 server.set_access_logger(None)
