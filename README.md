@@ -245,9 +245,9 @@ from fasthttp.HTTPClient import HTTPRequest
 request = HTTPRequest(url="https://www.python.org/", method='get')
 ```
 
-##### ClientSession
+##### AsyncSession
 ```pycon
-from fasthttp.HTTPClient import ClientSession
+from fasthttp.HTTPClient import AsyncSession
 
 async with ClientSession() as client:    
     ......  await implementation     
@@ -261,8 +261,9 @@ client = AssyncHTTPClient()
 response = client.get("https://www.python.org/")
 ```
 
-##### Benchmark for coding   
+#### HTTPBenchmark   
 Classe responsável por realizar solicitações simulataneas.
+
 ```pycon
 >>> from Benchmark import HTTPBenchmark
 >>> 
