@@ -1,11 +1,9 @@
+import json
+import settings
 from datetime import datetime
 from dataclasses import dataclass , field
-import settings
 from HTTPClient import HTTPClient
 
-PUBLIC_PROXIES_RAW = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt'
-PUBLIC_PROXIES_LIST = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list.txt'
-PUBLIC_PROXIES_STATUS = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-status.txt'
 
 @dataclass
 class ProxyParsed():
@@ -20,36 +18,32 @@ class ProxyParsed():
 	proxy_status               : str = field(default="no-status-available")
 
 
-
 class InvalidProxyToParser(Exception):
 	pass
 
-"""
-# Definitions
-----------------------------------------------------------------
-1. IP address
-2. Port number
-3. Country code
-4. Anonymity
-   N = No anonymity
-   A = Anonymity
-   H = High anonymity
-5. Type
-	 = HTTP
-   S = HTTP/HTTPS
-   ! = incoming IP different from outgoing IP
-6. Google passed
-   + = Yes
-   – = No
-----------------------------------------------------------------
-"""
-
-import json
 
 class ProxyListAPI():
 	"""
 	Uma lista de servidores proxy gratuitos, públicos e de encaminhamento.
 	Disponibilizados diariamente em 'https://github.com/clarketm/proxy-list'.
+
+	# Definitions
+		----------------------------------------------------------------
+		1. IP address
+		2. Port number
+		3. Country code
+		4. Anonymity
+		   N = No anonymity
+		   A = Anonymity
+		   H = High anonymity
+		5. Type
+			 = HTTP
+		   S = HTTP/HTTPS
+		   ! = incoming IP different from outgoing IP
+		6. Google passed
+		   + = Yes
+		   – = No
+		----------------------------------------------------------------
 	"""
 	def __init__(self):
 		self.client = HTTPClient()
