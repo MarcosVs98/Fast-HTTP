@@ -30,11 +30,11 @@ class ProxyParsed():
 
 class ProxyListClient():
 	"""
-	Uma lista de servidores proxy gratuitos, públicos e de encaminhamento.
-	Disponibilizados diariamente em 'https://github.com/clarketm/proxy-list'.
+	A list of free, public and forward proxy servers.
+	Available daily at 'https://github.com/clarketm/proxy-list'.
 
 	# Definitions
-		----------------------------------------------------------------
+	----------------------------------------------------------------
 		1. IP address
 		2. Port number
 		3. Country code
@@ -49,7 +49,7 @@ class ProxyListClient():
 		6. Google passed
 		   + = Yes
 		   – = No
-		----------------------------------------------------------------
+	----------------------------------------------------------------
 	"""
 	def __init__(self):
 		self.client = HTTPClient()
