@@ -12,7 +12,7 @@ import sys
 import argparse
 import settings
 from urllib.parse import urlparse
-from HTTPBooster import HTTPBenchmark
+from HTTPBenchmark import HTTPBenchmark
 
 def validate_url(url):
 	uri = urlparse(url)
@@ -66,12 +66,15 @@ class Command():
 		                    help="add cookie line",type=json.dumps)
 		parser.add_argument("-P", "--proxy",
 		                    help="Proxyserver and port number proxy:server", type=str)
+		parser.add_argument("-pp", "--public_proxy",
+							help="Public proxies list", type=str)
+		parser.add_argument("-mp", "--list_proxy",
+							help="list of proxies separated by uri and authentication, in txt format", type=str)
 		parser.add_argument("-S", "--verify_ssl", help="Disable SSL ceertificate",
 		                    default=settings.VERIFY_SSL, type=bool)
 		parser.add_argument("-E", "--certfile",
 		                    help="Specify optional client certificate chain and private key",
                             type=str)
-
 		self.args = parser.parse_args()
 
 	def execute(self):

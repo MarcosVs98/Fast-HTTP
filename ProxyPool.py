@@ -26,6 +26,8 @@ class ProxyParsed():
 	proxy_google_passed        : bool
 	proxy_outgoing_ip          : bool
 	proxy_uri                  : str
+	proxy_user                 : str = field(default=None)
+	proxy_pass                 : str = field(default=None)
 	proxy_status               : str = field(default="no-status-available")
 
 
@@ -52,11 +54,12 @@ class ProxyListAPI():
 		   – = No
 		----------------------------------------------------------------
 	"""
-	def __init__(self, check_latency=False):
+	def __init__(self, proxies=None):
 		self.client = HTTPClient()
 		self._proxies_result = {}
 		self._proxies_status = {}
-		self._initialize(check_latency)
+		self._initialize()
+		self._proxies = proxies
 
 	def get_proxies(self, proxy_path=None):
 		with open('proxy-list-cache.json', 'r') as f:
@@ -86,7 +89,7 @@ class ProxyListAPI():
 			self._proxies_result[name][ref] = []
 		self._proxies_result[name][ref].append(proxy_item.__dict__)
 
-	def _initialize(self, check_latency=False):
+	def _initialize(self):
 		self._get_proxy_list_status()
 		response = self.client.get(settings.PUBLIC_PROXIES_LIST)
 		proxies = response.content_text.split('\n\n')
