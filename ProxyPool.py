@@ -28,7 +28,7 @@ class ProxyParsed():
 	proxy_status          : str = field(default="no-status-available")
 
 
-class ProxyListAPI():
+class ProxyListClient():
 	"""
 	Uma lista de servidores proxy gratuitos, públicos e de encaminhamento.
 	Disponibilizados diariamente em 'https://github.com/clarketm/proxy-list'.
