@@ -83,9 +83,9 @@ DEFAULT_REQUEST_TIMEOUT = {
 }
 
 
-PUBLIC_PROXY_RAW = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt'
-PUBLIC_PROXY_LIST = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list.txt'
-
+PUBLIC_PROXIES_RAW = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt'
+PUBLIC_PROXIES_LIST = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list.txt'
+PUBLIC_PROXIES_STATUS = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-status.txt'
 
 # Certificates / SSL
 VERIFY_SSL = False

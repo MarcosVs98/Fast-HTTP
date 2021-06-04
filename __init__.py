@@ -1,18 +1,7 @@
-from dataclasses import dataclass
+from datetime import datetime
+from dataclasses import dataclass , field
 import settings
 from HTTPClient import HTTPClient
-
-#PUBLIC_PROXIES_LIST
-
-# Obtein os proxies
-#client =  HTTPClient()
-#response = client.get(settings.PUBLIC_PROX_RAW)
-
-#print(response.content_text)
-
-#proxies_raw = response.content_text.split('\n')
-#print(proxies_raw)
-
 
 PUBLIC_PROXIES_RAW = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt'
 PUBLIC_PROXIES_LIST = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list.txt'
@@ -28,30 +17,31 @@ class ProxyParsed():
 	proxy_google_passed        : bool
 	proxy_outgoing_ip          : bool
 	proxy_uri                  : str
+	proxy_status               : str = field(default="no-status-available")
 
 
 
 class InvalidProxyToParser(Exception):
 	pass
 
-
 """
-	# Definitions
-
-	1. IP address
-	2. Port number
-	3. Country code
-	4. Anonymity
-	   N = No anonymity
-	   A = Anonymity
-	   H = High anonymity
-	5. Type
-		 = HTTP
-	   S = HTTP/HTTPS
-	   ! = incoming IP different from outgoing IP
-	6. Google passed
-	   + = Yes
-	   – = No
+# Definitions
+----------------------------------------------------------------
+1. IP address
+2. Port number
+3. Country code
+4. Anonymity
+   N = No anonymity
+   A = Anonymity
+   H = High anonymity
+5. Type
+	 = HTTP
+   S = HTTP/HTTPS
+   ! = incoming IP different from outgoing IP
+6. Google passed
+   + = Yes
+   – = No
+----------------------------------------------------------------
 """
 
 import json
@@ -63,48 +53,86 @@ class ProxyListAPI():
 	"""
 	def __init__(self):
 		self.client = HTTPClient()
-		self._result = {}
+		self._proxies_result = {}
+		self._proxies_status = {}
+		self._initialize()
 
-	def get_proxy_list_raw(self):
-		pass
+	def get_proxies(self, proxy_path=None):
+		with open('proxy-list-cache.json', 'r') as f:
+			proxies = json.load(f)
+			if proxy_path:
+				try:
+					p, s = tuple(proxy_path.split('.'))
+					return proxies[p][s]
+				except (KeyError, ValueError):
+					raise Exception("this filter is not available")
+			return proxies['raw']
 
-	def get_proxy_list(self):
-		pass
+	def _get_proxy_list_status(self):
+		response = self.client.get(settings.PUBLIC_PROXIES_STATUS)
+		proxies_status = response.content_text.split('\n')
+		for proxie in proxies_status:
+			try:
+				address, status = proxie.split(': ')
+			except ValueError:
+				continue
+			self._proxies_status[address] = status
 
-	def get_proxy_list_status(self):
-		pass
+	def _order_proxies_by(self, proxy_item, ref, name=None):
+		if not name in self._proxies_result:
+			self._proxies_result[name] = {}
+		if not ref in self._proxies_result[name]:
+			self._proxies_result[name][ref] = []
+		self._proxies_result[name][ref].append(proxy_item.__dict__)
 
-	def proxy_ordenate(self, proxy_item, reference, name=None):
-		if not reference in self._result:
-			self._result[reference] = []
-		else:
-			self._result[reference].append(proxy_item.__dict__)
-
-	def initialize(self):
-		response = self.client.get(settings.PUBLIC_PROXY_LIST)
+	def _initialize(self):
+		self._get_proxy_list_status()
+		# get proxies list
+		response = self.client.get(settings.PUBLIC_PROXIES_LIST)
 		proxies = response.content_text.split('\n\n')
 		proxies_header = proxies[0]
 		proxies_list = proxies[1].split('\n')
-		self._result['info'] = {}
+		self._proxies_result['info'] = {}
 		for proxy_line in proxies_list:
-			proxy_item = self.parse(proxy_line)
+			proxy_item = self._parse(proxy_line)
+			try:
+				# get proxies status
+				proxy_item.proxy_status = self._proxies_status[proxy_item.proxy_ip]
+			except KeyError:
+				pass
+			# sort by proxy status
+			self._order_proxies_by(proxy_item, ref=proxy_item.proxy_status, name="status")
 			# sort by schema type
-			self.proxy_ordenate(proxy_item, f'scheme-{proxy_item.proxy_scheme}')
+			self._order_proxies_by(proxy_item, ref=proxy_item.proxy_scheme, name="scheme")
 			# sort by anonymity level
-			self.proxy_ordenate(proxy_item, f'level_anonymity-{proxy_item.proxy_level_anonymity}')
+			self._order_proxies_by(proxy_item, ref=proxy_item.proxy_level_anonymity, name="level_anonymity")
 			# sort by country of origin
-			self.proxy_ordenate(proxy_item, f'country-{proxy_item.proxy_country}')
+			self._order_proxies_by(proxy_item, ref=proxy_item.proxy_country, name="country")
 			# sorts by http port
-			self.proxy_ordenate(proxy_item, f'port-{proxy_item.proxy_port}')
+			self._order_proxies_by(proxy_item, ref=proxy_item.proxy_port, name="http-port")
 			# sort by proxy who goes through google
-			self.proxy_ordenate(proxy_item, f'google_passed-{proxy_item.proxy_google_passed}')
-		self._result['info']['header'] = proxies_header
-		self._result['info']['count_proxies'] = len(proxies_list)
+			self._order_proxies_by(proxy_item, ref=proxy_item.proxy_google_passed, name="google_passed")
+			# all proxies
+			if not 'raw' in self._proxies_result:
+				self._proxies_result['raw'] = []
+			self._proxies_result['raw'].append(proxy_item.__dict__)
+		# parsing headers info
+		self._proxies_result['info']['header'] = [line for line in proxies_header.split('\n')]
+		self._proxies_result['info']['updated'] = str(datetime.now())
+		self._proxies_result['info']['count_proxies'] = len(proxies_list)
+		# statistics
+		self._proxies_result['info']['success'] = len(self._proxies_result['status']['success'])
+		self._proxies_result['info']['failure'] = len(self._proxies_result['status']['failure'])
+		self._proxies_result['info']['no-status-available'] = len(self._proxies_result['status']['no-status-available'])
+		success_rate = round(100 * (sum(1 for s in self._proxies_status.values()
+			if s=='success'))/ len(self._proxies_status), 2)
+		self._proxies_result['info']['success-rate'] = f"{success_rate}%"
+		self._proxies_result['info']['failure-rate'] = f"{100.00 - success_rate}%"
 		# Prepare a json file for cache
 		with open('proxy-list-cache.json', 'w') as f:
-			json.dump(self._result, f, indent=4)
+			json.dump(self._proxies_result, f, indent=4)
 
-	def parse(self, proxy_line):
+	def _parse(self, proxy_line):
 		"""
 		IP [1]
 		|
@@ -183,7 +211,9 @@ class ProxyListAPI():
 
 
 proxy_api = ProxyListAPI()
-proxy_api.initialize()
+
+print(proxy_api.get_proxies('scheme.http'))
+#	print(proxy)
 
 #print(proxy_api.parse('190.92.9.162:999 HN-N-S -'))
 #print(proxy_api.parse('82.114.93.210:8080 AL-N-S! -'))
