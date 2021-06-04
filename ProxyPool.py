@@ -6,35 +6,36 @@
 *                                                                      *
 ************************************************************************
 """
+import time
 import json
 import settings
 from datetime import datetime
-from dataclasses import dataclass, field
-from HTTPClient import HTTPClient
+from dataclasses import dataclass , field
+from HTTPClient import HTTPClient, AsyncHTTPRequest
 
 class InvalidProxyToParser(Exception):
 	pass
 
 @dataclass
 class ProxyParsed():
-	proxy_ip              : str
-	proxy_port            : int
-	proxy_scheme          : str
-	proxy_level_anonymity : int
-	proxy_country         : str
-	proxy_google_passed   : bool
-	proxy_outgoing_ip     : bool
-	proxy_uri             : str
-	proxy_status          : str = field(default="no-status-available")
+	proxy_host                 : str
+	proxy_port                 : int
+	proxy_scheme               : str
+	proxy_level_anonymity      : int
+	proxy_country              : str
+	proxy_google_passed        : bool
+	proxy_outgoing_ip          : bool
+	proxy_uri                  : str
+	proxy_status               : str = field(default="no-status-available")
 
 
-class ProxyListClient():
+class ProxyListAPI():
 	"""
-	A list of free, public and forward proxy servers.
-	Available daily at 'https://github.com/clarketm/proxy-list'.
+	Uma lista de servidores proxy gratuitos, públicos e de encaminhamento.
+	Disponibilizados diariamente em 'https://github.com/clarketm/proxy-list'.
 
 	# Definitions
-	----------------------------------------------------------------
+		----------------------------------------------------------------
 		1. IP address
 		2. Port number
 		3. Country code
@@ -49,13 +50,13 @@ class ProxyListClient():
 		6. Google passed
 		   + = Yes
 		   – = No
-	----------------------------------------------------------------
+		----------------------------------------------------------------
 	"""
-	def __init__(self):
+	def __init__(self, check_latency=False):
 		self.client = HTTPClient()
 		self._proxies_result = {}
 		self._proxies_status = {}
-		self._initialize()
+		self._initialize(check_latency)
 
 	def get_proxies(self, proxy_path=None):
 		with open('proxy-list-cache.json', 'r') as f:
@@ -85,9 +86,8 @@ class ProxyListClient():
 			self._proxies_result[name][ref] = []
 		self._proxies_result[name][ref].append(proxy_item.__dict__)
 
-	def _initialize(self):
+	def _initialize(self, check_latency=False):
 		self._get_proxy_list_status()
-		# get proxies list
 		response = self.client.get(settings.PUBLIC_PROXIES_LIST)
 		proxies = response.content_text.split('\n\n')
 		proxies_header = proxies[0]
@@ -97,7 +97,7 @@ class ProxyListClient():
 			proxy_item = self._parse(proxy_line)
 			try:
 				# get proxies status
-				proxy_item.proxy_status = self._proxies_status[proxy_item.proxy_ip]
+				proxy_item.proxy_status = self._proxies_status[proxy_item.proxy_host]
 			except KeyError:
 				pass
 			# sort by proxy status
@@ -155,7 +155,7 @@ class ProxyListClient():
 		try:
 			proxy_splited = proxy_line.split(' ')
 			proxy_address_info = proxy_splited[0].split(':')
-			proxy_ip = proxy_address_info[0]
+			proxy_host = proxy_address_info[0]
 			proxy_port = proxy_address_info[1]
 			proxy_info = proxy_splited[1].split('-')
 			proxy_country = proxy_info[0]
@@ -164,10 +164,10 @@ class ProxyListClient():
 			proxy_outgoing_ip = self._parse_output_ip(proxy_type)
 			proxy_scheme = self._parse_http_type(proxy_type)
 			proxy_google_passed = self._parse_google_passed(proxy_line)
-			proxy_uri = f"{proxy_scheme}://{proxy_ip}:{proxy_port}/"
+			proxy_uri = f"{proxy_scheme}://{proxy_host}:{proxy_port}/"
 
 			proxy_parsed = ProxyParsed(
-				proxy_ip=proxy_ip, proxy_port=proxy_port,
+				proxy_host=proxy_host, proxy_port=proxy_port,
 				proxy_scheme=proxy_scheme,
 				proxy_level_anonymity=proxy_level_anonymity,
 				proxy_country=proxy_country,

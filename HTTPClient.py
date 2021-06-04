@@ -19,7 +19,7 @@ from utils import Structure
 from dataclasses import field
 from types import SimpleNamespace
 from dataclasses import dataclass
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode, urlparse, urlunparse
 from aiohttp.helpers import BasicAuth
 from aiohttp import HttpVersion10
 from aiohttp import HttpVersion11
@@ -122,8 +122,7 @@ class AsyncHTTPRequest(Structure):
 	auth_pass         : str = field(default=None)
 	allow_redirects   : bool = field(default=True)
 	redirects         : int = field(default=30)
-	proxy_host        : str = field(default=None)
-	proxy_port        : int = field(default=0)
+	proxy             : str = field(default=None)
 	proxy_user        : str = field(default=None)
 	proxy_pass        : str = field(default=None)
 	outbound_address  : str = field(default=None)
@@ -143,6 +142,11 @@ class AsyncHTTPRequest(Structure):
 			uri = urlparse(value)
 			self.__dict__['domain'] = uri.netloc
 			self.__dict__['scheme'] = uri.scheme
+		elif name == 'proxy':
+			proxy_uri = urlparse(value)
+			self.__dict__['scheme'] = proxy_uri.scheme
+			self.__dict__['proxy_host'] = proxy_uri.hostname
+			self.__dict__['proxy_port'] = proxy_uri.port
 		self.__dict__[name] = value
 
 	def __str__(self):
@@ -206,13 +210,15 @@ class HTTPClient():
 		if not request.timeout:
 			aio_request.timeout = aiohttp.ClientTimeout(**settings.DEFAULT_REQUEST_TIMEOUT)
 		# HTTP Proxy
-		if request.proxy_user and request.proxy_pass:
+		if request.proxy:
 			try:
 				if not request.proxy_headers:
 					aio_request.proxy_headers = request.headers
 				else:
 					aio_request.proxy_headers = request.proxy_headers
-				aio_request.proxy = aiohttp.BasicAuth(request.proxy_user, request.proxy_pass)
+				if request.proxy_user and request.proxy_pass:
+					aio_request.proxy_auth = aiohttp.BasicAuth(request.proxy_user, request.proxy_pass)
+				aio_request.proxy = request.proxy
 				log.debug(f'Proxy Server Enabled: address="{request.proxy_host}" port="{request.proxy_port}"')
 			except aiohttp.ClientProxyConnectionError as e:
 				log.error(f"failed to connect to a proxy: {e}")
