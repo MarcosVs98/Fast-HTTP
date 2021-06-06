@@ -7,9 +7,19 @@
 *                                                                      *
 ************************************************************************
 """
+import types
 import netifaces
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from __version__ import __title__
+from __version__ import __version__
+from __version__ import __description__
+from __version__ import __copyright__
+
+INFO = types.SimpleNamespace(title=__title__,
+							 version=__version__,
+							 description=__description__,
+							 copyright=__copyright__)
 
 @dataclass
 class Structure(ABC):
@@ -78,7 +88,6 @@ def humanbytes(b):
 	elif tb <= b:
 		return '{0:.2f} TB'.format(b/tb)
 	
-def copyright(uri):
-	return f"{name}, Version {version}\nTesting.... {uri}"
+
 
 # end-of-file

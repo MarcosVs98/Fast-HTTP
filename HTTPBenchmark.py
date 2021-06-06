@@ -10,12 +10,14 @@
 import time
 import ssl
 import queue
+import utils
 import logging
 import asyncio
 import aiohttp
 import settings
 from dataclasses import dataclass
 from dataclasses import field
+from urllib.parse import urlencode, urlparse, urlunparse
 from exceptions import AsyncLoopException
 from exceptions import AsyncHTTPConnectionException
 from exceptions import AsyncHTTPClientProxyException
@@ -64,6 +66,7 @@ class HTTPBenchmark():
 	"""
 	def __init__(self, url, concurrent_requests, max_queue_size=0, concurrent_blocks=None, **kwargs):
 		self._url = url
+		self._uri = urlparse(url)
 		self.b = 0
 		self._max_queue_size = max_queue_size
 		self._concurrent_requests = concurrent_requests
@@ -77,12 +80,10 @@ class HTTPBenchmark():
 		self._finished = 0
 		self.retult = {}
 
-	def _get_http_result(self):
+	def _all_http_status(self):
 		"""
-		Método responsável por montar um histograma de solicitações
-		inserir um time para validar quantas solicitações sucesso em
-		um periodo de tempo.
-		
+		Método responsável por montar um histograma de solicitações inserir um
+		time para validar quantas solicitações sucesso em um periodo de tempo.
 		"""
 		for f in self.finished:
 			try:
@@ -108,12 +109,11 @@ class HTTPBenchmark():
 						self.retult[response.status] = 0
 					self.retult[response.status] += 1
 			except AttributeError:
-				none_status = 000
-				if not none_status in self.retult:
-					self.retult[none_status] = 0
+				if not 000 in self.retult:
+					self.retult[000] = 0
 				self.retult[none_status] += 1
-		result = {k: v for k, v in sorted(self.retult.items(),
-			key=lambda item: item[1], reverse=True)}
+		return {k: v for k, v in sorted(self.retult.items(),
+				key=lambda item: item[1], reverse=True)}
 
 	def get_block_requests(self):
 		for n in range(self.b,  (self.b + self._concurrent_requests)):
@@ -128,7 +128,7 @@ class HTTPBenchmark():
 			except asyncio.TimeoutError as exc:
 				log.error(f"The operation has exceeded the given deadline,  bl={n} exc={exc}")
 
-	def _perform(self):
+	def perform(self):
 		for n in range(1, self._concurrent_blocks + 1):
 			try:
 				self.get_block_requests()
@@ -162,18 +162,63 @@ class HTTPBenchmark():
 			if not self._loop.is_closed():
 				self.shutdown_event_loop()
 
-	def run(self):
-		self._perform()
-		self._get_http_result()
-		print(self.retult)
+	def stats(self):
 
-		print("Processamento finalizado.\n",
-			  "Tempo de processamento             : ", round((self.end - self.start), 4), "s\n",
-			  "Numero requisições simultaneas     : ", self._concurrent_requests, "\n",
-			  "Numero de blocos                   : ", self._concurrent_blocks, "\n",
-			  "Tamanho da fila                    : ", self._max_queue_size, "\n",
-			  "Numero de requisições de sucesso   : ", self._concurrent_blocks * self._concurrent_requests, "\n", #self.rees[200], "\n",
-			  "Número de requisições que falharam : ", self._out_queue.qsize(), "\n", end="\n")
+		total = self._concurrent_blocks * self._concurrent_requests
+		info =  f'{utils.INFO.title} Version {utils.INFO.version__} - {utils.INFO.copyright}\n'
+		info += f'Benchmarking {self._url}..\n'
+		info += f'{total} requests divided into {self._concurrent_blocks} '
+		info += f'blocks with {self._concurrent_requests} simultaneous requests.\n'
+		print(info)
+
+		self.perform()
+
+
+		content_size = utils.humanbytes(0) # somente conteudo de sucesso a
+
+
+		res = f"Host: {self._uri.hostname} "
+		res += f"| Port: {self._uri.port} \n" if self._uri.port else "\n"
+		res += f"Protocol : {self._uri.scheme.upper()} \n"
+		res += f"SSL/TLS : TLSv1.1 \n"
+		res += f"Chipers : ECDHE-ECDSA-CHACHA20-POLY1305, 256, 256 \n"
+		res += f"Name server TLS: {self._uri.hostname} \n"
+		res += f"Path: {self._uri.path} \n"
+		res += f"Document Size: {content_size}"
+		res += "\n\n"
+
+
+		completed_request = 0
+		content_buffer  = utils.humanbytes(content_size * completed_request)
+		failed_requests = 0
+		benchmark_time  = 0
+
+		res += f"Concurrent requests: {self._concurrent_requests} "
+	 	res += f"Benchmark time: {self.benchmark_time} seconds\n"
+		res += f"Success Requests: {completed_request}\n"
+		res += f"Failed Requests: {failed_requests}\n"
+		res += f"Content Buffer Size: {content_buffer} Byte's"
+		res += "\n\n"
+
+		rps = 0
+		avg = 0
+		amp = 0
+		rate = 0
+
+		res  = f"Average requests per second: {avg} / sec (average)\n"
+		res += f"Time per Request: {rps} [ms] (average on all simultaneous requests)\n"
+
+		res += f"Request blocks: {content_buffer} Byte's"
+		res += f"Content Buffer Size: {content_buffer} Byte's"
+
+
+		#res = f"Tempo de processamento             : ", round((self.end - self.start), 4), "s",
+		#	  "\nNumero requisições simultaneas     : ", self._concurrent_requests,
+		#	  "\nNumero de blocos                   : ", self._concurrent_blocks,
+		#	  "\nTamanho da fila                    : ", self._max_queue_size,
+		#	  "\nNumero de requisições de sucesso   : ", self.retult[200],
+		#	  "\nNúmero de requisições que falharam : ", self._out_queue.qsize(), end="\n")
+
 
 	def shutdown_event_loop(self):
 		if self._loop.is_running():

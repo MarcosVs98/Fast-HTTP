@@ -108,16 +108,18 @@ class Command():
 		# url = 'https://diaxcapital.com.br/'
 		# url ='https://reqres.in/api/users?page=1'
 
+
 		try:
-			assincrone_res = HTTPBenchmark(url='http://0.0.0.0:9000/', method='get', concurrent_requests=25, concurrent_blocks=800)
+			assincrone_res = HTTPBenchmark(url='http://0.0.0.0:9000/', method='get', concurrent_requests=25, concurrent_blocks=100)
 			assincrone_res.run()
 
 		except Exception as e:
 			print(e)
 
 
-c = Command()
-c.execute()
+#c = Command()
+#c.execute()
+
 #from HTTPClient import HTTPClient
 
 #r = HTTPClient()
