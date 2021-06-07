@@ -16,7 +16,7 @@ from HTTPBenchmark import HTTPBenchmark
 
 def validate_url(url):
 	uri = urlparse(url)
-	if not all((uri.scheme, uri.netloc)):
+	if not all((uri.scheme, uri.netloc, uri.path)):
 		raise argparse.ArgumentTypeError(
 			"URL used for fetching is malformed, e.g. it does not contain host part")
 	return uri.geturl()
@@ -32,12 +32,14 @@ class Command():
 	def add_options(self):
 		parser = argparse.ArgumentParser(description="Fast-HTTP [options] [http[s]://]hostname[:port]/path",
 		                   formatter_class=argparse.RawTextHelpFormatter)
-		parser.add_argument('url', help="uRL", type=validate_url)
+		parser.add_argument('url', help="URL", type=validate_url)
 
-		parser.add_argument("-rpd", "--max_requests_per_domain", help="Number of requests per domain",
-		                    default=settings.CONCURRENT_REQUESTS_PER_DOMAIN, type=int)
+		parser.add_argument("-m", "--method", help="HTTP method",
+		                    default='get', type=str)
+		parser.add_argument("-rph", "--max_requests_per_host", help="Number of requests per host",
+		                    default=settings.LIMIT_REQUESTS_PER_HOST, type=int)
 		parser.add_argument("-rpi", "--max_requests_per_ip", help="Number of requests per ip",
-		                    default=settings.CONCURRENT_REQUESTS_PER_IP, type=int)
+		                    default=settings.LIMIT_REQUESTS_PER_IP, type=int)
 		parser.add_argument("-d", "--max_delay", help="Maximum delay on request",
 		                    default=settings.AUTOTHROTTLE_MAX_DELAY, type=float)
 		parser.add_argument("-s", "--start_delay", help="Delay at the start of the request",
@@ -110,15 +112,15 @@ class Command():
 
 
 		try:
-			assincrone_res = HTTPBenchmark(url='http://0.0.0.0:9000/', method='get', concurrent_requests=25, concurrent_blocks=100)
-			assincrone_res.run()
+			assincrone_res = HTTPBenchmark(url=self.args.url, method=self.args.method, concurrent_requests=self.args.concurrent, concurrent_blocks=self.args.block)
+			assincrone_res.perform()
 
 		except Exception as e:
 			print(e)
 
 
-#c = Command()
-#c.execute()
+c = Command()
+c.execute()
 
 #from HTTPClient import HTTPClient
 

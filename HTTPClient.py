@@ -10,6 +10,7 @@ import io
 import ssl
 import json
 import time
+import socket
 import random
 import logging
 import asyncio
@@ -50,7 +51,7 @@ class AsyncTCPConnector(Structure):
 	use_dns_cache         : bool = field(default=settings.USE_DNS_CACHE)
 	ttl_dns_cache         : int = field(default=settings.TTL_DNS_CACHE)
 	family                : int = field(default=socket.AF_INET)
-	ssl_context           : ssl.SSLContext = field(default=None)
+	ssl_context           : str = field(default=None)
 	local_addr            : tuple = field(default=None)
 	resolver              : aiohttp.AsyncResolver = field(default=None)
 	force_close           : bool = field(default=False)
@@ -109,7 +110,7 @@ class AsyncHTTPResponse(Structure):
 		ClientResponse supports asynchronous context manager protocol.
 	"""
 	def __str__(self):
-		self.summary = SimpleNamespace(**{k:v for k,v in self.__dict__.items() if k not in ['content_text']})
+		self.summary = SimpleNamespace(**{ k:v for k,v in self.__dict__.items() if k != 'content_text'})
 		return (f'<FHTTP Response [{self.summary.status} '
 				f'{self.summary.reason if not self.summary.status == 200 else "OK"}]>')
 

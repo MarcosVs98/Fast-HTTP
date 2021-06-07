@@ -81,7 +81,7 @@ def humanbytes(b):
 		return '{0} {1}'.format(b,'Bytes' if 0 == b > 1 else 'Byte')
 	elif kb <= b < mb:
 		return '{0:.2f} KB'.format(b/kb)
-	elif mb <= b < GB:
+	elif mb <= b < gb:
 		return '{0:.2f} MB'.format(b/mb)
 	elif gb <= b < tb:
 		return '{0:.2f} GB'.format(b/gb)
