@@ -141,7 +141,7 @@ class HTTPBenchmark():
 			except (ConnectionRefusedError, ConnectionError) as exc:
 				log.warning('Error trying to connect to the client')
 		try:
-			self.start = time.time()
+			t0 = time.time()
  			# perform!
 			while self.unfinished:
 				# get new event loop!
@@ -156,7 +156,9 @@ class HTTPBenchmark():
 				finally:
 					self.shutdown_event_loop()
 			# finished!
-			self.end = time.time()
+			tf = time.time()
+
+			self.benchmark_time = round((tf - t0), 4)
 		except AsyncLoopException as exc:
 			log.error(f"Unexpected error: {exc} terminating lopp shutdown_event_loop")
 			if not self._loop.is_closed():
@@ -173,10 +175,7 @@ class HTTPBenchmark():
 
 		self.perform()
 
-
 		content_size = utils.humanbytes(0) # somente conteudo de sucesso a
-
-
 		res = f"Host: {self._uri.hostname} "
 		res += f"| Port: {self._uri.port} \n" if self._uri.port else "\n"
 		res += f"Protocol : {self._uri.scheme.upper()} \n"
@@ -186,7 +185,6 @@ class HTTPBenchmark():
 		res += f"Path: {self._uri.path} \n"
 		res += f"Document Size: {content_size}"
 		res += "\n\n"
-
 
 		completed_request = 0
 		content_buffer  = utils.humanbytes(content_size * completed_request)
@@ -199,18 +197,14 @@ class HTTPBenchmark():
 		res += f"Failed Requests: {failed_requests}\n"
 		res += f"Content Buffer Size: {content_buffer} Byte's"
 		res += "\n\n"
-
 		rps = 0
 		avg = 0
 		amp = 0
 		rate = 0
-
-		res  = f"Average requests per second: {avg} / sec (average)\n"
+		res = f"Average requests per second: {avg} / sec (average)\n"
 		res += f"Time per Request: {rps} [ms] (average on all simultaneous requests)\n"
-
 		res += f"Request blocks: {content_buffer} Byte's"
 		res += f"Content Buffer Size: {content_buffer} Byte's"
-
 
 		#res = f"Tempo de processamento             : ", round((self.end - self.start), 4), "s",
 		#	  "\nNumero requisições simultaneas     : ", self._concurrent_requests,

@@ -40,6 +40,27 @@ from exceptions import AsyncHTTPClientError
 log = logging.getLogger('HTTPClient')
 
 @dataclass
+class AsyncTCPConnector(Structure):
+	"""
+	https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp-client-reference-connectors
+	"""
+	ssl                   : str = field(default=None)
+	verify_ssl            : bool = field(default=settings.VERIFY_SSL)
+	fingerprint           : bytes = field(default=None, repr=False)
+	use_dns_cache         : bool = field(default=settings.USE_DNS_CACHE)
+	ttl_dns_cache         : int = field(default=settings.TTL_DNS_CACHE)
+	family                : int = field(default=socket.AF_INET)
+	ssl_context           : ssl.SSLContext = field(default=None)
+	local_addr            : tuple = field(default=None)
+	resolver              : aiohttp.AsyncResolver = field(default=None)
+	force_close           : bool = field(default=False)
+	limit                 : int = field(default=settings.LIMIT_CONNECTIONS)
+	limit_per_host        : int = field(default=settings.LIMIT_REQUESTS_PER_HOST)
+	enable_cleanup_closed : bool = field(default=False)
+	loop                  : str = field(default=None)
+
+
+@dataclass
 class AsyncSession(Structure):
 	"""
 	Class responsible for setting up an interface for making HTTP requests.
@@ -165,7 +186,7 @@ class HTTPClient():
 	async def auto_decode(self, content):
 		for enc in ['ascii', 'utf8', 'iso-8859-1', 'cp-1252']:
 			try:
-				return await content(enc)
+				return enc, await content(enc)
 			except UnicodeDecodeError:
 				pass
 
@@ -252,14 +273,15 @@ class HTTPClient():
 			# Request Callback
 			async with request_callback(**vars(aio_request)) as async_resp:
 				try:
-					contents_buffer = await self.auto_decode(async_resp.text)
+					encoding, contents_text = await self.auto_decode(async_resp.text)
 				except TypeError:
-					contents_buffer = None
+					contents_text = None
+					encoding = None
 				try:
 					# Response Object
 					response = AsyncHTTPResponse(
 						request=request,
-						content_text=contents_buffer,
+						content_text=contents_text,
 						version=async_resp.version,
 						status=async_resp.status,
 						reason=async_resp.reason,
@@ -268,6 +290,8 @@ class HTTPClient():
 						real_url=async_resp.real_url,
 						connection=async_resp.connection,
 						content=async_resp.content,
+						content_length=len(contents_text),
+						encoding=encoding,
 						cookies=async_resp.cookies,
 						headers=async_resp.headers,
 						raw_headers=async_resp.raw_headers,
