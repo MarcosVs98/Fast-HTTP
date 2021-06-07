@@ -73,7 +73,6 @@ class HTTPBenchmark():
 		self._concurrent_blocks = concurrent_blocks
 		self._request_block = queue.Queue(maxsize=self._max_queue_size)
 		self._response_block = queue.Queue(maxsize=self._max_queue_size)
-		self._out_queue = queue.Queue(maxsize=self._max_queue_size)
 		self._loop = None
 		self.unfinished = [1]
 		self.kwargs = kwargs
@@ -181,24 +180,23 @@ class HTTPBenchmark():
 		server = sample.headers.get('server', 'Unknown')
 
 		nrequests = self._concurrent_blocks * self._concurrent_requests
-		s =  f'{utils.INFO.title} Version {utils.INFO.version} - {utils.INFO.copyright}\n'
-		s += f'Benchmarking {self._url}\n\n'
-		s += f'{nrequests} requests divided into {self._concurrent_blocks} '
-		s += f'blocks with {self._concurrent_requests} simultaneous requests.\n'
-		print(s)
+		info =  f'{utils.INFO.title} Version {utils.INFO.version} - {utils.INFO.copyright}\n'
+		info += f'Benchmarking {self._url}\n\n'
+		info += f'{nrequests} requests divided into {self._concurrent_blocks} '
+		info += f'blocks with {self._concurrent_requests} simultaneous requests.\n'
+		print(info)
 
 		document_size = utils.humanbytes(sample.content_length)
-		s =  f"* Host: {self._uri.hostname} "
-		s += f"| Port: {self._uri.port} \n" if self._uri.port else "\n"
-		s += f"* Server: {server} \n"
-		s += f"* Method: {self.kwargs['method'].upper()} \n"
-		s += f"* Scheme : {self._uri.scheme.upper()} \n"
-		s += f"* SSL/TLS : TLSv1.1 \n"
-		s += f"* Chipers : ECDHE-ECDSA-CHACHA20-POLY1305, 256, 256 \n"
-		s += f"* Name server TLS: {self._uri.hostname} \n"
-		s += f"* Path: {self._uri.path} \n"
-		s += f"* Document Size: {document_size}'s\n"
-		s += "\n"
+		info =  f"* Host: {self._uri.hostname} "
+		info += f"| Port: {self._uri.port} \n" if self._uri.port else "\n"
+		info += f"* Server: {server} \n"
+		info += f"* Method: {self.kwargs['method'].upper()} \n"
+		info += f"* Scheme : {self._uri.scheme.upper()} \n"
+		info += f"* SSL/TLS : TLSv1.1 \n"
+		info += f"* Chipers : ECDHE-ECDSA-CHACHA20-POLY1305, 256, 256 \n"
+		info += f"* Name server TLS: {self._uri.hostname} \n"
+		info += f"* Path: {self._uri.path} \n"
+		info += f"* Document Size: {document_size}'s\n\n"
 		try:
 			completed_request = self.retult[200]
 		except KeyError:
@@ -206,41 +204,33 @@ class HTTPBenchmark():
 
 		content_buffer  = utils.humanbytes(
 			sample.content_length * completed_request)
-
 		failed_requests = sum(self.retult.values()) - completed_request
 
-		s += f"* TCP Connections: {self._concurrent_requests} \n"
-		s += f"* Max. requests per IP: {self._concurrent_requests} \n"
-		s += f"* Max. requests per hostname: {self._concurrent_requests} \n"
-		s += f"* Concurrent requests: {self._concurrent_requests} \n"
-		s += f"* Qtd. blocks: {self._concurrent_blocks} \n\n"
-
+		info += f"* TCP Connections: {self._concurrent_requests} \n"
+		info += f"* Max. requests per IP: {self._concurrent_requests} \n"
+		info += f"* Max. requests per hostname: {self._concurrent_requests} \n"
+		info += f"* Concurrent requests: {self._concurrent_requests} \n"
+		info += f"* Qtd. blocks: {self._concurrent_blocks} \n\n"
 		try:
 			rps = round(self.benchmark_time / completed_request , 7)
 		except ZeroDivisionError:
 			rps = 0
-
 		try:
 			avg = round(1.0 / rps)
 		except ZeroDivisionError:
 			avg = 0
-
-		s += f"* Total Requests: {self._concurrent_blocks * self._concurrent_requests} \n"
-		s += f"* Benchmark time: {self.benchmark_time} seconds\n"
-		s += f"* Success Requests: {completed_request}\n"
-		s += f"* Failed Requests: {failed_requests}\n"
-		s += f"* Content Buffer Size: {content_buffer}'s "
-		s += f"* Average requests per second: {avg} / sec (average)\n"
-		s += f"* Time per Request: {rps} [ms] (average on all simultaneous requests)\n"
-		s += f"* Request blocks: {content_buffer} Byte's\n"
-		print(s)
-
-
-	def print_server_info(sample):
-		pass
+		info += f"* Total Requests: {self._concurrent_blocks * self._concurrent_requests} \n"
+		info += f"* Benchmark time: {self.benchmark_time} seconds\n"
+		info += f"* Success Requests: {completed_request}\n"
+		info += f"* Failed Requests: {failed_requests}\n"
+		info += f"* Content Buffer Size: {content_buffer}'s \n"
+		info += f"* Average requests per second: {avg} / sec (average)\n"
+		info += f"* Time per Request: {rps} [ms] (average on all simultaneous requests)\n"
+		info += f"* Request blocks: {content_buffer} Byte's\n"
+		print(info)
 
 	def shutdown_event_loop(self):
 		if self._loop.is_running():
 			self._loop.close()
 
-# end-of-file                                          '
+# end-of-file

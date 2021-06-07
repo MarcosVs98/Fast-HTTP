@@ -45,8 +45,7 @@ class AsyncTCPConnector(Structure):
 	"""
 	https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp-client-reference-connectors
 	"""
-	ssl                   : str = field(default=None)
-	verify_ssl            : bool = field(default=settings.VERIFY_SSL)
+	ssl                   : bool = field(default=settings.VERIFY_SSL)
 	fingerprint           : bytes = field(default=None, repr=False)
 	use_dns_cache         : bool = field(default=settings.USE_DNS_CACHE)
 	ttl_dns_cache         : int = field(default=settings.TTL_DNS_CACHE)
@@ -60,6 +59,19 @@ class AsyncTCPConnector(Structure):
 	enable_cleanup_closed : bool = field(default=False)
 	loop                  : str = field(default=None)
 
+	def __call__(self, *args, **kwargs):
+		try:
+			return aiohttp.TCPConnector(**self.__dict__)
+		except aiohttp.ClientConnectorError as e:
+			log.error(e)
+
+	def __aexit__(self, exc_type, exc_val, exc_tb):
+		with aiohttp.Timeout(self.timeout):
+			if exc_val:
+				log.warning(f'exc_type: {exc_type}')
+				log.warning(f'exc_value: {exc_val}')
+				log.warning(f'exc_traceback: {exc_tb}')
+
 
 @dataclass
 class AsyncSession(Structure):
@@ -67,7 +79,7 @@ class AsyncSession(Structure):
 	Class responsible for setting up an interface for making HTTP requests.
 	The session encapsulates a set of connections supporting keepalives by default.
 	"""
-	#connector            : aiohttp.BaseConnector = field(default=None)
+	connector            : aiohttp.BaseConnector = field(default=AsyncTCPConnector())
 	loop                 : str = field(default=None)
 	cookies              : dict = field(default=None)
 	headers              : dict = field(default=None)
@@ -76,7 +88,6 @@ class AsyncSession(Structure):
 	json_serialize       : dict = field(default=json.dumps)
 	cookie_jar           : aiohttp.DummyCookieJar = field(default=None)
 	conn_timeout         : float = field(default=10)
-	timeout              : int = field(default=30)
 	raise_for_status     : bool = field(default=False)
 	connector_owner      : bool = field(default=True)
 	auto_decompress      : bool = field(default=True)
@@ -85,23 +96,24 @@ class AsyncSession(Structure):
 	trust_env            : bool = field(default=False)
 	trace_configs        : bool = field(default=False)
 
-	def connect(self):
-		self.connection = aiohttp.ClientSession()
-		return self.connection
+	@property
+	def connection(self):
+		self.connector = self.connector()
+		return aiohttp.ClientSession(**self.__dict__)
 
 	async def __aenter__(self):
-		return self.connect()
+		return self.connect
 
 	async def __aexit__(self, exc_type, exc, tb):
 		with aiohttp.Timeout(self.timeout):
-			return self.connect().close()
+			return self.connection.close()
 
 	async def __aiter__(self):
 		with aiohttp.Timeout(self.timeout):
 			return self
 
 	async def __await__(self):
-		return self.connect().__await()
+		return self.connection.__await()
 
 
 class AsyncHTTPResponse(Structure):
@@ -191,7 +203,7 @@ class HTTPClient():
 			except UnicodeDecodeError:
 				pass
 
-	async def send_request(self, request=None, **kwargs):
+	async def send_request(self, request=None, session=dict(), **kwargs):
 		"""
 		method responsible for handling an HTTP request.
 		"""
@@ -257,7 +269,7 @@ class HTTPClient():
 		aio_request.raise_for_status = request.raise_for_status
 
 		# Cliente async session!
-		async with AsyncSession().connect() as client:
+		async with AsyncSession(**session).connection as client:
 			# HTTP Method
 			if request.method == 'GET':
 				request_callback = client.get
@@ -360,3 +372,4 @@ class HTTPClient():
 		del self
 
 # end-of-file
+
