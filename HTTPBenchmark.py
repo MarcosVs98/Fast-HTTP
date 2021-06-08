@@ -178,7 +178,6 @@ class HTTPBenchmark():
 				continue
 
 		server = sample.headers.get('server', 'Unknown')
-
 		nrequests = self._concurrent_blocks * self._concurrent_requests
 		info =  f'{utils.INFO.title} Version {utils.INFO.version} - {utils.INFO.copyright}\n'
 		info += f'Benchmarking {self._url}\n\n'
@@ -187,16 +186,16 @@ class HTTPBenchmark():
 		print(info)
 
 		document_size = utils.humanbytes(sample.content_length)
-		info =  f"* Host: {self._uri.hostname} "
-		info += f"| Port: {self._uri.port} \n" if self._uri.port else "\n"
-		info += f"* Server: {server} \n"
-		info += f"* Method: {self.kwargs['method'].upper()} \n"
-		info += f"* Scheme : {self._uri.scheme.upper()} \n"
+		info =  f"* host: {self._uri.hostname} "
+		info += f"| port: {self._uri.port} \n" if self._uri.port else "\n"
+		info += f"* server: {server} \n"
+		info += f"* method: {self.kwargs['method'].upper()} \n"
+		info += f"* scheme : {self._uri.scheme.upper()} \n"
 		info += f"* SSL/TLS : TLSv1.1 \n"
-		info += f"* Chipers : ECDHE-ECDSA-CHACHA20-POLY1305, 256, 256 \n"
-		info += f"* Name server TLS: {self._uri.hostname} \n"
-		info += f"* Path: {self._uri.path} \n"
-		info += f"* Document Size: {document_size}'s\n\n"
+		info += f"* chipers : ECDHE-ECDSA-CHACHA20-POLY1305, 256, 256 \n"
+		info += f"* name server TLS: {self._uri.hostname} \n"
+		info += f"* path: {self._uri.path} \n"
+		info += f"* document size: {document_size}'s\n\n"
 		try:
 			completed_request = self.retult[200]
 		except KeyError:
@@ -205,12 +204,11 @@ class HTTPBenchmark():
 		content_buffer  = utils.humanbytes(
 			sample.content_length * completed_request)
 		failed_requests = sum(self.retult.values()) - completed_request
-
-		info += f"* TCP Connections: {self._concurrent_requests} \n"
-		info += f"* Max. requests per IP: {self._concurrent_requests} \n"
-		info += f"* Max. requests per hostname: {self._concurrent_requests} \n"
-		info += f"* Concurrent requests: {self._concurrent_requests} \n"
-		info += f"* Qtd. blocks: {self._concurrent_blocks} \n\n"
+		info += f"* TCP connections: {self._concurrent_requests} \n"
+		info += f"* máx. requests per IP: {self._concurrent_requests} \n"
+		info += f"* máx. requests per hostname: {self._concurrent_requests} \n"
+		info += f"* concurrent requests: {self._concurrent_requests} \n"
+		info += f"* qtd. request block: {self._concurrent_blocks} \n\n"
 		try:
 			rps = round(self.benchmark_time / completed_request , 7)
 		except ZeroDivisionError:
@@ -219,14 +217,13 @@ class HTTPBenchmark():
 			avg = round(1.0 / rps)
 		except ZeroDivisionError:
 			avg = 0
-		info += f"* Total Requests: {self._concurrent_blocks * self._concurrent_requests} \n"
-		info += f"* Benchmark time: {self.benchmark_time} seconds\n"
-		info += f"* Success Requests: {completed_request}\n"
-		info += f"* Failed Requests: {failed_requests}\n"
-		info += f"* Content Buffer Size: {content_buffer}'s \n"
-		info += f"* Average requests per second: {avg} / sec (average)\n"
-		info += f"* Time per Request: {rps} [ms] (average on all simultaneous requests)\n"
-		info += f"* Request blocks: {content_buffer} Byte's\n"
+		info += f"* total requests: {self._concurrent_blocks * self._concurrent_requests} \n"
+		info += f"* benchmark time: {self.benchmark_time} seconds\n"
+		info += f"* success requests: {completed_request}\n"
+		info += f"* failed requests: {failed_requests}\n"
+		info += f"* content buffer size: {content_buffer}'s \n"
+		info += f"* average requests per second: {avg} / sec (average)\n"
+		info += f"* time per request: {rps} [ms] (average on all simultaneous requests)\n"
 		print(info)
 
 	def shutdown_event_loop(self):

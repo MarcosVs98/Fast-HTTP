@@ -40,7 +40,7 @@ HTTP_CLIENT_ERROR   = range(400, 452)
 HTTP_SERVER_ERROR   = range(500, 512)
 
 # Limits the total amount of parallel connections.
-LIMIT_CONNECTIONS = 200
+LIMIT_CONNECTIONS = 100
 
 # The download delay setting will respect only one of the following.
 # To limit the amount of open connection simultaneously to the same endpoint.
@@ -49,10 +49,10 @@ LIMIT_REQUESTS_PER_IP = 0 #no limite
 
 # DNS caching enabled and resolutions will be cached by default for 10 seconds.
 # This behavior can be changed.
-TTL_DNS_CACHE = 500
+TTL_DNS_CACHE = 300
 
 # Disables the use of the DNS cache table, causing all requests to end up doing a DNS resolution.
-USE_DNS_CACHE = False#True
+USE_DNS_CACHE = False
 
 # Ajustar isso
 AUTOTHROTTLE_MAX_DELAY   = 0.00020

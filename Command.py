@@ -80,37 +80,6 @@ class Command():
 		self.args = parser.parse_args()
 
 	def execute(self):
-		#print(self.args)
-
-		# proxy-list https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt
-		# https://github.com/clarketm/proxy-list
-
-		# logging.basicConfig(**settings.LOGGING_CONFIG['console_color_debug'])
-		# Beleza ficou legal
-		#  ab -c 50 -n 1000 https://api.myip.com/
-		# ab -c 50 -n 100 https://croquistands.com.br/
-		# ab -c 50 -n 100 https://api.myip.com/
-		# ab -c 50 -n 100 http://127.0.0.1:8000/api/?method=xpto.get
-
-		# Teste unitario
-		# request = HTTPClient()
-		# response = request.get('http://127.0.0.1:8000/api/?method=foobar.get&format=json')
-		# response = request.get('https://internacional.com.br/')
-		# print(response)
-		# print(response)
-
-		# Teste assincrono
-		# ab -c 50 -n 100 http://127.0.0.1:8000/api/?method=xpto.get
-		#url = 'https://www.internacional.com.br/associe-se'
-		#url = 'http://127.0.0.1:8000/api/?method=xpto.get'
-		#url = 'http://127.0.0.1:8000/api/?method=xpto.get'
-		#url = 'https://api.myip.com/'
-		#url = 'http://0.0.0.0:9000/'
-		# url = 'https://croquistands.com.br/'
-		# url = 'https://diaxcapital.com.br/'
-		# url ='https://reqres.in/api/users?page=1'
-
-
 		try:
 			assincrone_res = HTTPBenchmark(url=self.args.url, method=self.args.method, concurrent_requests=self.args.concurrent, concurrent_blocks=self.args.block)
 			assincrone_res.perform()
@@ -118,17 +87,7 @@ class Command():
 		except Exception as e:
 			print(e)
 
-
 c = Command()
 c.execute()
-
-#from HTTPClient import HTTPClient
-
-#r = HTTPClient()
-#resp = r.get('https://www.python.org/')
-
-#print(resp.links)
-
-#print(resp.raw_headers)
 
 # end-of-file
