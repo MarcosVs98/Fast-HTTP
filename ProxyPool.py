@@ -10,8 +10,8 @@ import time
 import json
 import settings
 from datetime import datetime
+from urllib.request import urlopen
 from dataclasses import dataclass , field
-from HTTPClient import HTTPClient, AsyncHTTPRequest
 
 class InvalidProxyToParser(Exception):
 	pass
@@ -33,8 +33,8 @@ class ProxyParsed():
 
 class ProxyListAPI():
 	"""
-	Uma lista de servidores proxy gratuitos, públicos e de encaminhamento.
-	Disponibilizados diariamente em 'https://github.com/clarketm/proxy-list'.
+	A list of free, public and forward proxy servers.
+	Available daily on 'https://github.com/clarketm/proxy-list'.
 
 	# Definitions
 		----------------------------------------------------------------
@@ -46,7 +46,7 @@ class ProxyListAPI():
 		   A = Anonymity
 		   H = High anonymity
 		5. Type
-			 = HTTP
+		   "" = HTTP
 		   S = HTTP/HTTPS
 		   ! = incoming IP different from outgoing IP
 		6. Google passed
@@ -54,15 +54,15 @@ class ProxyListAPI():
 		   – = No
 		----------------------------------------------------------------
 	"""
-	def __init__(self, proxies=None):
-		self.client = HTTPClient()
+	def __init__(self, proxies=None, outfile='proxy-list-cache.json'):
 		self._proxies_result = {}
 		self._proxies_status = {}
-		self._initialize()
 		self._proxies = proxies
+		self._outfile = outfile
+		self._initialize()
 
 	def get_proxies(self, proxy_path=None):
-		with open('proxy-list-cache.json', 'r') as f:
+		with open(self._outfile, 'r') as f:
 			proxies = json.load(f)
 			if proxy_path:
 				try:
@@ -73,8 +73,9 @@ class ProxyListAPI():
 			return proxies['raw']
 
 	def _get_proxy_list_status(self):
-		response = self.client.get(settings.PUBLIC_PROXIES_STATUS)
-		proxies_status = response.content_text.split('\n')
+		response = urlopen(settings.PUBLIC_PROXIES_STATUS)
+		content_text = response.read().decode('utf-8')
+		proxies_status = content_text.split('\n')
 		for proxie in proxies_status:
 			try:
 				address, status = proxie.split(': ')
@@ -91,8 +92,9 @@ class ProxyListAPI():
 
 	def _initialize(self):
 		self._get_proxy_list_status()
-		response = self.client.get(settings.PUBLIC_PROXIES_LIST)
-		proxies = response.content_text.split('\n\n')
+		response = urlopen(settings.PUBLIC_PROXIES_LIST)
+		content_text = response.read().decode('utf-8')
+		proxies = content_text.split('\n\n')
 		proxies_header = proxies[0]
 		proxies_list = proxies[1].split('\n')
 		self._proxies_result['info'] = {}
@@ -132,7 +134,7 @@ class ProxyListAPI():
 		self._proxies_result['info']['success-rate'] = f"{success_rate}%"
 		self._proxies_result['info']['failure-rate'] = f"{100.00 - success_rate}%"
 		# Prepare a json file for cache
-		with open('proxy-list-cache.json', 'w') as f:
+		with open(self._outfile, 'w') as f:
 			json.dump(self._proxies_result, f, indent=4)
 
 	def _parse(self, proxy_line):
@@ -213,3 +215,5 @@ class ProxyListAPI():
 		return 'http'
 
 # end-of-file
+
+c =ProxyListAPI()

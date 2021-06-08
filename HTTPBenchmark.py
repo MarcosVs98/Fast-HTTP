@@ -204,11 +204,13 @@ class HTTPBenchmark():
 		content_buffer  = utils.humanbytes(
 			sample.content_length * completed_request)
 		failed_requests = sum(self.retult.values()) - completed_request
+
 		info += f"* TCP connections: {self._concurrent_requests} \n"
 		info += f"* máx. requests per IP: {self._concurrent_requests} \n"
 		info += f"* máx. requests per hostname: {self._concurrent_requests} \n"
 		info += f"* concurrent requests: {self._concurrent_requests} \n"
 		info += f"* qtd. request block: {self._concurrent_blocks} \n\n"
+
 		try:
 			rps = round(self.benchmark_time / completed_request , 7)
 		except ZeroDivisionError:
@@ -217,6 +219,7 @@ class HTTPBenchmark():
 			avg = round(1.0 / rps)
 		except ZeroDivisionError:
 			avg = 0
+
 		info += f"* total requests: {self._concurrent_blocks * self._concurrent_requests} \n"
 		info += f"* benchmark time: {self.benchmark_time} seconds\n"
 		info += f"* success requests: {completed_request}\n"
