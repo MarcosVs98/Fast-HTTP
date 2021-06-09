@@ -8,10 +8,13 @@
 """
 import time
 import json
+import logging
 import settings
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.request import urlopen
 from dataclasses import dataclass , field
+
+log = logging.getLogger('proxy-list')
 
 class InvalidProxyToParser(Exception):
 	pass
@@ -31,7 +34,7 @@ class ProxyParsed():
 	proxy_status               : str = field(default="no-status-available")
 
 
-class ProxyListAPI():
+class ProxyListClient():
 	"""
 	A list of free, public and forward proxy servers.
 	Available daily on 'https://github.com/clarketm/proxy-list'.
@@ -46,7 +49,7 @@ class ProxyListAPI():
 		   A = Anonymity
 		   H = High anonymity
 		5. Type
-		   "" = HTTP
+		     = HTTP
 		   S = HTTP/HTTPS
 		   ! = incoming IP different from outgoing IP
 		6. Google passed
@@ -54,11 +57,12 @@ class ProxyListAPI():
 		   – = No
 		----------------------------------------------------------------
 	"""
-	def __init__(self, proxies=None, outfile='proxy-list-cache.json'):
+	def __init__(self, proxies=None, outfile='proxy-list-cache.json', tolerance=10):
 		self._proxies_result = {}
 		self._proxies_status = {}
 		self._proxies = proxies
 		self._outfile = outfile
+		self._tolerance = tolerance
 		self._initialize()
 
 	def get_proxies(self, proxy_path=None):
@@ -90,7 +94,22 @@ class ProxyListAPI():
 			self._proxies_result[name][ref] = []
 		self._proxies_result[name][ref].append(proxy_item.__dict__)
 
+	def _updated_proxies(self):
+		with open(self._outfile, 'r') as f:
+			try:
+				cache = json.load(f)
+				string_date = cache['info']['header'][0].split(',')[-1].partition(',')[0].partition(' +')[0].strip()
+				inserted = datetime.strptime(string_date, '%d %b %y %H:%M:%S')
+				updated = datetime.strptime(cache['info']['updated'], "%Y-%m-%d %H:%M:%S.%f")
+				tolerance = inserted + timedelta(hours=self._tolerance)
+				if (tolerance < updated):
+					return True
+			except (KeyError, AttributeError) as e:
+				pass
+
 	def _initialize(self):
+		if self._updated_proxies():
+			return
 		self._get_proxy_list_status()
 		response = urlopen(settings.PUBLIC_PROXIES_LIST)
 		content_text = response.read().decode('utf-8')
@@ -136,6 +155,8 @@ class ProxyListAPI():
 		# Prepare a json file for cache
 		with open(self._outfile, 'w') as f:
 			json.dump(self._proxies_result, f, indent=4)
+		log.warning(f"success-rate={self._proxies_result['info']['success-rate']} "
+					f"failure-rate={self._proxies_result['info']['failure-rate']} ")
 
 	def _parse(self, proxy_line):
 		"""
@@ -215,5 +236,3 @@ class ProxyListAPI():
 		return 'http'
 
 # end-of-file
-
-c =ProxyListAPI()

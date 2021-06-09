@@ -31,17 +31,18 @@ from datetime import datetime, timedelta
 
 
 
-updated = datetime.strptime(info['updated'], "%Y-%m-%d %H:%M:%S.%f")
-if  updated < datetime.now() - timedelta(hours=15):
-	print(updated)
+def update_proxies(info):
+	try:
+		string_date = info['header'][0].split(',')[-1].partition(',')[0].partition(' +')[0].strip()
+		datetime_object = datetime.strptime(string_date, '%d %b %y %H:%M:%S')
+		updated = datetime.strptime(info['updated'], "%Y-%m-%d %H:%M:%S.%f")
+		if updated < (datetime_object + timedelta(hours=10)):
+			return True
+	except (KeyError, AttributeError) as e:
+		pass
+	finally:
+		return False
 
-updated = info['header'][0].split(',')[-1].strip()
-#print(updated)
+print(update_proxies(info))
 
-#datetime_object = datetime.strptime('08 Jun 21 07:55:01', '%d %b %H:%M:%S')
-#print(datetime_object)
-
-
-datetime_object = datetime.strptime('08 Jun 21  07:55:01 +0300', '%d %b %y %H:%M:%S ')
-print(datetime_object)
 
