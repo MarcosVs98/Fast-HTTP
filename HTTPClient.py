@@ -278,7 +278,7 @@ class AsyncHTTPClient():
 		if request.http_version == 'HTTP/1.0':
 			async_session.version = aiohttp.HttpVersion10
 		elif request.http_version == 'HTTP/1.1':
-			async_session.version = aiohttp.HttpVersion11
+			async_session.version = aiohttp.HttpVersion10
 		else:
 			raise AsyncHTTPClientException(f'Unsuported HTTP Protocol Version: "{request.http_version}"')
 
@@ -369,9 +369,10 @@ class AsyncHTTPClient():
 	async def fetch(self, **kwargs):
 		try:
 			return await self.send_request(**kwargs)
-		except aiohttp.client_exceptions.ClientConnectorError as exc:
-			log.debug(f"connection {exc.host}:{exc.port} - {exc.os_error}")
-
+		except aiohttp.ClientError as exc:
+			log.debug(f"connection error {exc.host}:{exc.port} - {exc.os_error}")
+			return  (exc._conn_key, exc._os_error)
+		
 	def dispatch(self, **kwargs):
 		self.loop = self.get_loop()
 		return self.loop.run_until_complete(self.fetch(**kwargs))

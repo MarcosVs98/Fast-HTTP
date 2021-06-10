@@ -14,14 +14,13 @@ from pathlib import Path
 from colorama import Fore, Style
 
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'. <- Django ref
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Fast http settings
 APPLICATION_CONFIG = {
-	'logging_mode'       : 'console_debug',
-	'logfile'            : BASE_DIR / 'fasthttp.log'
+	'logging_mode'  : 'console_debug',
+	'logfile'        : BASE_DIR / 'fasthttp.log'
 }
 
 #Configure the maximum number of requisition blocks
@@ -51,10 +50,10 @@ LIMIT_REQUESTS_PER_IP = 0 #no limite
 
 # DNS caching enabled and resolutions will be cached by default for 10 seconds.
 # This behavior can be changed.
-TTL_DNS_CACHE = 10
+TTL_DNS_CACHE = 300
 
 # Disables the use of the DNS cache table, causing all requests to end up doing a DNS resolution.
-USE_DNS_CACHE = False
+USE_DNS_CACHE = True
 
 # Ajustar isso
 AUTOTHROTTLE_MAX_DELAY   = 0.00020

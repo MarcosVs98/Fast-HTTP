@@ -112,24 +112,27 @@ class HTTPBenchmark():
 				key=lambda item: item[1], reverse=True)}
 
 	def get_block_requests(self):
+
+		request_block = queue.Queue(maxsize=self._asynchronous_requests)
+
 		for n in range(0, self._asynchronous_requests):
 			try:
 				async_request = AsyncHTTPClient()
 				future = asyncio.ensure_future(async_request.fetch(url=self._url, **self.kwargs), loop=self._loop)
-				self._request_block.put(future)
+				request_block.put(future)
 			except asyncio.InvalidStateError as exc:
 				log.error(f"Invalid internal state of {future}. bl={n} exc={exc}")
 			except asyncio.CancelledError as exc:
 				log.error(f"The operation has been cancelled. bl={n} exc={exc}")
 			except asyncio.TimeoutError as exc:
 				log.error(f"The operation has exceeded the given deadline,  bl={n} exc={exc}")
+		return request_block
 
 	def perform(self):
 		t0 = time.time()
 		for n in range(1, self._asynchronous_blocks + 1):
 			try:
-				self._request_block = queue.Queue(maxsize=self._asynchronous_requests)
-				self.get_block_requests()
+				request_block = self.get_block_requests()
 				self.blocks = n + self._asynchronous_requests
 				log.debug(f'processed block=(r={n * self._asynchronous_requests}, b={n})')
 			except AsyncHTTPConnectionException as exc:
@@ -145,16 +148,17 @@ class HTTPBenchmark():
 					self._loop = asyncio.get_event_loop()
 					asyncio.set_event_loop(self._loop)
 					try:
-						self.finished, self._unfinished = self._loop.run_until_complete(
-							asyncio.wait(self._request_block.queue,
+						finished, self._unfinished = self._loop.run_until_complete(
+							asyncio.wait(request_block.queue,
 								return_when=asyncio.FIRST_COMPLETED, timeout=30))
 					except aiohttp.client_exceptions.ClientConnectorError as e:
 						log.error(e)
 					finally:
 						self.shutdown_event_loop()
 				# block finished!
-				self._all_http_status(self.finished)
-				self._response_block.put(self.finished)
+				self._all_http_status(finished)
+				self._response_block.put(finished)
+				self._unfinished = True
 
 			except AsyncLoopException as exc:
 				log.error(f"Unexpected error: {exc} terminating lopp shutdown_event_loop")
@@ -168,9 +172,13 @@ class HTTPBenchmark():
 		self.print_stats()
 
 	def print_stats(self):
-		for s in list(self.finished):
+		ret = self._response_block.get()
+		for s in list(ret):
 			try:
 				response = s.result()
+				if isinstance(response, tuple):
+					connection_key, error = response
+					return print(error)
 				if response.content_length > 0:
 					sample = response
 					break
