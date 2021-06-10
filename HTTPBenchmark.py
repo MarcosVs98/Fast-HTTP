@@ -21,7 +21,7 @@ from urllib.parse import urlencode, urlparse, urlunparse
 from exceptions import AsyncLoopException
 from exceptions import AsyncHTTPConnectionException
 from exceptions import AsyncHTTPClientProxyException
-from HTTPClient import HTTPClient
+from HTTPClient import AsyncHTTPClient
 
 log = logging.getLogger('http-booster')
 
@@ -117,8 +117,8 @@ class HTTPBenchmark():
 	def get_block_requests(self):
 		for n in range(self.b,  (self.b + self._concurrent_requests)):
 			try:
-				request = HTTPClient()
-				future = asyncio.ensure_future(request.fetch(url=self._url, **self.kwargs), loop=self._loop)
+				async_request = AsyncHTTPClient()
+				future = asyncio.ensure_future(async_request.fetch(url=self._url, **self.kwargs), loop=self._loop)
 				self._request_block.put(future)
 			except asyncio.InvalidStateError as exc:
 				log.error(f"Invalid internal state of {future}. bl={n} exc={exc}")

@@ -188,7 +188,7 @@ class AsyncHTTPRequest(Structure):
 			   f'method="{self.method}")'
 
 
-class HTTPClient():
+class AsyncHTTPClient():
 	"""
 	Class responsible for executing asynchronous HTTP requests
 	and return response objects.
@@ -202,6 +202,18 @@ class HTTPClient():
 				return enc, await content(enc)
 			except UnicodeDecodeError:
 				pass
+
+	async def _open_socket_callback(self, args):
+		purpose, family, socktype, proto, raddr, laddr = args
+		s = socket.socket(family, socktype, proto)
+		try:
+			if ((laddr is not None) and (family == socket.AF_INET)):
+				s.bind(laddr)
+		except OSError as e:
+			log.debug(f"Cannot bind local address '{laddr}' to socket '{s}': {e}")
+		s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+		log.debug(f'Open Socket: {s}')
+		return await s
 
 	async def send_request(self, request=None, session=dict(), **kwargs):
 		"""
@@ -365,7 +377,7 @@ class HTTPClient():
 	def close_loop(self):
 		if self.loop is not None:
 			self.loop()
-		raise AsyncLoopException('Finishing event-loop..')
+		raise AsyncLoopException('finishing event-loop..')
 
 	def __enter__(cls):
 		return cls
@@ -380,4 +392,3 @@ class HTTPClient():
 		del self
 
 # end-of-file
-
