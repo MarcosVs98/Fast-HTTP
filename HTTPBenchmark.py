@@ -131,7 +131,7 @@ class HTTPBenchmark():
 				self._request_block = queue.Queue(maxsize=self._asynchronous_requests)
 				self.get_block_requests()
 				self.blocks = n + self._asynchronous_requests
-				log.warning(f'processed block=(r={n * self._asynchronous_requests}, b={n})')
+				log.debug(f'processed block=(r={n * self._asynchronous_requests}, b={n})')
 			except AsyncHTTPConnectionException as exc:
 				log.error(f"Unexpected error when blocking requests {exc}")
 			except (BrokenPipeError, ConnectionAbortedError) as exc:
