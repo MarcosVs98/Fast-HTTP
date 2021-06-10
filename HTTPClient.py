@@ -212,7 +212,7 @@ class HTTPClient():
 
 		log.debug(f'HTTP Client Request: {request}')
 		# AIO Request
-		aio_request = SimpleNamespace()
+		async_request = SimpleNamespace()
 
 		# URL
 		uri = urlparse(request.url)
@@ -220,7 +220,7 @@ class HTTPClient():
 		if not all((uri.scheme, uri.netloc, uri.path)):
 			raise aiohttp.InvalidURL(
 			   "URL used for fetching is malformed, e.g. it does not contain host part")
-		aio_request.url = uri.geturl()
+		async_request.url = uri.geturl()
 
 		# Request Headers
 		if request.headers is not None:
@@ -232,41 +232,49 @@ class HTTPClient():
 				raise AsyncHTTPClientException(f'Invalid request headers')
 			rawheaders = [f'{k}: {v}' for k, v in request.headers]
 
-			aio_request.headers = settings.DEFAULT_REQUEST_HEADERS
+			async_request.headers = settings.DEFAULT_REQUEST_HEADERS
 		else:
 			request.headers = settings.DEFAULT_REQUEST_HEADERS
 		# Authentication
 		if request.security_web:
-			aio_request.auth = aiohttp.BasicAuth(request.auth_user, request.auth_pass)
+			async_request.auth = aiohttp.BasicAuth(request.auth_user, request.auth_pass)
 		# Redirects
-		aio_request.max_redirects = request.redirects
+		async_request.max_redirects = request.redirects
 		# Timeout
 		if not request.timeout:
-			aio_request.timeout = aiohttp.ClientTimeout(**settings.DEFAULT_REQUEST_TIMEOUT)
+			async_request.timeout = aiohttp.ClientTimeout(**settings.DEFAULT_REQUEST_TIMEOUT)
 		# HTTP Proxy
 		if request.proxy:
 			try:
 				if not request.proxy_headers:
-					aio_request.proxy_headers = request.headers
+					async_request.proxy_headers = request.headers
 				else:
-					aio_request.proxy_headers = request.proxy_headers
+					async_request.proxy_headers = request.proxy_headers
 				if request.proxy_user and request.proxy_pass:
-					aio_request.proxy_auth = aiohttp.BasicAuth(request.proxy_user, request.proxy_pass)
-				aio_request.proxy = request.proxy
+					async_request.proxy_auth = aiohttp.BasicAuth(request.proxy_user, request.proxy_pass)
+				async_request.proxy = request.proxy
 				log.debug(f'Proxy Server Enabled: address="{request.proxy_host}" port="{request.proxy_port}"')
 			except aiohttp.ClientProxyConnectionError as e:
 				log.error(f"failed to connect to a proxy: {e}")
 			except aiohttp.ClientConnectorError as e:
 				raise AsyncHTTPClientProxyException(e)
 
+		# HTTP Protocol Version
+		if request.http_version == 'HTTP/1.0':
+			async_request.version = aiohttp.HttpVersion10
+		elif request.http_version == 'HTTP/1.1':
+			async_request.version = aiohttp.HttpVersion11
+		else:
+			raise AsyncHTTPClientException(f'Unsuported HTTP Protocol Version: "{request.http_version}"')
+
 		# Certificates / SSL
 		if request.verify_ssl and request.sslcontext:
 			# Path of the example certificates '/path/to/ca-bundle.crt'
-			aio_request.ssl = ssl.create_default_context(request.sslcontext)
+			async_request.ssl = ssl.create_default_context(request.sslcontext)
 		# Validate ssl
-		aio_request.verify_ssl = request.verify_ssl
+		async_request.verify_ssl = request.verify_ssl
 		# Raises exception if response status is> = 400.
-		aio_request.raise_for_status = request.raise_for_status
+		async_request.raise_for_status = request.raise_for_status
 
 		# Cliente async session!
 		async with AsyncSession(**session).connection as client:
@@ -284,7 +292,7 @@ class HTTPClient():
 					"Unsupported request method"
 				)
 			# Request Callback
-			async with request_callback(**vars(aio_request)) as async_resp:
+			async with request_callback(**vars(async_request)) as async_resp:
 				try:
 					encoding, contents_text = await self.auto_decode(async_resp.text)
 				except TypeError:
