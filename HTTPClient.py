@@ -85,16 +85,17 @@ class AsyncSession(Structure):
 	headers              : dict = field(default=None)
 	skip_auto_headers    : str = field(default=None)
 	auth                 : aiohttp.BasicAuth = field(default=None)
+	version              : aiohttp.HttpVersion = field(default=None)
 	json_serialize       : dict = field(default=json.dumps)
 	cookie_jar           : aiohttp.DummyCookieJar = field(default=None)
-	conn_timeout         : float = field(default=10)
+	conn_timeout         : float = field(default=None)
 	raise_for_status     : bool = field(default=False)
 	connector_owner      : bool = field(default=True)
 	auto_decompress      : bool = field(default=True)
 	read_bufsize         : int = field(default=2 ** 16)
-	requote_redirect_url : bool = field(default=True)
+	requote_redirect_url : bool = field(default=False)
 	trust_env            : bool = field(default=False)
-	trace_configs        : bool = field(default=False)
+	trace_configs        : bool = field(default=None)
 
 	@property
 	def connection(self):
@@ -215,7 +216,7 @@ class AsyncHTTPClient():
 		log.debug(f'Open Socket: {s}')
 		return await s
 
-	async def send_request(self, request=None, session=dict(), **kwargs):
+	async def send_request(self, request=None, **kwargs):
 		"""
 		method responsible for handling an HTTP request.
 		"""
@@ -225,6 +226,8 @@ class AsyncHTTPClient():
 		log.debug(f'HTTP Client Request: {request}')
 		# AIO Request
 		async_request = SimpleNamespace()
+		# Initialize Async Session
+		async_session = AsyncSession()
 
 		# URL
 		uri = urlparse(request.url)
@@ -273,9 +276,9 @@ class AsyncHTTPClient():
 
 		# HTTP Protocol Version
 		if request.http_version == 'HTTP/1.0':
-			async_request.version = aiohttp.HttpVersion10
+			async_session.version = aiohttp.HttpVersion10
 		elif request.http_version == 'HTTP/1.1':
-			async_request.version = aiohttp.HttpVersion11
+			async_session.version = aiohttp.HttpVersion11
 		else:
 			raise AsyncHTTPClientException(f'Unsuported HTTP Protocol Version: "{request.http_version}"')
 
@@ -289,7 +292,7 @@ class AsyncHTTPClient():
 		async_request.raise_for_status = request.raise_for_status
 
 		# Cliente async session!
-		async with AsyncSession(**session).connection as client:
+		async with AsyncSession(**vars(async_session)).connection as client:
 			# HTTP Method
 			if request.method == 'GET':
 				request_callback = client.get
