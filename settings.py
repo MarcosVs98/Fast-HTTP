@@ -38,6 +38,8 @@ HTTP_HTTP_SUCESS    = range(200, 207)
 HTTP_REDIRECTION    = range(300, 309)
 HTTP_CLIENT_ERROR   = range(400, 452)
 HTTP_SERVER_ERROR   = range(500, 512)
+# Async HTTP default status code
+HTTP_CLIENT_DEFAULT_ERROR = 777 # Just an example of status
 
 # Limits the total amount of parallel connections.
 LIMIT_CONNECTIONS = 100
@@ -49,7 +51,7 @@ LIMIT_REQUESTS_PER_IP = 0 #no limite
 
 # DNS caching enabled and resolutions will be cached by default for 10 seconds.
 # This behavior can be changed.
-TTL_DNS_CACHE = 300
+TTL_DNS_CACHE = 10
 
 # Disables the use of the DNS cache table, causing all requests to end up doing a DNS resolution.
 USE_DNS_CACHE = False
