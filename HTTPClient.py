@@ -292,9 +292,9 @@ class HTTPClient():
 					"Unsupported request method"
 				)
 			# Request Callback
-			async with request_callback(**vars(async_request)) as async_resp:
+			async with request_callback(**vars(async_request)) as async_response:
 				try:
-					encoding, contents_text = await self.auto_decode(async_resp.text)
+					encoding, contents_text = await self.auto_decode(async_response.text)
 				except TypeError:
 					contents_text = None
 					encoding = None
@@ -303,25 +303,25 @@ class HTTPClient():
 					response = AsyncHTTPResponse(
 						request=request,
 						content_text=contents_text,
-						version=async_resp.version,
-						status=async_resp.status,
-						reason=async_resp.reason,
-						method=async_resp.method,
-						url=async_resp.url,
-						real_url=async_resp.real_url,
-						connection=async_resp.connection,
-						content=async_resp.content,
+						version=async_response.version,
+						status=async_response.status,
+						reason=async_response.reason,
+						method=async_response.method,
+						url=async_response.url,
+						real_url=async_response.real_url,
+						connection=async_response.connection,
+						content=async_response.content,
 						content_length=len(contents_text),
 						encoding=encoding,
-						cookies=async_resp.cookies,
-						headers=async_resp.headers,
-						raw_headers=async_resp.raw_headers,
-						links=async_resp.links,
-						content_type=async_resp.content_type,
-						charset=async_resp.charset,
-						history=async_resp.history,
-						request_info=async_resp.request_info,
-						release=await async_resp.release())
+						cookies=async_response.cookies,
+						headers=async_response.headers,
+						raw_headers=async_response.raw_headers,
+						links=async_response.links,
+						content_type=async_response.content_type,
+						charset=async_response.charset,
+						history=async_response.history,
+						request_info=async_response.request_info,
+						release=await async_response.release())
 				except aiohttp.ServerTimeoutError as e:
 					raise AsyncHTTPTimeoutException(f"Confirmation time exceeded : {e}")
 
