@@ -13,7 +13,6 @@ import logging
 from pathlib import Path
 from colorama import Fore, Style
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,10 +24,8 @@ APPLICATION_CONFIG = {
 
 #Configure the maximum number of requisition blocks
 CONCURRENT_BLOCKS = 1
-
 # Configure the maximum number of simultaneous requests
 CONCURRENT_REQUESTS = 24
-
 # set delay value for downloads
 DOWNLOAD_DELAY = 0.57
 
@@ -92,6 +89,9 @@ DEFAULT_REQUEST_TIMEOUT = {
 	"sock_connect": AUTOTHROTTLE_SOCK_DELAY,
 	"sock_read"   : AUTOTHROTTLE_READ_DELAY
 }
+
+# Maximum number of redirects
+MAX_REDIRECTS = 30
 
 
 PUBLIC_PROXIES_RAW = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt'

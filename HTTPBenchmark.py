@@ -18,12 +18,12 @@ import settings
 from dataclasses import dataclass
 from dataclasses import field
 from urllib.parse import urlencode, urlparse, urlunparse
+from HTTPClient import AsyncHTTPClientt
 from exceptions import AsyncLoopException
 from exceptions import AsyncHTTPConnectionException
 from exceptions import AsyncHTTPClientProxyException
-from HTTPClient import AsyncHTTPClient
 
-log = logging.getLogger('http-booster')
+log = logging.getLogger('http-benchmark')
 
 class HTTPBenchmark():
 	"""

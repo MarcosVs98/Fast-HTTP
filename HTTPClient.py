@@ -40,6 +40,7 @@ from exceptions import AsyncHTTPClientError
 
 log = logging.getLogger('HTTPClient')
 
+
 @dataclass
 class AsyncTCPConnector(Structure):
 	"""
@@ -216,7 +217,7 @@ class AsyncHTTPClient():
 		log.debug(f'Open Socket: {s}')
 		return await s
 
-	async def send_request(self, request=None, **kwargs):
+	async def send_request(self, request=None, session=None, **kwargs):
 		"""
 		method responsible for handling an HTTP request.
 		"""
@@ -226,9 +227,12 @@ class AsyncHTTPClient():
 		log.debug(f'HTTP Client Request: {request}')
 		# AIO Request
 		async_request = SimpleNamespace()
-		# Initialize Async Session
-		async_session = AsyncSession()
 
+		# Initialize Async Session
+		if isinstance(session, AsyncSession):
+			async_session = session
+		else:
+			async_session = AsyncSession()
 		# URL
 		uri = urlparse(request.url)
 		# validate if it is a valid url
