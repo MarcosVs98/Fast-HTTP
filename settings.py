@@ -9,6 +9,7 @@
 """
 import sys
 import random
+import socket
 import logging
 from pathlib import Path
 from colorama import Fore, Style
@@ -29,6 +30,9 @@ CONCURRENT_REQUESTS = 24
 # set delay value for downloads
 DOWNLOAD_DELAY = 0.57
 
+# Size of the read buffer
+READ_BUFSIZE = 2 ** 16
+
 # HTTP status code 
 HTTP_HTTP_SUCESS    = range(200, 207)
 HTTP_REDIRECTION    = range(300, 309)
@@ -40,6 +44,9 @@ HTTP_CLIENT_DEFAULT_ERROR = 777 # Just an example of status
 # Limits the total amount of parallel connections.
 LIMIT_CONNECTIONS = 100
 
+# Should the body response be automatically decompressed
+AUTO_DESCOMPRESS = False
+
 # The download delay setting will respect only one of the following.
 # To limit the amount of open connection simultaneously to the same endpoint.
 LIMIT_REQUESTS_PER_HOST = 0 #no limite
@@ -48,6 +55,9 @@ LIMIT_REQUESTS_PER_IP = 0 #no limite
 # DNS caching enabled and resolutions will be cached by default for 10 seconds.
 # This behavior can be changed.
 TTL_DNS_CACHE = 300
+
+# Should connector be closed on session closing.
+CONNECTOR_OWNER = True
 
 # Disables the use of the DNS cache table, causing all requests to end up doing a DNS resolution.
 USE_DNS_CACHE = True
@@ -61,6 +71,9 @@ AUTOTHROTTLE_READ_DELAY  = 0.00020
 # Disable cookies (enabled by default)
 COOKIES_ENABLED = False
 
+# Abort underlining transport after 2 seconds.
+SHUTDOWN_TRANSPORT = False
+
 # Disable Telnet console (enabled by default)
 TELNETCONSOLE_ENABLED = False
 
@@ -70,6 +83,9 @@ DEFAULT_REQUEST_HEADERS = {
    'Accept-Language': 'en',
    'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
 }
+
+# for fingerprint validation, ssl.SSLContext for custom SSL certificate validation.
+SSL_CERTIFICATE_VALIDATION = None 
 
 # Distribute http requests via network interface using round robin algoritm
 ROUNDROBIN_ACTIVE = False
@@ -93,6 +109,8 @@ DEFAULT_REQUEST_TIMEOUT = {
 # Maximum number of redirects
 MAX_REDIRECTS = 30
 
+# close underlying sockets after connection releasing (optional).
+CLOSE_ALL_SOCKETS = True
 
 PUBLIC_PROXIES_RAW = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt'
 PUBLIC_PROXIES_LIST = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list.txt'
@@ -102,7 +120,16 @@ PUBLIC_PROXIES_STATUS = 'https://raw.githubusercontent.com/clarketm/proxy-list/m
 VERIFY_SSL = False
 
 # Default address to bind socket
-DEFAULT_ADDRESS = ('0.0.0.0')
+DEFAULT_ADDRESS = ('0.0.0.0', None)
+
+# Path absolute for ssl certificate.
+DEFAULT_SSL_CONTEXT = None
+
+# TCP socket family, both IPv4 and IPv6 by default.
+TCP_SOCKET_FAMILY = { 4 : socket.AF_INE,  6 : socket.AF_INET6 }
+
+# Custom resolvers allow you to resolve hostname.
+RESOLVE_HOSTNAME = False
 
 # Configurações de Logging e Debugging
 
@@ -159,4 +186,4 @@ LOGGING_CONFIG = {
 	}
 }
 
-#end-of-file
+# end-of-file

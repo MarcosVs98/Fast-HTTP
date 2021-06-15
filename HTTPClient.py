@@ -38,8 +38,7 @@ from exceptions import AsyncHTTPConnectionException
 from exceptions import AsyncHTTPClientProxyException
 from exceptions import AsyncHTTPClientError
 
-log = logging.getLogger('HTTPClient')
-
+log = logging.getLogger('AsyncHTTPClient')
 
 @dataclass
 class AsyncTCPConnector(Structure):
@@ -47,7 +46,7 @@ class AsyncTCPConnector(Structure):
 	https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp-client-reference-connectors
 	"""
 	ssl                   : bool = field(default=settings.VERIFY_SSL)
-	fingerprint           : bytes = field(default=None, repr=False)
+	fingerprint           : bytes = field(default=None, repr=False) 
 	use_dns_cache         : bool = field(default=settings.USE_DNS_CACHE)
 	ttl_dns_cache         : int = field(default=settings.TTL_DNS_CACHE)
 	family                : int = field(default=socket.AF_INET)
