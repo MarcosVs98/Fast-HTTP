@@ -87,7 +87,31 @@ def humanbytes(b):
 		return '{0:.2f} GB'.format(b/gb)
 	elif tb <= b:
 		return '{0:.2f} TB'.format(b/tb)
-	
+
+
+def validate_url(url):
+	uri = urlparse(url)
+	if not all((uri.scheme, uri.netloc, uri.path)):
+		raise argparse.ArgumentTypeError(
+			"URL used for fetching is malformed, e.g. it does not contain host part")
+	return uri.geturl()
+
+
+def str_int_to_tuple(s):
+	if isinstance(s, str) and len(s.replace('.', '')) == 2:
+		if int(s[0]) == 1 and int(s[-1]) in [0, 1]:
+			return int(s[0]), int(s[-1])
+	raise Exception("HTTP version is not supported.")
+
+
+def str_to_tuple(s):
+	if isinstance(s, str):
+		return s[0], s[-1]
+	raise Exception("HTTP auth error.")
+
+
+def get_family(n):
+	return settings.TCP_SOCKET_FAMILY.get(int(n))
 
 
 # end-of-file

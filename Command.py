@@ -14,42 +14,21 @@ import settings
 import logging
 from urllib.parse import urlparse
 from utils import Structure
+from utils import get_family
+from utils import str_to_tuple
+from utils import str_int_to_tuple
+from utils import validate_url
 from HTTPClient import AsyncTCPConnector
 from HTTPClient import AsyncSession
 from HTTPClient import AsyncHTTPRequest
 from HTTPClient import AsyncRequestTimeout
 from HTTPBenchmark import HTTPBenchmark
 
-
 log = logging.getLogger('command')
+
 
 class CommandGroups(Structure):
 	pass
-
-
-def validate_url(url):
-	uri = urlparse(url)
-	if not all((uri.scheme, uri.netloc, uri.path)):
-		raise argparse.ArgumentTypeError(
-			"URL used for fetching is malformed, e.g. it does not contain host part")
-	return uri.geturl()
-
-
-def str_int_to_tuple(s):
-	if isinstance(s, str) and len(s.replace('.', '')) == 2:
-		if int(s[0]) == 1 and int(s[-1]) in [0, 1]:
-			return int(s[0]), int(s[-1])
-	raise Exception("HTTP version is not supported.")
-
-
-def str_to_tuple(s):
-	if isinstance(s, str):
-		return s[0], s[-1]
-	raise Exception("HTTP auth error.")
-
-
-def get_family(n):
-	return settings.TCP_SOCKET_FAMILY.get(int(n))
 
 
 class Command():
