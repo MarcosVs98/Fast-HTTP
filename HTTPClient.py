@@ -65,13 +65,6 @@ class AsyncTCPConnector(Structure):
 		except aiohttp.ClientConnectorError as e:
 			log.error(e)
 
-	def __aexit__(self, exc_type, exc_val, exc_tb):
-		with aiohttp.Timeout(self.timeout):
-			if exc_val:
-				log.warning(f'exc_type: {exc_type}')
-				log.warning(f'exc_value: {exc_val}')
-				log.warning(f'exc_traceback: {exc_tb}')
-
 
 @dataclass
 class AsyncSession(Structure):
@@ -106,11 +99,11 @@ class AsyncSession(Structure):
 		return self.connect
 
 	async def __aexit__(self, exc_type, exc, tb):
-		with aiohttp.Timeout(self.timeout):
+		with aiohttp.Timeout(self.conn_timeout):
 			return self.connection.close()
 
 	async def __aiter__(self):
-		with aiohttp.Timeout(self.timeout):
+		with aiohttp.Timeout(self.conn_timeout):
 			return self
 
 	async def __await__(self):
@@ -141,6 +134,18 @@ class AsyncHTTPResponse(Structure):
 
 
 @dataclass
+class AsyncRequestTimeout(Structure):
+	"""
+	Data class responsible for representing
+	the fields of an aiohttp.Timeout
+	"""
+	total        : float = field(default=settings.AUTOTHROTTLE_MAX_DELAY)
+	connect      : float = field(default=settings.AUTOTHROTTLE_START_DELAY)
+	sock_connect : float = field(default=settings.AUTOTHROTTLE_SOCK_DELAY)
+	sock_read    : float = field(default=settings.AUTOTHROTTLE_SOCK_DELAY)
+
+
+@dataclass
 class AsyncHTTPRequest(Structure):
 	"""
 	Data class responsible for representing
@@ -148,8 +153,8 @@ class AsyncHTTPRequest(Structure):
 	"""
 	url               : str 
 	method            : str
-	headers           : dict = field(default=None) 
-	timeout           : int = field(default=120)
+	header            : dict = field(default=None)
+	timeout           : int = field(default=AsyncRequestTimeout)
 	security_web      : bool = field(default=False)
 	postdata          : bytes = field(default=None, repr=False)
 	http_version      : str = field(default='HTTP/1.1')
@@ -241,14 +246,14 @@ class AsyncHTTPClient():
 		async_request.url = uri.geturl()
 
 		# Request Headers
-		if request.headers is not None:
-			if not isinstance(request.headers, (list, tuple)):
+		if request.header is not None:
+			if not isinstance(request.header, (list, tuple)):
 				raise AsyncHTTPClientException(f'Invalid request headers')
-			if not all(isinstance(i, (tuple, list)) for i in request.headers):
+			if not all(isinstance(i, (tuple, list)) for i in request.header):
 				raise AsyncHTTPClientException(f'Invalid request headers')
-			if not all(len(i) == 2 for i in request.headers):
+			if not all(len(i) == 2 for i in request.header):
 				raise AsyncHTTPClientException(f'Invalid request headers')
-			rawheaders = [f'{k}: {v}' for k, v in request.headers]
+			rawheaders = [f'{k}: {v}' for k, v in request.header]
 
 			async_request.headers = settings.DEFAULT_REQUEST_HEADERS
 		else:
@@ -260,7 +265,7 @@ class AsyncHTTPClient():
 		async_request.max_redirects = request.redirects
 		# Timeout
 		if not request.timeout:
-			async_request.timeout = aiohttp.ClientTimeout(**settings.DEFAULT_REQUEST_TIMEOUT)
+			async_request.timeout = aiohttp.ClientTimeout(**request.timeout())
 		# HTTP Proxy
 		if request.proxy:
 			try:

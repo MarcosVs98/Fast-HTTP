@@ -18,7 +18,7 @@ import settings
 from dataclasses import dataclass
 from dataclasses import field
 from urllib.parse import urlencode, urlparse, urlunparse
-from HTTPClient import AsyncHTTPClientt
+from HTTPClient import AsyncHTTPClient
 from exceptions import AsyncLoopException
 from exceptions import AsyncHTTPConnectionException
 from exceptions import AsyncHTTPClientProxyException

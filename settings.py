@@ -103,7 +103,7 @@ DEFAULT_REQUEST_TIMEOUT = {
 	"total"       : AUTOTHROTTLE_MAX_DELAY,
 	"connect"     : AUTOTHROTTLE_START_DELAY,
 	"sock_connect": AUTOTHROTTLE_SOCK_DELAY,
-	"sock_read"   : AUTOTHROTTLE_READ_DELAY
+	"sock_read"   : AUTOTHROTTLE_SOCK_DELAY
 }
 
 # Maximum number of redirects
@@ -125,8 +125,11 @@ DEFAULT_ADDRESS = ('0.0.0.0', None)
 # Path absolute for ssl certificate.
 DEFAULT_SSL_CONTEXT = None
 
+ALLOW_REDIRECTS = True
+RAISE_FOR_STATUS = False
+
 # TCP socket family, both IPv4 and IPv6 by default.
-TCP_SOCKET_FAMILY = { 4 : socket.AF_INE,  6 : socket.AF_INET6 }
+TCP_SOCKET_FAMILY = { 4 : socket.AF_INET,  6 : socket.AF_INET6 }
 
 # Custom resolvers allow you to resolve hostname.
 RESOLVE_HOSTNAME = False
