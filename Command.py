@@ -70,9 +70,7 @@ class Command():
 		timeout = parser.add_argument_group('timeout')
 
 		request.add_argument('url', help="URL", type=validate_url)
-
-		request.add_argument("-m", "--method", help="HTTP method",
-		                    default='get', type=str)
+		request.add_argument("-m", "--method", help="HTTP method", default='get', type=str)
 		request.add_argument("-ar", "--allow_redirects", help='Allow redirects', type=bool,
 							   default=settings.ALLOW_REDIRECTS)
 		request.add_argument("-mr", "--redirects", help="Maximum number of redirects",
