@@ -41,10 +41,12 @@ def str_int_to_tuple(s):
 			return int(s[0]), int(s[-1])
 	raise Exception("HTTP version is not supported.")
 
+
 def str_to_tuple(s):
 	if isinstance(s, str):
 		return s[0], s[-1]
-	raise Exception("HTTP version is not supported.")
+	raise Exception("HTTP auth error.")
+
 
 def get_family(n):
 	return settings.TCP_SOCKET_FAMILY.get(int(n))
@@ -60,45 +62,37 @@ class Command():
 
 	def add_options(self):
 		parser = argparse.ArgumentParser(description="Fast-HTTP [options] [http[s]://]hostname[:port]/path",
-		                   formatter_class=argparse.RawTextHelpFormatter)
+							   formatter_class=argparse.RawTextHelpFormatter)
 		connector = parser.add_argument_group('connector')
 		session = parser.add_argument_group('session')
 		request = parser.add_argument_group('request')
 		benchmark = parser.add_argument_group('benchmark')
 		timeout = parser.add_argument_group('timeout')
 
-
 		request.add_argument('url', help="URL", type=validate_url)
 
 		request.add_argument("-m", "--method", help="HTTP method",
 		                    default='get', type=str)
-		#request.add_argument("-au", "--auth_user",
-		#					help="Add Basic Authentication, [user]", default=None, type=str)
-		#request.add_argument("-ap", "--auth_pass",  -d
-		#					help="Add Basic Authentication, [pass]", default=None, type=str)
 		request.add_argument("-ar", "--allow_redirects", help='Allow redirects', type=bool,
-							 default=settings.ALLOW_REDIRECTS)
+							   default=settings.ALLOW_REDIRECTS)
 		request.add_argument("-mr", "--redirects", help="Maximum number of redirects",
-								default=settings.MAX_REDIRECTS, type=int)
+							   default=settings.MAX_REDIRECTS, type=int)
 		request.add_argument("-k", "--postdata",
-		                    help="data to be sent via post", type=json.dumps)
+							   help="data to be sent via post", type=json.dumps)
 		request.add_argument("-H", "--header", action='store', help="add header line",
-		                    default=settings.DEFAULT_REQUEST_HEADERS, type=json.dumps)
+							   default=settings.DEFAULT_REQUEST_HEADERS, type=json.dumps)
 		request.add_argument("-PH", "--proxy_headers", action='store', help="add proxy header line",
-							default=settings.DEFAULT_REQUEST_HEADERS, type=json.dumps)
+							   default=settings.DEFAULT_REQUEST_HEADERS, type=json.dumps)
 		request.add_argument("-pU", "--proxy_user", type=str,
-							 help="Add Basic Proxy Authentication, [user]", default=None)
+							   help="Add Basic Proxy Authentication, [user]", default=None)
 		request.add_argument("-pP", "--proxy_pass", type=str,
-							 help="Add Basic Proxy Authentication, [pass]", default=None)
+							   help="Add Basic Proxy Authentication, [pass]", default=None)
 		request.add_argument("-S", "--verify_ssl", help="Disable SSL ceertificate",
-							 default=settings.VERIFY_SSL, type=bool)
+							   default=settings.VERIFY_SSL, type=bool)
 		request.add_argument("-E", "--sslcontext", help="Specify optional client certificate chain and private key",
-							 default=settings.DEFAULT_SSL_CONTEXT, type=str)
-		#request.add_argument("-0", "--raise_for_status", help="raise_for_status",
-		#					 type=bool, default=settings.RAISE_FOR_STATUS)
+							   default=settings.DEFAULT_SSL_CONTEXT, type=str)
 		request.add_argument("-X", "--proxy",
-							 help="Proxyserver and port number proxy:server", type=str)
-		# CONNECTOR
+							   help="Proxyserver and port number proxy:server", type=str)
 		connector.add_argument("-cs", "--connector_ssl", help="SSL validation mode.", type=str,
 							   default=settings.VERIFY_SSL)
 		connector.add_argument("-cf", "--fingerprint",
@@ -130,64 +124,59 @@ class Command():
 		connector.add_argument("-cC", "--enable_cleanup_closed",
 							   help="Aborts underlining transport after 2 seconds. It is off by default.",
 							   default=settings.SHUTDOWN_TRANSPORT, type=bool)
-		# Session
 		session.add_argument("-sC", "--cookies", action='store',
-		                    help="add cookie line",type=json.dumps)
+							   help="add cookie line",type=json.dumps)
 		session.add_argument("-sH", "--headers", action='store', help="add header line",
-							 default=settings.DEFAULT_REQUEST_HEADERS, type=json.dumps)
+							   default=settings.DEFAULT_REQUEST_HEADERS, type=json.dumps)
 		session.add_argument("-sK", "--skip_auto_headers", action='store', help="add header line",
-							 default=settings.DEFAULT_REQUEST_HEADERS, type=json.dumps)
-
+							   default=settings.DEFAULT_REQUEST_HEADERS, type=json.dumps)
 		session.add_argument("-sAu", "--auth", default=None, type=str_to_tuple)
-		
 		session.add_argument("-sV", "--version",
-							 help="HTTP Version", default=(1, 1), type=str_int_to_tuple)
+							   help="HTTP Version", default=(1, 1), type=str_int_to_tuple)
 		session.add_argument("-sJ", "--json_serialize", help="Python’s standard json module for serialization.",
-							 default=json.dumps, type=json.dumps)
+							   default=json.dumps, type=json.dumps)
 		session.add_argument("-sM", "--conn_timeout",
-							 help="add header line", default=None, type=float)
+							   help="add header line", default=None, type=float)
 		session.add_argument("-sR", "--raise_for_status", help="call raise for status for all answers not ok",
-							 default=False, type=bool)
+							   default=False, type=bool)
 		session.add_argument("-sO", "--connector_owner", help="Should connector be closed on session closing",
-							 default=settings.CONNECTOR_OWNER, type=bool)
+							   default=settings.CONNECTOR_OWNER, type=bool)
 		session.add_argument("-sD", "--auto_decompress", help="Should the body response be automatically decompressed",
-							 default=settings.AUTO_DESCOMPRESS, type=bool)
+							   default=settings.AUTO_DESCOMPRESS, type=bool)
 		session.add_argument("-sB", "--read_bufsize", help="Size of the read buffer",
-							 default=settings.READ_BUFSIZE, type=int)
+							   default=settings.READ_BUFSIZE, type=int)
 		session.add_argument("-sQ", "--requote_redirect_url",
 			help="To disable re-quote system set requote_redirect_url attribute", default=bool)
 		session.add_argument("-sT", "--trust_env",
-							 help="Get proxies information from HTTP_PROXY / HTTPS_PROXY environment variables",
+							   help="Get proxies information from HTTP_PROXY / HTTPS_PROXY environment variables",
 							 default=bool)
 		session.add_argument("-sF", "--trace_configs",
-							 help="Get proxies information from HTTP_PROXY / HTTPS_PROXY environment variables",
-							 default=bool)
-		# OTHERS
+							   help="Get proxies information from HTTP_PROXY / HTTPS_PROXY environment variables",
+							   default=bool)
 		benchmark.add_argument("-T", "--telnet", help="Telnet console (enabled by default)",
-							default=settings.TELNETCONSOLE_ENABLED, type=bool)
+							   default=settings.TELNETCONSOLE_ENABLED, type=bool)
 		benchmark.add_argument("-lp", "--limit_per_ip", help="Limit simultaneous connections to the same ip",
 							   default=settings.LIMIT_REQUESTS_PER_IP, type=int)
 		benchmark.add_argument("-c", "--concurrency", help="Number of simultaneous requests",
-							default=settings.CONCURRENT_REQUESTS, type=int)
+							   default=settings.CONCURRENT_REQUESTS, type=int)
 		benchmark.add_argument("-b", "--block", help="Number of request blocks",
-							default=settings.CONCURRENT_BLOCKS, type=int)
+							   default=settings.CONCURRENT_BLOCKS, type=int)
 		benchmark.add_argument("-B", "--outbound_address", help="Address to bind to when making outgoing connections",
-							default=settings.DEFAULT_ADDRESS, type=str)
+							   default=settings.DEFAULT_ADDRESS, type=str)
 		benchmark.add_argument("-pp", "--public_proxy",
-							help="Public proxies list", type=str)
-		# REQUEST DELAY
+							   help="Public proxies list", type=str)
 		timeout.add_argument("-d", "--total", help="Maximum delay on request [start]",
-							default=settings.AUTOTHROTTLE_MAX_DELAY, type=float)
+							   default=settings.AUTOTHROTTLE_MAX_DELAY, type=float)
 		timeout.add_argument("-s", "--connect", help="Delay at the start of the request [connect]",
-							default=settings.AUTOTHROTTLE_START_DELAY, type=float)
+							   default=settings.AUTOTHROTTLE_START_DELAY, type=float)
 		timeout.add_argument("-sd", "--sock_connect", help="Delay on socket request [socket]",
-							default=settings.AUTOTHROTTLE_SOCK_DELAY, type=float)
+							   default=settings.AUTOTHROTTLE_SOCK_DELAY, type=float)
 		timeout.add_argument("-rd", "--sock_read", help="Delay for reading request [read]",
-							default=settings.AUTOTHROTTLE_READ_DELAY, type=float)
+							   default=settings.AUTOTHROTTLE_READ_DELAY, type=float)
 		benchmark.add_argument("-R", "--roundrobin", help="Distribute http requests via network interface",
-							default=settings.ROUNDROBIN_ACTIVE, type=bool)
+							   default=settings.ROUNDROBIN_ACTIVE, type=bool)
 		benchmark.add_argument("-mp", "--list_proxy",
-							help="list of proxies separated by uri and authentication, in txt format", type=str)
+							   help="list of proxies separated by uri and authentication, in txt format", type=str)
 		args = parser.parse_args()
 
 		self.arg_groups = CommandGroups()
@@ -202,7 +191,7 @@ class Command():
 			timeout =  AsyncRequestTimeout(**vars(self.arg_groups.timeout))
 			#create connector
 			connector = AsyncTCPConnector(**vars(self.arg_groups.connector))
-			# set session args			
+			# set session args
 			self.arg_groups.session.connector = connector
 			# crate session
 			session = AsyncSession(**vars(self.arg_groups.session))
