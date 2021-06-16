@@ -99,11 +99,11 @@ class AsyncSession(Structure):
 		return self.connect
 
 	async def __aexit__(self, exc_type, exc, tb):
-		with aiohttp.Timeout(self.conn_timeout):
+		with aiohttp.Timeout(self.timeout):
 			return self.connection.close()
 
 	async def __aiter__(self):
-		with aiohttp.Timeout(self.conn_timeout):
+		with aiohttp.Timeout(self.timeout):
 			return self
 
 	async def __await__(self):
