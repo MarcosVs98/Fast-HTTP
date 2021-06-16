@@ -99,11 +99,10 @@ AUTOTHROTTLE_DEBUG = False
 
 # The maximum download delay to be defined in case of high latencies
 DEFAULT_REQUEST_TIMEOUT = {
-
 	"total"       : AUTOTHROTTLE_MAX_DELAY,
 	"connect"     : AUTOTHROTTLE_START_DELAY,
 	"sock_connect": AUTOTHROTTLE_SOCK_DELAY,
-	"sock_read"   : AUTOTHROTTLE_SOCK_DELAY
+	"sock_read"   : AUTOTHROTTLE_READ_DELAY
 }
 
 # Maximum number of redirects

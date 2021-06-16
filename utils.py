@@ -10,6 +10,7 @@
 import types
 import netifaces
 from dataclasses import dataclass
+from urllib.parse import urlparse
 from abc import ABC, abstractmethod
 from __version__ import __title__
 from __version__ import __version__
@@ -97,7 +98,7 @@ def validate_url(url):
 	return uri.geturl()
 
 
-def str_int_to_tuple(s):
+def str_auth_tuple(s):
 	if isinstance(s, str) and len(s.replace('.', '')) == 2:
 		if int(s[0]) == 1 and int(s[-1]) in [0, 1]:
 			return int(s[0]), int(s[-1])

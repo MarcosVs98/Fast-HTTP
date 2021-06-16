@@ -12,11 +12,10 @@ import sys
 import argparse
 import settings
 import logging
-from urllib.parse import urlparse
 from utils import Structure
 from utils import get_family
 from utils import str_to_tuple
-from utils import str_int_to_tuple
+from utils import str_auth_tuple
 from utils import validate_url
 from HTTPClient import AsyncTCPConnector
 from HTTPClient import AsyncSession
@@ -109,7 +108,7 @@ class Command():
 							   default=settings.DEFAULT_REQUEST_HEADERS, type=json.dumps)
 		session.add_argument("-sAu", "--auth", default=None, type=str_to_tuple)
 		session.add_argument("-sV", "--version",
-							   help="HTTP Version", default=(1, 1), type=str_int_to_tuple)
+							   help="HTTP Version", default=(1, 1), type=str_auth_tuple)
 		session.add_argument("-sJ", "--json_serialize", help="Python’s standard json module for serialization.",
 							   default=json.dumps, type=json.dumps)
 		session.add_argument("-sM", "--conn_timeout",
@@ -165,18 +164,19 @@ class Command():
 	def execute(self):
 		try:
 			# create timeout
-			timeout =  AsyncRequestTimeout(**vars(self.arg_groups.timeout))
+			#timeout =  AsyncRequestTimeout(**vars(self.arg_groups.timeout))
 			#create connector
-			connector = AsyncTCPConnector(**vars(self.arg_groups.connector))
+			#connector = AsyncTCPConnector(**vars(self.arg_groups.connector))
 			# set session args
-			self.arg_groups.session.connector = connector
+			#self.arg_groups.session.connector = connector
 			# crate session
-			session = AsyncSession(**vars(self.arg_groups.session))
+			#session = AsyncSession(**vars(self.arg_groups.session))
 			# set request timeout
-			self.arg_groups.request.timeout = timeout
+			#self.arg_groups.request.timeout = timeout
 			# crate request
 			request = AsyncHTTPRequest(**vars(self.arg_groups.request))
 			# create benchmark
+
 			benchmark = HTTPBenchmark(
 				url=request.url,
 				method=request.method,
