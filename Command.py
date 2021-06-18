@@ -30,7 +30,7 @@ class CommandGroups(Structure):
 	pass
 
 
-class Command():
+class FastHTTPCommand():
 	"""
 	Class responsible for implementing a command pattern.
 	ref: https://en.wikipedia.org/wiki/Command_pattern.
