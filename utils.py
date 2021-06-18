@@ -7,7 +7,13 @@
 *                                                                      *
 ************************************************************************
 """
+
+import ssl
 import types
+import socket
+import urllib3
+import requests
+import argparse
 import netifaces
 from dataclasses import dataclass
 from urllib.parse import urlparse
@@ -18,9 +24,11 @@ from __version__ import __description__
 from __version__ import __copyright__
 
 INFO = types.SimpleNamespace(title=__title__,
-							 version=__version__,
-							 description=__description__,
-							 copyright=__copyright__)
+	                         version=__version__,
+	                         description=__description__,
+	                         copyright=__copyright__)
+
+SOCK = None
 
 @dataclass
 class Structure(ABC):
@@ -113,6 +121,29 @@ def str_to_tuple(s):
 
 def get_family(n):
 	return settings.TCP_SOCKET_FAMILY.get(int(n))
+
+
+def get_tls_info(url):
+	tls_info = types.SimpleNamespace()
+
+	_orig_connect = urllib3.connection.VerifiedHTTPSConnection.connect
+
+	def _connect(self):
+		global SOCK
+		_orig_connect(self)
+		SOCK = self.sock
+
+	try:
+		urllib3.connection.VerifiedHTTPSConnection.connect = _connect
+		requests.get(url)
+	except requests.RequestException:
+		raise ("Request Exception.")
+
+	tlscon = SOCK.connection
+	tls_info.tls_protocol = f"{tlscon.get_cipher_name()}, {tlscon.get_cipher_version()}, {tlscon.get_cipher_bits()}"
+	tls_info.tls_remote_certificate = tlscon.get_peer_certificate()
+	tls_info.tls_version = tlscon.get_protocol_version_name()
+	return tls_info
 
 
 # end-of-file

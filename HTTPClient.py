@@ -247,13 +247,13 @@ class AsyncHTTPClient():
 
 		# Request Headers
 		if request.header is not None:
-			if not isinstance(request.header, (list, tuple)):
+			if not isinstance(request.header, (list, tuple, dict)):
 				raise AsyncHTTPClientException(f'Invalid request headers')
-			if not all(isinstance(i, (tuple, list)) for i in request.header):
+			if not all(isinstance(i, (list, tuple, str)) for i in request.header):
 				raise AsyncHTTPClientException(f'Invalid request headers')
-			if not all(len(i) == 2 for i in request.header):
+			if not all(len(i) == 2 for i in request.header.items()):
 				raise AsyncHTTPClientException(f'Invalid request headers')
-			rawheaders = [f'{k}: {v}' for k, v in request.header]
+			rawheaders = [f'{k}: {v}' for k, v in request.header.items()]
 
 			async_request.headers = settings.DEFAULT_REQUEST_HEADERS
 		else:

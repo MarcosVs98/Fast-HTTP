@@ -164,22 +164,20 @@ class Command():
 	def execute(self):
 		try:
 			# create timeout
-			#timeout =  AsyncRequestTimeout(**vars(self.arg_groups.timeout))
+			timeout =  AsyncRequestTimeout(**vars(self.arg_groups.timeout))
 			#create connector
-			#connector = AsyncTCPConnector(**vars(self.arg_groups.connector))
+			connector = AsyncTCPConnector(**vars(self.arg_groups.connector))
 			# set session args
-			#self.arg_groups.session.connector = connector
+			self.arg_groups.session.connector = connector
 			# crate session
-			#session = AsyncSession(**vars(self.arg_groups.session))
+			session = AsyncSession(**vars(self.arg_groups.session))
 			# set request timeout
-			#self.arg_groups.request.timeout = timeout
+			self.arg_groups.request.timeout = timeout
 			# crate request
 			request = AsyncHTTPRequest(**vars(self.arg_groups.request))
 			# create benchmark
-
 			benchmark = HTTPBenchmark(
-				url=request.url,
-				method=request.method,
+				request=request,
 				concurrent_requests=self.arg_groups.benchmark.concurrency,
 				concurrent_blocks=self.arg_groups.benchmark.block)
 			try:

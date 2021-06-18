@@ -15,6 +15,7 @@ import logging
 import asyncio
 import aiohttp
 import settings
+from utils import get_tls_info
 from dataclasses import dataclass
 from dataclasses import field
 from urllib.parse import urlencode, urlparse, urlunparse
@@ -64,14 +65,13 @@ class HTTPBenchmark():
 	params>
 	*****************************************************************
 	"""
-	def __init__(self, url, concurrent_requests, max_queue_size=0, concurrent_blocks=None, **kwargs):
-		self._url = url
-		self._uri = urlparse(url)
+	def __init__(self, request, concurrent_requests, max_queue_size=0, concurrent_blocks=None):
+		self._request = request
+		self._uri = urlparse(request.url)
 		self.blocks = 0
 		self._asynchronous_requests = concurrent_requests
 		self._asynchronous_blocks = concurrent_blocks
 		self._response_block = queue.Queue(maxsize=max_queue_size)
-		self.kwargs = kwargs
 		self._loop = None
 		self._unfinished = [1]
 		self._http_status = {}
@@ -118,7 +118,7 @@ class HTTPBenchmark():
 		for n in range(0, self._asynchronous_requests):
 			try:
 				async_request = AsyncHTTPClient()
-				future = asyncio.ensure_future(async_request.fetch(url=self._url, **self.kwargs), loop=self._loop)
+				future = asyncio.ensure_future(async_request.fetch(request=self._request), loop=self._loop)
 				request_block.put(future)
 			except asyncio.InvalidStateError as exc:
 				log.error(f"Invalid internal state of {future}. bl={n} exc={exc}")
@@ -185,10 +185,12 @@ class HTTPBenchmark():
 			except AttributeError as e:
 				continue
 
+		tls_info = get_tls_info(self._request.url)
+
 		server = sample.headers.get('server', 'Unknown')
 		nrequests = self._asynchronous_blocks * self._asynchronous_requests
 		info =  f'{utils.INFO.title} Version {utils.INFO.version} - {utils.INFO.copyright}\n'
-		info += f'Benchmarking {self._url}\n\n'
+		info += f'Benchmarking {self._request.url}\n\n'
 		info += f'{nrequests} requests divided into {self._asynchronous_blocks} '
 		info += f'blocks with {self._asynchronous_requests} simultaneous requests.\n'
 		print(info)
@@ -197,10 +199,10 @@ class HTTPBenchmark():
 		info =  f"* host: {self._uri.hostname} "
 		info += f"| port: {self._uri.port} \n" if self._uri.port else "\n"
 		info += f"* server: {server} \n"
-		info += f"* method: {self.kwargs['method'].upper()} \n"
+		info += f"* method: {self._request.method.upper()} \n"
 		info += f"* scheme : {self._uri.scheme.upper()} \n"
-		info += f"* SSL/TLS : TLSv1.1 \n"
-		info += f"* chipers : ECDHE-ECDSA-CHACHA20-POLY1305, 256, 256 \n"
+		info += f"* SSL/TLS : {tls_info.tls_version} \n"
+		info += f"* chipers {tls_info.tls_protocol}\n"
 		info += f"* name server TLS: {self._uri.hostname} \n"
 		info += f"* path: {self._uri.path} \n"
 		info += f"* document size: {document_size}'s\n\n"
