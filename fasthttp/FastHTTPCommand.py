@@ -22,8 +22,9 @@ from HTTPClient import AsyncSession
 from HTTPClient import AsyncHTTPRequest
 from HTTPClient import AsyncRequestTimeout
 from HTTPBenchmark import HTTPBenchmark
+from exceptions import BenchmarkingFailed
 
-log = logging.getLogger('command')
+log = logging.getLogger('FastHTTP-Command')
 
 
 class CommandGroups(Structure):
@@ -175,6 +176,8 @@ class FastHTTPCommand():
 			# crate request
 			request = AsyncHTTPRequest(**vars(self.arg_groups.request))
 			# create benchmark
+			log.warning("initializing benchmark...")
+
 			benchmark = HTTPBenchmark(
 				request=request,
 				concurrent_requests=self.arg_groups.benchmark.concurrency,
@@ -183,11 +186,7 @@ class FastHTTPCommand():
 				benchmark.perform()
 			except KeyboardInterrupt:
 				log.warning('CTRL+C Detected!')
-		except Exception as e:
-			log.error(e)
-
-c = Command()
-
-c.execute()
+		except BenchmarkingFailed:
+			raise BenchmarkingFailed("Benchmark ended in error.")
 
 # end-of-file

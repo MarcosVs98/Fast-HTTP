@@ -24,7 +24,6 @@ from urllib.parse import urlencode, urlparse, urlunparse
 from aiohttp.helpers import BasicAuth
 from aiohttp import HttpVersion10
 from aiohttp import HttpVersion11
-from exceptions import FailedAIO
 from exceptions import AsyncHTTPClientException
 from exceptions import AsyncHTTPClientEmptyResponseException
 from exceptions import AsyncHTTPClientTimeoutException
