@@ -196,8 +196,7 @@ class HTTPBenchmark():
 				success=self._http_status.get(200, 0),
 				failed=sum(self._http_status.values()) - self._http_status.get(200, 0),
 				total_time=self.benchmark_time,
-				blocks=(responses for responses in self._response_block.get())
-			)
+				blocks=(responses for responses in self._response_block.get()))
 			return list(self._response_block.queue)
 		raise BenchmarkingFailed("No response objects were generated...")
 
