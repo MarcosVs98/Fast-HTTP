@@ -190,7 +190,7 @@ class HTTPBenchmark():
 		# Show results
 		self.print_stats()
 
-	def get_response_block(self):
+	def get_responses(self):
 		if not self._response_block.empty():
 			return BenchmarkResponse(
 				success=self._http_status.get(200, 0),
