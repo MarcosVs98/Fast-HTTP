@@ -38,7 +38,7 @@ class BenchmarkResponse(Structure):
 	success             : int = field(default=0)
 	failed              : int = field(default=0)
 	total_time          : int = field(default=0)
-	downloaded_content  : int = field(default=0)
+	blocks              : tuple
 
 	def __repr__(self):
 		return (f'< FastHTTP-Benchmark[success={self.success},'
@@ -192,6 +192,12 @@ class HTTPBenchmark():
 
 	def get_response_block(self):
 		if not self._response_block.empty():
+			return BenchmarkResponse(
+				success=self._http_status.get(200, 0),
+				failed=sum(self._http_status.values()) - self._http_status.get(200, 0),
+				total_time=self.benchmark_time,
+				blocks=(responses for responses in self._response_block.get())
+			)
 			return list(self._response_block.queue)
 		raise BenchmarkingFailed("No response objects were generated...")
 
@@ -230,11 +236,8 @@ class HTTPBenchmark():
 		info += f"* name server TLS: {self._uri.hostname} \n"
 		info += f"* path: {self._uri.path} \n"
 		info += f"* document size: {document_size}'s\n\n"
-		try:
-			completed_request = self._http_status[200]
-		except KeyError:
-			completed_request = 0
 
+		completed_request = self._http_status.get(200, 0)
 		content_buffer  = utils.humanbytes(
 			sample.content_length * completed_request)
 		failed_requests = sum(self._http_status.values()) - completed_request
