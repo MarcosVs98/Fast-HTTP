@@ -9,7 +9,7 @@
 import time
 import json
 import logging
-import settings
+import fasthttp.settings as settings
 from datetime import datetime, timedelta
 from urllib.request import urlopen
 from dataclasses import dataclass , field

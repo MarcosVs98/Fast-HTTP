@@ -10,19 +10,19 @@
 import json
 import sys
 import argparse
-import settings
+import fasthttp.settings as settings
 import logging
-from utils import Structure
-from utils import get_family
-from utils import str_to_tuple
-from utils import str_auth_tuple
-from utils import validate_url
-from HTTPClient import AsyncTCPConnector
-from HTTPClient import AsyncSession
-from HTTPClient import AsyncHTTPRequest
-from HTTPClient import AsyncRequestTimeout
-from HTTPBenchmark import HTTPBenchmark
-from exceptions import BenchmarkingFailed
+from fasthttp.utils import Structure
+from fasthttp.utils import get_family
+from fasthttp.utils import str_to_tuple
+from fasthttp.utils import str_auth_tuple
+from fasthttp.utils import validate_url
+from fasthttp.HTTPClient import AsyncTCPConnector
+from fasthttp.HTTPClient import AsyncSession
+from fasthttp.HTTPClient import AsyncHTTPRequest
+from fasthttp.HTTPClient import AsyncRequestTimeout
+from fasthttp.HTTPBenchmark import HTTPBenchmark
+from fasthttp.exceptions import BenchmarkingFailed
 
 log = logging.getLogger('FastHTTP-Command')
 

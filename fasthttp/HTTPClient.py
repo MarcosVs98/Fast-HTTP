@@ -15,8 +15,8 @@ import random
 import logging
 import asyncio
 import aiohttp
-import settings
-from utils import Structure
+import fasthttp.settings as settings
+from fasthttp.utils import Structure
 from dataclasses import field
 from types import SimpleNamespace
 from dataclasses import dataclass
@@ -24,18 +24,18 @@ from urllib.parse import urlencode, urlparse, urlunparse
 from aiohttp.helpers import BasicAuth
 from aiohttp import HttpVersion10
 from aiohttp import HttpVersion11
-from exceptions import AsyncHTTPClientException
-from exceptions import AsyncHTTPClientEmptyResponseException
-from exceptions import AsyncHTTPClientTimeoutException
-from exceptions import AsyncHTTPClientTooManyRedirectsException
-from exceptions import AsyncHTTPClientResolveHostException
-from exceptions import AsyncHTTPUnsupportedMethodException
-from exceptions import AsyncLoopException
-from exceptions import AsyncHTTPTimeoutException
-from exceptions import AsyncHTTPCertificateException
-from exceptions import AsyncHTTPConnectionException
-from exceptions import AsyncHTTPClientProxyException
-from exceptions import AsyncHTTPClientError
+from fasthttp.exceptions import AsyncHTTPClientException
+from fasthttp.exceptions import AsyncHTTPClientEmptyResponseException
+from fasthttp.exceptions import AsyncHTTPClientTimeoutException
+from fasthttp.exceptions import AsyncHTTPClientTooManyRedirectsException
+from fasthttp.exceptions import AsyncHTTPClientResolveHostException
+from fasthttp.exceptions import AsyncHTTPUnsupportedMethodException
+from fasthttp.exceptions import AsyncLoopException
+from fasthttp.exceptions import AsyncHTTPTimeoutException
+from fasthttp.exceptions import AsyncHTTPCertificateException
+from fasthttp.exceptions import AsyncHTTPConnectionException
+from fasthttp.exceptions import AsyncHTTPClientProxyException
+from fasthttp.exceptions import AsyncHTTPClientError
 
 log = logging.getLogger('AsyncHTTPClient')
 

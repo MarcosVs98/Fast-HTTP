@@ -8,32 +8,32 @@
 ************************************************************************
 """
 import sys
-from FastHTTPCommand import FastHTTPCommand
+from fasthttp.FastHTTPCommand import FastHTTPCommand
 
 # HTTPClient
-from HTTPClient import AsyncTCPConnector
-from HTTPClient import AsyncSession
-from HTTPClient import AsyncHTTPRequest
-from HTTPClient import AsyncRequestTimeout
+from fasthttp.HTTPClient import AsyncTCPConnector
+from fasthttp.HTTPClient import AsyncSession
+from fasthttp.HTTPClient import AsyncHTTPRequest
+from fasthttp.HTTPClient import AsyncRequestTimeout
 
 # HTTPBenchmark
-from HTTPBenchmark import HTTPBenchmark
+from fasthttp.HTTPBenchmark import HTTPBenchmark
 
 # Exceptions
-from exceptions import BenchmarkingFailed
-from exceptions import AsyncHTTPClientException
-from exceptions import AsyncHTTPClientEmptyResponseException
-from exceptions import AsyncHTTPClientTimeoutException
-from exceptions import AsyncHTTPClientTooManyRedirectsException
-from exceptions import AsyncHTTPClientResolveHostException
-from exceptions import AsyncHTTPUnsupportedMethodException
-from exceptions import AsyncLoopException
-from exceptions import AsyncHTTPTimeoutException
-from exceptions import AsyncHTTPCertificateException
-from exceptions import AsyncHTTPConnectionException
-from exceptions import AsyncHTTPClientProxyException
-from exceptions import AsyncHTTPClientError
-from exceptions import BenchmarkingFailed
+from fasthttp.exceptions import BenchmarkingFailed
+from fasthttp.exceptions import AsyncHTTPClientException
+from fasthttp.exceptions import AsyncHTTPClientEmptyResponseException
+from fasthttp.exceptions import AsyncHTTPClientTimeoutException
+from fasthttp.exceptions import AsyncHTTPClientTooManyRedirectsException
+from fasthttp.exceptions import AsyncHTTPClientResolveHostException
+from fasthttp.exceptions import AsyncHTTPUnsupportedMethodException
+from fasthttp.exceptions import AsyncLoopException
+from fasthttp.exceptions import AsyncHTTPTimeoutException
+from fasthttp.exceptions import AsyncHTTPCertificateException
+from fasthttp.exceptions import AsyncHTTPConnectionException
+from fasthttp.exceptions import AsyncHTTPClientProxyException
+from fasthttp.exceptions import AsyncHTTPClientError
+from fasthttp.exceptions import BenchmarkingFailed
 
 if len(sys.argv) > 1:
 	command = FastHTTPCommand()

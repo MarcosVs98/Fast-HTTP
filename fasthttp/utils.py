@@ -18,10 +18,10 @@ import netifaces
 from dataclasses import dataclass
 from urllib.parse import urlparse
 from abc import ABC, abstractmethod
-from __version__ import __title__
-from __version__ import __version__
-from __version__ import __description__
-from __version__ import __copyright__
+from fasthttp.__version__ import __title__
+from fasthttp.__version__ import __version__
+from fasthttp.__version__ import __description__
+from fasthttp.__version__ import __copyright__
 
 INFO = types.SimpleNamespace(title=__title__,
 	                         version=__version__,

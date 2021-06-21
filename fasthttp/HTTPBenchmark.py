@@ -10,19 +10,20 @@
 import time
 import ssl
 import queue
-import utils
 import logging
 import asyncio
 import aiohttp
-import settings
-from utils import get_tls_info
+import fasthttp.utils
+import fasthttp.settings as settings
+from fasthttp.utils import get_tls_info
 from dataclasses import dataclass
 from dataclasses import field
 from urllib.parse import urlencode, urlparse, urlunparse
-from HTTPClient import AsyncHTTPClient
-from exceptions import AsyncLoopException
-from exceptions import AsyncHTTPConnectionException
-from exceptions import AsyncHTTPClientProxyException
+from fasthttp.HTTPClient import AsyncHTTPClient
+from fasthttp.exceptions import AsyncLoopException
+from fasthttp.exceptions import AsyncHTTPConnectionException
+from fasthttp.exceptions import AsyncHTTPClientProxyException
+from fasthttp.exceptions import BenchmarkingFailed
 
 log = logging.getLogger('http-benchmark')
 
@@ -171,9 +172,14 @@ class HTTPBenchmark():
 		# Show results
 		self.print_stats()
 
+	def get_response_block(self):
+		if not self._response_block.empty():
+			return list(self._response_block.queue)
+		raise BenchmarkingFailed("No response objects were generated...")
+
 	def print_stats(self):
-		ret = self._response_block.get()
-		for s in list(ret):
+		responses = self._response_block.get()
+		for s in list(responses):
 			try:
 				response = s.result()
 				if isinstance(response, tuple):
