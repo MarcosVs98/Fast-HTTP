@@ -154,7 +154,6 @@ class FastHTTPCommand():
 		benchmark.add_argument("-mp", "--list_proxy",
 							   help="list of proxies separated by uri and authentication, in txt format", type=str)
 		args = parser.parse_args()
-
 		self.arg_groups = CommandGroups()
 
 		for group in parser._action_groups:
