@@ -14,7 +14,7 @@ import logging
 import asyncio
 import aiohttp
 import fasthttp.utils
-import fasthttp.settings as settings
+import fasthttp.settings
 from fasthttp.utils import get_tls_info
 from dataclasses import dataclass
 from dataclasses import field
@@ -85,30 +85,30 @@ class HTTPBenchmark():
 		for f in finisheds:
 			try:
 				response = f.result()
-				if response.status in settings.HTTP_HTTP_SUCESS:
-					if not min(settings.HTTP_HTTP_SUCESS) in self._http_status:
-						self._http_status[min(settings.HTTP_HTTP_SUCESS)] = 0
-					self._http_status[min(settings.HTTP_HTTP_SUCESS)] += 1
-				elif response.status in settings.HTTP_REDIRECTION:
-					if not min(settings.HTTP_REDIRECTION) in self._http_status:
-						self._http_status[min(settings.HTTP_REDIRECTION)] = 0
-					self._http_status[min(settings.HTTP_REDIRECTION)] += 1
-				elif response.status in settings.HTTP_CLIENT_ERROR:
-					if not min(settings.HTTP_CLIENT_ERROR) in self._http_status:
-						self._http_status[min(settings.HTTP_CLIENT_ERROR)] = 0
-					self._http_status[min(settings.HTTP_CLIENT_ERROR)] += 1
-				elif response.status in settings.HTTP_SERVER_ERROR:
-					if not min(settings.HTTP_SERVER_ERROR) in self._http_status:
-						self._http_status[min(settings.HTTP_SERVER_ERROR)] = 0
-					self._http_status[min(settings.HTTP_SERVER_ERROR)] += 1
+				if response.status in fasthttp.settings.HTTP_HTTP_SUCESS:
+					if not min(fasthttp.settings.HTTP_HTTP_SUCESS) in self._http_status:
+						self._http_status[min(fasthttp.settings.HTTP_HTTP_SUCESS)] = 0
+					self._http_status[min(fasthttp.settings.HTTP_HTTP_SUCESS)] += 1
+				elif response.status in fasthttp.settings.HTTP_REDIRECTION:
+					if not min(fasthttp.settings.HTTP_REDIRECTION) in self._http_status:
+						self._http_status[min(fasthttp.settings.HTTP_REDIRECTION)] = 0
+					self._http_status[min(fasthttp.settings.HTTP_REDIRECTION)] += 1
+				elif response.status in fasthttp.settings.HTTP_CLIENT_ERROR:
+					if not min(fasthttp.settings.HTTP_CLIENT_ERROR) in self._http_status:
+						self._http_status[min(fasthttp.settings.HTTP_CLIENT_ERROR)] = 0
+					self._http_status[min(fasthttp.settings.HTTP_CLIENT_ERROR)] += 1
+				elif response.status in fasthttp.settings.HTTP_SERVER_ERROR:
+					if not min(fasthttp.settings.HTTP_SERVER_ERROR) in self._http_status:
+						self._http_status[min(fasthttp.settings.HTTP_SERVER_ERROR)] = 0
+					self._http_status[min(fasthttp.settings.HTTP_SERVER_ERROR)] += 1
 				else:
 					if not response.status in self._http_status:
 						self._http_status[response.status] = 0
 					self._http_status[response.status] += 1
 			except AttributeError:
-				if not settings.HTTP_CLIENT_DEFAULT_ERROR in self._http_status:
-					self._http_status[settings.HTTP_CLIENT_DEFAULT_ERROR] = 0
-				self._http_status[settings.HTTP_CLIENT_DEFAULT_ERROR] += 1
+				if not fasthttp.settings.HTTP_CLIENT_DEFAULT_ERROR in self._http_status:
+					self._http_status[fasthttp.settings.HTTP_CLIENT_DEFAULT_ERROR] = 0
+				self._http_status[fasthttp.settings.HTTP_CLIENT_DEFAULT_ERROR] += 1
 		return {k: v for k, v in sorted(self._http_status.items(),
 				key=lambda item: item[1], reverse=True)}
 

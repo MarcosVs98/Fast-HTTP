@@ -15,7 +15,7 @@ import random
 import logging
 import asyncio
 import aiohttp
-import fasthttp.settings as settings
+import fasthttp.settings
 from fasthttp.utils import Structure
 from dataclasses import field
 from types import SimpleNamespace
@@ -44,17 +44,17 @@ class AsyncTCPConnector(Structure):
 	"""
 	https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp-client-reference-connectors
 	"""
-	ssl                   : bool = field(default=settings.VERIFY_SSL)
+	ssl                   : bool = field(default=fasthttp.settings.VERIFY_SSL)
 	fingerprint           : bytes = field(default=None, repr=False) 
-	use_dns_cache         : bool = field(default=settings.USE_DNS_CACHE)
-	ttl_dns_cache         : int = field(default=settings.TTL_DNS_CACHE)
+	use_dns_cache         : bool = field(default=fasthttp.settings.USE_DNS_CACHE)
+	ttl_dns_cache         : int = field(default=fasthttp.settings.TTL_DNS_CACHE)
 	family                : int = field(default=socket.AF_INET)
 	ssl_context           : str = field(default=None)
 	local_addr            : tuple = field(default=None)
 	resolver              : aiohttp.AsyncResolver = field(default=None)
 	force_close           : bool = field(default=False)
-	limit                 : int = field(default=settings.LIMIT_CONNECTIONS)
-	limit_per_host        : int = field(default=settings.LIMIT_REQUESTS_PER_HOST)
+	limit                 : int = field(default=fasthttp.settings.LIMIT_CONNECTIONS)
+	limit_per_host        : int = field(default=fasthttp.settings.LIMIT_REQUESTS_PER_HOST)
 	enable_cleanup_closed : bool = field(default=False)
 	loop                  : str = field(default=None)
 
@@ -138,10 +138,10 @@ class AsyncRequestTimeout(Structure):
 	Data class responsible for representing
 	the fields of an aiohttp.Timeout
 	"""
-	total        : float = field(default=settings.AUTOTHROTTLE_MAX_DELAY)
-	connect      : float = field(default=settings.AUTOTHROTTLE_START_DELAY)
-	sock_connect : float = field(default=settings.AUTOTHROTTLE_SOCK_DELAY)
-	sock_read    : float = field(default=settings.AUTOTHROTTLE_SOCK_DELAY)
+	total        : float = field(default=fasthttp.settings.AUTOTHROTTLE_MAX_DELAY)
+	connect      : float = field(default=fasthttp.settings.AUTOTHROTTLE_START_DELAY)
+	sock_connect : float = field(default=fasthttp.settings.AUTOTHROTTLE_SOCK_DELAY)
+	sock_read    : float = field(default=fasthttp.settings.AUTOTHROTTLE_SOCK_DELAY)
 
 
 @dataclass
@@ -254,9 +254,9 @@ class AsyncHTTPClient():
 				raise AsyncHTTPClientException(f'Invalid request headers')
 			rawheaders = [f'{k}: {v}' for k, v in request.header.items()]
 
-			async_request.headers = settings.DEFAULT_REQUEST_HEADERS
+			async_request.headers = fasthttp.settings.DEFAULT_REQUEST_HEADERS
 		else:
-			request.headers = settings.DEFAULT_REQUEST_HEADERS
+			request.headers = fasthttp.settings.DEFAULT_REQUEST_HEADERS
 		# Authentication
 		if request.security_web:
 			async_request.auth = aiohttp.BasicAuth(request.auth_user, request.auth_pass)

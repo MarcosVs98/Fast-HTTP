@@ -9,7 +9,7 @@
 import time
 import json
 import logging
-import fasthttp.settings as settings
+import fasthttp.settings
 from datetime import datetime, timedelta
 from urllib.request import urlopen
 from dataclasses import dataclass , field
@@ -77,7 +77,7 @@ class ProxyListClient():
 			return proxies['raw']
 
 	def _get_proxy_list_status(self):
-		response = urlopen(settings.PUBLIC_PROXIES_STATUS)
+		response = urlopen(fasthttp.settings.PUBLIC_PROXIES_STATUS)
 		content_text = response.read().decode('utf-8')
 		proxies_status = content_text.split('\n')
 		for proxie in proxies_status:
@@ -111,7 +111,7 @@ class ProxyListClient():
 		if self._updated_proxies():
 			return
 		self._get_proxy_list_status()
-		response = urlopen(settings.PUBLIC_PROXIES_LIST)
+		response = urlopen(fasthttp.settings.PUBLIC_PROXIES_LIST)
 		content_text = response.read().decode('utf-8')
 		proxies = content_text.split('\n\n')
 		proxies_header = proxies[0]
