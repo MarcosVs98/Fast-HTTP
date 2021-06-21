@@ -35,7 +35,7 @@ from exceptions import AsyncHTTPClientProxyException
 from exceptions import AsyncHTTPClientError
 from exceptions import BenchmarkingFailed
 
-if sys.argv[1]:
+if len(sys.argv) > 1:
 	command = FastHTTPCommand()
 	command.execute()
 	sys.exit()
