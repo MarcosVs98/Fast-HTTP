@@ -15,9 +15,10 @@ import asyncio
 import aiohttp
 import fasthttp.utils
 import fasthttp.settings
-from fasthttp.utils import get_tls_info
-from dataclasses import dataclass
 from dataclasses import field
+from dataclasses import dataclass
+from fasthttp.utils import get_tls_info
+from fasthttp.utils import Structure
 from urllib.parse import urlencode, urlparse, urlunparse
 from fasthttp.HTTPClient import AsyncHTTPClient
 from fasthttp.exceptions import AsyncLoopException
@@ -26,6 +27,23 @@ from fasthttp.exceptions import AsyncHTTPClientProxyException
 from fasthttp.exceptions import BenchmarkingFailed
 
 log = logging.getLogger('http-benchmark')
+
+
+@dataclass
+class BenchmarkResponse(Structure):
+	"""
+	Data class responsible for encapsulating
+	all benchmark results.
+	"""
+	success             : int = field(default=0)
+	failed              : int = field(default=0)
+	total_time          : int = field(default=0)
+	downloaded_content  : int = field(default=0)
+
+	def __repr__(self):
+		return (f'< FastHTTP-Benchmark[success={self.success},'
+		        f'total_time={round(self.total_time, 3)}]>')
+
 
 class HTTPBenchmark():
 	"""
