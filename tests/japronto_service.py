@@ -5,7 +5,7 @@ requests = 0
 def hello(request):
 	global requests
 	requests += 1
-	return request.Response(text=f'{requests}')
+	return request.Response(text='hello wolrd')
 
 app = Application()
 

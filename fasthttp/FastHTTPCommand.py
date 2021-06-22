@@ -181,9 +181,9 @@ class FastHTTPCommand():
 			benchmark = HTTPBenchmark(
 				request=request,
 				concurrent_requests=self.arg_groups.benchmark.concurrency,
-				concurrent_blocks=self.arg_groups.benchmark.block)
+				concurrent_blocks=self.arg_groups.benchmark.block),
 			try:
-				benchmark.perform()
+				benchmark.perform(debug_stats=True)
 			except KeyboardInterrupt:
 				log.warning('CTRL+C Detected!')
 		except BenchmarkingFailed:

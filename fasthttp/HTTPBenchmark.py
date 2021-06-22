@@ -17,10 +17,13 @@ import fasthttp.utils
 import fasthttp.settings
 from dataclasses import field
 from dataclasses import dataclass
+from urllib.parse import urlencode
+from urllib.parse import urlparse
+from urllib.parse import urlunparse
 from fasthttp.utils import get_tls_info
 from fasthttp.utils import Structure
-from urllib.parse import urlencode, urlparse, urlunparse
 from fasthttp.HTTPClient import AsyncHTTPClient
+from fasthttp.HTTPClient import AsyncHTTPRequest
 from fasthttp.exceptions import AsyncLoopException
 from fasthttp.exceptions import AsyncHTTPConnectionException
 from fasthttp.exceptions import AsyncHTTPClientProxyException
@@ -35,14 +38,14 @@ class BenchmarkResponse(Structure):
 	Data class responsible for encapsulating
 	all benchmark results.
 	"""
-	success             : int = field(default=0)
-	failed              : int = field(default=0)
-	total_time          : int = field(default=0)
-	blocks              : tuple
+	success       : int = field(default=0)
+	failed        : int = field(default=0)
+	total_time    : int = field(default=0)
+	blocks        : list = field(default=())
 
-	def __repr__(self):
-		return (f'< FastHTTP-Benchmark[success={self.success},'
-		        f'total_time={round(self.total_time, 3)}]>')
+	def __str__(self):
+		return f'<FastHTTP-Benchmark[success={self.success}, ' \
+			   f'total_time={round(self.total_time, 3)}]>'
 
 
 class HTTPBenchmark():
@@ -84,16 +87,21 @@ class HTTPBenchmark():
 	params>
 	*****************************************************************
 	"""
-	def __init__(self, request, concurrent_requests, max_queue_size=0, concurrent_blocks=None):
-		self._request = request
-		self._uri = urlparse(request.url)
-		self.blocks = 0
+	def __init__(self, concurrent_blocks, concurrent_requests, request=None, **kwargs):
+
+		if not isinstance(request, AsyncHTTPRequest):
+			self._request = AsyncHTTPRequest(**kwargs)
+		else:
+			self._request = request
+		self._uri = urlparse(self._request.url)
 		self._asynchronous_requests = concurrent_requests
 		self._asynchronous_blocks = concurrent_blocks
-		self._response_block = queue.Queue(maxsize=max_queue_size)
+		self._max_queue_size = int(concurrent_blocks * concurrent_requests)
+		self._response_block = queue.Queue(maxsize=self._max_queue_size)
 		self._loop = None
 		self._unfinished = [1]
 		self._http_status = {}
+		self.blocks = 0
 
 	def _all_http_status(self, finisheds):
 		"""
@@ -147,7 +155,7 @@ class HTTPBenchmark():
 				log.error(f"The operation has exceeded the given deadline,  bl={n} exc={exc}")
 		return request_block
 
-	def perform(self):
+	def perform(self, debug_stats=False):
 		t0 = time.time()
 		for n in range(1, self._asynchronous_blocks + 1):
 			try:
@@ -188,7 +196,8 @@ class HTTPBenchmark():
 		self.benchmark_time = round((tf - t0), 5)
 		# finished all requests!
 		# Show results
-		self.print_stats()
+		if debug_stats:
+			self.print_stats()
 
 	def get_responses(self):
 		if not self._response_block.empty():
@@ -196,7 +205,7 @@ class HTTPBenchmark():
 				success=self._http_status.get(200, 0),
 				failed=sum(self._http_status.values()) - self._http_status.get(200, 0),
 				total_time=self.benchmark_time,
-				blocks=(responses for responses in self._response_block.get()))
+				blocks=(responses.result() for responses in self._response_block.get()))
 		raise BenchmarkingFailed("No response objects were generated...")
 
 	def print_stats(self):
@@ -214,16 +223,15 @@ class HTTPBenchmark():
 				continue
 
 		tls_info = get_tls_info(self._request.url)
-
 		server = sample.headers.get('server', 'Unknown')
 		nrequests = self._asynchronous_blocks * self._asynchronous_requests
-		info =  f'{utils.INFO.title} Version {utils.INFO.version} - {utils.INFO.copyright}\n'
+		info =  f's% Version {fasthttp.utils.INFO.version} - {fasthttp.utils.INFO.copyright}\n'
 		info += f'Benchmarking {self._request.url}\n\n'
 		info += f'{nrequests} requests divided into {self._asynchronous_blocks} '
 		info += f'blocks with {self._asynchronous_requests} simultaneous requests.\n'
 		print(info)
 
-		document_size = utils.humanbytes(sample.content_length)
+		document_size = fasthttp.utils.humanbytes(sample.content_length)
 		info =  f"* host: {self._uri.hostname} "
 		info += f"| port: {self._uri.port} \n" if self._uri.port else "\n"
 		info += f"* server: {server} \n"
@@ -236,7 +244,7 @@ class HTTPBenchmark():
 		info += f"* document size: {document_size}'s\n\n"
 
 		completed_request = self._http_status.get(200, 0)
-		content_buffer  = utils.humanbytes(
+		content_buffer  = fasthttp.utils.humanbytes(
 			sample.content_length * completed_request)
 		failed_requests = sum(self._http_status.values()) - completed_request
 
@@ -245,7 +253,6 @@ class HTTPBenchmark():
 		info += f"* máx. requests per hostname: {self._asynchronous_requests} \n"
 		info += f"* concurrent requests: {self._asynchronous_requests} \n"
 		info += f"* qtd. request block: {self._asynchronous_blocks} \n\n"
-
 		try:
 			rps = round(self.benchmark_time / completed_request , 7)
 		except ZeroDivisionError:
@@ -254,7 +261,6 @@ class HTTPBenchmark():
 			avg = round(1.0 / rps)
 		except ZeroDivisionError:
 			avg = 0
-
 		info += f"* total requests: {self._asynchronous_blocks * self._asynchronous_requests} \n"
 		info += f"* benchmark time: {self.benchmark_time} seconds\n"
 		info += f"* success requests: {completed_request}\n"
@@ -267,5 +273,21 @@ class HTTPBenchmark():
 	def shutdown_event_loop(self):
 		if self._loop.is_running():
 			self._loop.close()
+
+	def __enter__(self):
+		self.perform()
+		return self.get_responses()
+
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		if exc_val:
+			log.warning(f'exc_type: {exc_type}')
+			log.warning(f'exc_value: {exc_val}')
+			log.warning(f'exc_traceback: {exc_tb}')
+		self.shutdown_event_loop()
+
+	def __repr__(self):
+		return (f'<FastHTTP-Benchmark ('
+				f'max_size={self._max_queue_size})>')
+
 
 # end-of-file
