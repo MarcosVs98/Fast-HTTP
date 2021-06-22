@@ -7,14 +7,15 @@
 *                                                                      *
 ************************************************************************
 """
-import time
 import ssl
+import time
 import queue
 import logging
 import asyncio
 import aiohttp
 import fasthttp.utils
 import fasthttp.settings
+from uuid import uuid4
 from dataclasses import field
 from dataclasses import dataclass
 from urllib.parse import urlencode
@@ -31,6 +32,18 @@ from fasthttp.exceptions import BenchmarkingFailed
 
 log = logging.getLogger('http-benchmark')
 
+@dataclass
+class BlockResponse(Structure):
+	"""
+	Data class responsible for encapsulating
+	block response.
+	"""
+	ssid   : str = field(default=uuid4())
+	block  : tuple = field(default=())
+
+	def __str__(self):
+		return f'<BlockResponse(sid={self.ssid})>'
+
 
 @dataclass
 class BenchmarkResponse(Structure):
@@ -41,7 +54,7 @@ class BenchmarkResponse(Structure):
 	success       : int = field(default=0)
 	failed        : int = field(default=0)
 	total_time    : int = field(default=0)
-	blocks        : list = field(default=())
+	blocks        : tuple = field(default=())
 
 	def __str__(self):
 		return f'<FastHTTP-Benchmark[success={self.success}, ' \
@@ -201,11 +214,13 @@ class HTTPBenchmark():
 
 	def get_responses(self):
 		if not self._response_block.empty():
+
 			return BenchmarkResponse(
 				success=self._http_status.get(200, 0),
 				failed=sum(self._http_status.values()) - self._http_status.get(200, 0),
 				total_time=self.benchmark_time,
-				blocks=(responses.result() for responses in self._response_block.get()))
+				blocks=(BlockResponse(ssid=str(n), block=(response.result() for response in responses))
+			 for n, responses in enumerate(self._response_block.queue, 1)))
 		raise BenchmarkingFailed("No response objects were generated...")
 
 	def print_stats(self):

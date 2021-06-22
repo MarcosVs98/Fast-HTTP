@@ -26,9 +26,11 @@ url = 'http://0.0.0.0:9999/'
 
 
 
-with HTTPBenchmark(method='get', url=url, concurrent_requests=120, concurrent_blocks=1) as benchmark:
-	for bl in benchmark.blocks:
-		print(bl)
+with HTTPBenchmark(method='get', url=url, concurrent_requests=120, concurrent_blocks=3) as benchmark:
+	for n, resultados in enumerate(benchmark.blocks,1):
+		print(n, resultados)
+		#for r in resultados.block:
+		#	print(n, r)
 
 
 
