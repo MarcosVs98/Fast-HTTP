@@ -214,13 +214,12 @@ class HTTPBenchmark():
 
 	def get_responses(self):
 		if not self._response_block.empty():
-
 			return BenchmarkResponse(
 				success=self._http_status.get(200, 0),
 				failed=sum(self._http_status.values()) - self._http_status.get(200, 0),
 				total_time=self.benchmark_time,
 				blocks=(BlockResponse(ssid=str(n), block=(response.result() for response in responses))
-			 for n, responses in enumerate(self._response_block.queue, 1)))
+				      for n, responses in enumerate(self._response_block.queue, 1)))
 		raise BenchmarkingFailed("No response objects were generated...")
 
 	def print_stats(self):
