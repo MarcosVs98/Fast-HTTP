@@ -33,6 +33,10 @@ with HTTPBenchmark(method='get', url=url, concurrent_requests=120, concurrent_bl
 		#	print(n, r)
 
 
+from fasthttp.utils import get_tls_info
+
+print(get_tls_info('http://0.0.0.0:9999/'))
+
 
 #benchmark.perform()
 

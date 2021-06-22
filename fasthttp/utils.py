@@ -124,7 +124,10 @@ def get_family(n):
 
 
 def get_tls_info(url):
-	tls_info = types.SimpleNamespace()
+	tls_info = types.SimpleNamespace(
+		tls_protocol=None,
+		tls_remote_certificate=None,
+		tls_version=None)
 
 	_orig_connect = urllib3.connection.VerifiedHTTPSConnection.connect
 
@@ -139,11 +142,14 @@ def get_tls_info(url):
 	except requests.RequestException:
 		raise ("Request Exception.")
 
-	tlscon = SOCK.connection
-	tls_info.tls_protocol = f"{tlscon.get_cipher_name()}, {tlscon.get_cipher_version()}, {tlscon.get_cipher_bits()}"
-	tls_info.tls_remote_certificate = tlscon.get_peer_certificate()
-	tls_info.tls_version = tlscon.get_protocol_version_name()
-	return tls_info
+	try:
+		tlscon = SOCK.connection
+		tls_info.tls_protocol = f"{tlscon.get_cipher_name()}, {tlscon.get_cipher_version()}, {tlscon.get_cipher_bits()}"
+		tls_info.tls_remote_certificate = tlscon.get_peer_certificate()
+		tls_info.tls_version = tlscon.get_protocol_version_name()
+		return tls_info
+	except AttributeError:
+		return tls_info
 
 
 # end-of-file
