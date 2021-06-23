@@ -370,9 +370,6 @@ class AsyncHTTPClient():
 		kwargs.update({"url": url, "method": "HEAD"})
 		return self.dispatch(**kwargs)
 
-	def get_loop(self):
-		return asyncio.get_event_loop()
-
 	async def fetch(self, **kwargs):
 		try:
 			return await self.send_request(**kwargs)
@@ -381,23 +378,24 @@ class AsyncHTTPClient():
 			return  (exc._conn_key, exc._os_error)
 		
 	def dispatch(self, **kwargs):
-		self.loop = self.get_loop()
+		self.loop = asyncio.get_event_loop()
 		return self.loop.run_until_complete(self.fetch(**kwargs))
 
 	@property
 	def close_loop(self):
-		if self.loop is not None:
-			self.loop()
+		if not self.loop.is_closed():
+			self.loop.close()
 		raise AsyncLoopException('finishing event-loop..')
 
-	def __enter__(cls):
-		return cls
+	async def __aenter__(self, **kwargs):
+		return await self.fetch(**kwargs)
 
-	def __exit__(cls, typ, value, tb):
+	async def __aexit__(self, typ, value, tb):
 		if exc_val:
 			log.warning(f'exc_type: {exc_type}')
 			log.warning(f'exc_value: {exc_val}')
 			log.warning(f'exc_traceback: {exc_tb}')
+		self.close_loop()
 
 	def __dell__(self):
 		del self
