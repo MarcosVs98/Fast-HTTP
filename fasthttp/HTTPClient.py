@@ -16,7 +16,6 @@ import logging
 import asyncio
 import aiohttp
 import fasthttp.settings
-from fasthttp.utils import Structure
 from dataclasses import field
 from types import SimpleNamespace
 from dataclasses import dataclass
@@ -24,6 +23,7 @@ from urllib.parse import urlencode, urlparse, urlunparse
 from aiohttp.helpers import BasicAuth
 from aiohttp import HttpVersion10
 from aiohttp import HttpVersion11
+from fasthttp.utils import Structure
 from fasthttp.exceptions import AsyncHTTPClientException
 from fasthttp.exceptions import AsyncHTTPClientEmptyResponseException
 from fasthttp.exceptions import AsyncHTTPClientTimeoutException
@@ -38,6 +38,7 @@ from fasthttp.exceptions import AsyncHTTPClientProxyException
 from fasthttp.exceptions import AsyncHTTPClientError
 
 log = logging.getLogger('AsyncHTTPClient')
+
 
 @dataclass
 class AsyncTCPConnector(Structure):
