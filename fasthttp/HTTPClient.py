@@ -383,7 +383,7 @@ class AsyncHTTPClient():
 
 	@property
 	def close_loop(self):
-		if not self.loop.is_closed():
+		if self.loop is not None:
 			self.loop.close()
 		raise AsyncLoopException('finishing event-loop..')
 

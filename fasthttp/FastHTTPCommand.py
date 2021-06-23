@@ -23,6 +23,7 @@ from fasthttp.HTTPClient import AsyncHTTPRequest
 from fasthttp.HTTPClient import AsyncRequestTimeout
 from fasthttp.HTTPBenchmark import HTTPBenchmark
 from fasthttp.exceptions import BenchmarkingFailed
+from fasthttp.ProxyListClient import ProxyListClient
 
 log = logging.getLogger('FastHTTP-Command')
 
@@ -150,10 +151,6 @@ class FastHTTPCommand():
 							   default=fasthttp.settings.AUTOTHROTTLE_SOCK_DELAY, type=float)
 		timeout.add_argument("-rd", "--sock_read", help="Delay for reading request [read]",
 							   default=fasthttp.settings.AUTOTHROTTLE_READ_DELAY, type=float)
-		benchmark.add_argument("-R", "--roundrobin", help="Distribute http requests via network interface",
-							   default=fasthttp.settings.ROUNDROBIN_ACTIVE, type=bool)
-		benchmark.add_argument("-mp", "--list_proxy",
-							   help="list of proxies separated by uri and authentication, in txt format", type=str)
 		args = parser.parse_args()
 		self.arg_groups = CommandGroups()
 

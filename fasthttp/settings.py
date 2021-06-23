@@ -88,7 +88,7 @@ DEFAULT_REQUEST_HEADERS = {
 SSL_CERTIFICATE_VALIDATION = None 
 
 # Distribute http requests via network interface using round robin algoritm
-ROUNDROBIN_ACTIVE = False
+ROUNDROBIN_ACTIVE = False # not implemented
 
 # The average number of HTTPRequest requests must
 # send in parallel to each remote server
@@ -110,10 +110,6 @@ MAX_REDIRECTS = 30
 
 # close underlying sockets after connection releasing (optional).
 CLOSE_ALL_SOCKETS = True
-
-PUBLIC_PROXIES_RAW = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt'
-PUBLIC_PROXIES_LIST = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list.txt'
-PUBLIC_PROXIES_STATUS = 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-status.txt'
 
 # Certificates / SSL
 VERIFY_SSL = False
