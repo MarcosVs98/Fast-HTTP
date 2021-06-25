@@ -137,7 +137,7 @@ The library has a benchmarking tool supporting HTTP/1.0/1.1 written in python, w
 The tool uses the Fast-HTTP asynchronous client sending request blocks in order to better balance the pipelines, being able to simulate long requests, using internal resources promoted by [aiohttp](https://docs.aiohttp.org/en/stable/) and by Fast-HTTP itself.
  
 ## Use
-### Command Line
+## Command Line
 
 ```
 Fast-HTTP [options] [http[s]://]hostname[:port]/path
