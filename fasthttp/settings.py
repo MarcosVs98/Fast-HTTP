@@ -10,18 +10,8 @@
 import sys
 import random
 import socket
-import logging
 from pathlib import Path
 from colorama import Fore, Style
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Fast http settings
-APPLICATION_CONFIG = {
-	'logging_mode'  : 'console_debug',
-	'logfile'        : BASE_DIR / 'fasthttp.log'
-}
 
 #Configure the maximum number of requisition blocks
 CONCURRENT_BLOCKS = 1
@@ -128,60 +118,5 @@ TCP_SOCKET_FAMILY = { 4 : socket.AF_INET,  6 : socket.AF_INET6 }
 
 # Custom resolvers allow you to resolve hostname.
 RESOLVE_HOSTNAME = False
-
-# Configurações de Logging e Debugging
-
-LOGGING_CONFIG = {
-	'console_release' : {
-		'format'   : '[%(asctime)s.%(msecs)03d][%(process)s]'
-					 '[%(threadName)s] %(message)s',
-		'datefmt'  : '%Y-%m-%d %H:%M:%S',
-		'level'    : logging.WARNING,
-		'stream'   : sys.stdout
-	},
-
-	'logfile_release' : {
-		'format'   : '[%(asctime)s.%(msecs)03d][%(process)s]'
-					 '[%(threadName)s] %(message)s',
-		'datefmt'  : '%Y-%m-%d %H:%M:%S',
-		'level'    : logging.WARNING,
-		'filename' : APPLICATION_CONFIG['logfile']
-	},
-
-	'console_debug' : {
-		'format'   : '[%(asctime)s.%(msecs)03d]'
-					 '[PID-%(process)s][%(threadName)s]'
-					 '[%(module)s:%(funcName)s:%(lineno)d] '
-					 '%(levelname)s: '
-					 '%(message)s',
-		'datefmt'  : '%Y-%m-%d %H:%M:%S',
-		'level'    : logging.WARNING,
-		'stream'   : sys.stdout
-	},
-
-	'logfile_debug' : {
-		'format'   : '[%(asctime)s.%(msecs)03d]'
-					 '[PID-%(process)s][%(threadName)s]'
-					 '[%(module)s:%(funcName)s:%(lineno)d] '
-					 '%(levelname)s: '
-					 '%(message)s',
-		'datefmt'  : '%Y-%m-%d %H:%M:%S',
-		'level'    : logging.DEBUG,
-		'filename' : APPLICATION_CONFIG['logfile']
-	},
-
-	'console_color_debug' : {
-		'format'   : f'{Fore.CYAN}[%(asctime)s.%(msecs)03d]'
-					 f'{Fore.RED}[PID-%(process)s]'
-					 f'{Fore.MAGENTA}[%(threadName)s]'
-					 f'{Fore.GREEN}[%(module)s:%(funcName)s:%(lineno)d]'
-					 f'{Fore.YELLOW}[%(name)s:%(levelname)s]'
-					 f'{Fore.RESET}'
-					 f': %(message)s',
-		'datefmt'  : '%Y-%m-%d %H:%M:%S',
-		'level'    : logging.DEBUG,
-		'stream'   : sys.stderr
-	}
-}
 
 # end-of-file
