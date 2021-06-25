@@ -1,15 +1,15 @@
- # Fast-HTTP
+# Fast-HTTP
 
 Python library for making asynchronous HTTP requests.
  ![Web-Trader Block Diagram](https://github.com/MarcosVs98/Fast-HTTP/blob/main/img/example.png)
 
-## Sobre
+## About
 Fast-HTTP is a library packaged with an asynchronous HTTP client, which allows you to parallelize http requests in order to
 optimize and improve persistence with the target server. All this because the HTTP protocol offers pipelining,
 allowing multiple hits to be sent on the same connection without waiting for responses.
 blocked or closed while the HTTP server responds.
 
-### Assincrono em Python
+### Async in Python
 Become an asynchronous function/method using the keyword "async" before the definition and also using another word
 reserved called "await" in the implementation, so you can know to expect something. 
 
@@ -26,18 +26,18 @@ Simple example of using HTTP client.
 >>>
 ```
 
-## Instalação
+## Installation
 
 ```
 python setup.py install
 ```
 
-### Clonando o repositório
+### Cloning the repository
 ```
 $ git clone https://github.com/MarcosVs98/Fast-HTTP.git
 ```
 
-## Parametros
+## Parameters
 
 The application's base parameterization was based on the parameters already used by the core library [aiohttp](https://docs.aiohttp.org/en/stable/) used in this project.
 
@@ -250,7 +250,7 @@ timeout:
                         Delay for reading request [read]
 
 ```
-## Testando os limites
+## Testing the limits
 
 ## Performance
 
