@@ -323,7 +323,7 @@ Benchmarking http://0.0.0.0:9999
 
 ### Programmatically Examples
 
-##### HTTPRequest
+#### HTTPRequest
 
 ```pycon
 from fasthttp.HTTPClient import HTTPRequest
@@ -331,7 +331,7 @@ from fasthttp.HTTPClient import HTTPRequest
 request = HTTPRequest(url="https://www.python.org/", method='get')
 ```
 
-##### AsyncSession
+#### AsyncSession
 ```pycon
 from fasthttp.HTTPClient import AsyncSession
 
@@ -339,7 +339,7 @@ async with AsyncSession() as client:
     ......  await implementation     
 ```
 
-##### AssyncHTTPClient
+#### AssyncHTTPClient
 ```pycon
 from fasthttp.HTTPClient import AssyncHTTPClient
 
