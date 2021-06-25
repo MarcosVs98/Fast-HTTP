@@ -23,7 +23,6 @@ from fasthttp.HTTPClient import AsyncHTTPRequest
 from fasthttp.HTTPClient import AsyncRequestTimeout
 from fasthttp.HTTPBenchmark import HTTPBenchmark
 from fasthttp.exceptions import BenchmarkingFailed
-from fasthttp.ProxyListClient import ProxyListClient
 
 log = logging.getLogger('FastHTTP-Command')
 
@@ -93,7 +92,7 @@ class FastHTTPCommand():
 		connector.add_argument("-cR", "--resolver", help="Custom resolvers allow you to resolve hostnames",
 							   default=fasthttp.settings.RESOLVE_HOSTNAME, type=bool)
 		connector.add_argument("-cF", "--force_close",
-							   help="close underlying sockets after connection releasing (optional).",
+							   help="Close underlying sockets after connection releasing (optional).",
 							   default=fasthttp.settings.CLOSE_ALL_SOCKETS)
 		connector.add_argument("-cL", "--limit", help="Total number simultaneous connections",
 							   default=fasthttp.settings.LIMIT_CONNECTIONS, type=int)
@@ -176,9 +175,9 @@ class FastHTTPCommand():
 			log.warning("initializing benchmark...")
 
 			benchmark = HTTPBenchmark(
-				request=request,
+				request=request, session=session,
 				concurrent_requests=self.arg_groups.benchmark.concurrency,
-				concurrent_blocks=self.arg_groups.benchmark.block),
+				concurrent_blocks=self.arg_groups.benchmark.block)
 			try:
 				benchmark.perform(debug_stats=True)
 			except KeyboardInterrupt:

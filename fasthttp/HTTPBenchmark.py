@@ -25,6 +25,7 @@ from fasthttp.utils import get_tls_info
 from fasthttp.utils import Structure
 from fasthttp.HTTPClient import AsyncHTTPClient
 from fasthttp.HTTPClient import AsyncHTTPRequest
+from fasthttp.HTTPClient import AsyncSession
 from fasthttp.exceptions import AsyncLoopException
 from fasthttp.exceptions import AsyncHTTPConnectionException
 from fasthttp.exceptions import AsyncHTTPClientProxyException
@@ -101,12 +102,16 @@ class HTTPBenchmark():
 	params>
 	*****************************************************************
 	"""
-	def __init__(self, concurrent_blocks, concurrent_requests, request=None, **kwargs):
+	def __init__(self, concurrent_blocks, concurrent_requests, request=None, session=None, **kwargs):
 
 		if not isinstance(request, AsyncHTTPRequest):
 			self._request = AsyncHTTPRequest(**kwargs)
 		else:
 			self._request = request
+		if not isinstance(session, AsyncSession):
+			self._session = AsyncSession()
+		else:
+			self._session = session
 		self._uri = urlparse(self._request.url)
 		self._asynchronous_requests = concurrent_requests
 		self._asynchronous_blocks = concurrent_blocks
@@ -240,7 +245,7 @@ class HTTPBenchmark():
 		tls_info = get_tls_info(self._request.url)
 		server = sample.headers.get('server', 'Unknown')
 		nrequests = self._asynchronous_blocks * self._asynchronous_requests
-		info =  f's% Version {fasthttp.utils.INFO.version} - {fasthttp.utils.INFO.copyright}\n'
+		info =  f'{fasthttp.utils.INFO.title} Version {fasthttp.utils.INFO.version} - {fasthttp.utils.INFO.copyright}\n'
 		info += f'Benchmarking {self._request.url}\n\n'
 		info += f'{nrequests} requests divided into {self._asynchronous_blocks} '
 		info += f'blocks with {self._asynchronous_requests} simultaneous requests.\n'
@@ -263,9 +268,9 @@ class HTTPBenchmark():
 			sample.content_length * completed_request)
 		failed_requests = sum(self._http_status.values()) - completed_request
 
-		info += f"* TCP connections: {self._asynchronous_requests} \n"
-		info += f"* máx. requests per IP: {self._asynchronous_requests} \n"
-		info += f"* máx. requests per hostname: {self._asynchronous_requests} \n"
+		info += f"* TCP connections: {self._session.connector.limit} \n"
+		info += f"* máx. requests per hostname: {self._session.connector.limit_per_host} \n"
+		info += f"* TTL dns cache: {self._session.connector.ttl_dns_cache} \n"
 		info += f"* concurrent requests: {self._asynchronous_requests} \n"
 		info += f"* qtd. request block: {self._asynchronous_blocks} \n\n"
 		try:
@@ -280,7 +285,7 @@ class HTTPBenchmark():
 		info += f"* benchmark time: {self.benchmark_time} seconds\n"
 		info += f"* success requests: {completed_request}\n"
 		info += f"* failed requests: {failed_requests}\n"
-		info += f"* content buffer size: {content_buffer}'s \n"
+		info += f"* total buffer size: {content_buffer}'s \n"
 		info += f"* average requests per second: {avg} / sec (average)\n"
 		info += f"* time per request: {rps} [ms] (average on all simultaneous requests)\n"
 		print(info)
@@ -301,8 +306,7 @@ class HTTPBenchmark():
 		self.shutdown_event_loop()
 
 	def __repr__(self):
-		return (f'<FastHTTP-Benchmark ('
-				f'max_size={self._max_queue_size})>')
+		return f'<FastHTTP-Benchmark (max_size={self._max_queue_size})>'
 
 
 # end-of-file

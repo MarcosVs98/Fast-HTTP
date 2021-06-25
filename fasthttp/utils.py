@@ -124,10 +124,13 @@ def get_family(n):
 
 
 def get_tls_info(url):
+
+	default_value = 'Null'
+
 	tls_info = types.SimpleNamespace(
-		tls_protocol=None,
-		tls_remote_certificate=None,
-		tls_version=None)
+		tls_protocol=default_value,
+		tls_remote_certificate=default_value,
+		tls_version=default_value)
 
 	_orig_connect = urllib3.connection.VerifiedHTTPSConnection.connect
 
@@ -135,13 +138,11 @@ def get_tls_info(url):
 		global SOCK
 		_orig_connect(self)
 		SOCK = self.sock
-
 	try:
 		urllib3.connection.VerifiedHTTPSConnection.connect = _connect
 		requests.get(url)
 	except requests.RequestException:
 		raise ("Request Exception.")
-
 	try:
 		tlscon = SOCK.connection
 		tls_info.tls_protocol = f"{tlscon.get_cipher_name()}, {tlscon.get_cipher_version()}, {tlscon.get_cipher_bits()}"

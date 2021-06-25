@@ -57,7 +57,7 @@ LIMIT_REQUESTS_PER_IP = 0 #no limite
 TTL_DNS_CACHE = 300
 
 # Should connector be closed on session closing.
-CONNECTOR_OWNER = True
+CONNECTOR_OWNER = False
 
 # Disables the use of the DNS cache table, causing all requests to end up doing a DNS resolution.
 USE_DNS_CACHE = True
