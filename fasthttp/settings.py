@@ -16,7 +16,7 @@ from colorama import Fore, Style
 #Configure the maximum number of requisition blocks
 CONCURRENT_BLOCKS = 1
 # Configure the maximum number of simultaneous requests
-CONCURRENT_REQUESTS = 24
+CONCURRENT_REQUESTS = 25
 # set delay value for downloads
 DOWNLOAD_DELAY = 0.57
 

@@ -15,6 +15,7 @@ from fasthttp.HTTPClient import AsyncTCPConnector
 from fasthttp.HTTPClient import AsyncSession
 from fasthttp.HTTPClient import AsyncHTTPRequest
 from fasthttp.HTTPClient import AsyncRequestTimeout
+from fasthttp.HTTPClient import AsyncHTTPClient
 
 # HTTPBenchmark
 from fasthttp.HTTPBenchmark import HTTPBenchmark

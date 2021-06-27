@@ -10,6 +10,7 @@
 import ssl
 import time
 import queue
+import timeit
 import logging
 import asyncio
 import aiohttp
@@ -175,7 +176,7 @@ class HTTPBenchmark():
 		return request_block
 
 	def perform(self, debug_stats=False):
-		t0 = time.time()
+		t0 = timeit.default_timer()
 		for n in range(1, self._asynchronous_blocks + 1):
 			try:
 				request_block = self.get_block_requests()
@@ -210,7 +211,7 @@ class HTTPBenchmark():
 				log.error(f"Unexpected error: {exc} terminating lopp shutdown_event_loop")
 				if not self._loop.is_closed():
 					self.shutdown_event_loop()
-		tf = time.time()
+		tf = timeit.default_timer()
 		# Calc time of benchmarking
 		self.benchmark_time = round((tf - t0), 5)
 		# finished all requests!

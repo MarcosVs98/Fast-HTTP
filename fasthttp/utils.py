@@ -7,7 +7,6 @@
 *                                                                      *
 ************************************************************************
 """
-
 import ssl
 import types
 import socket
@@ -69,13 +68,6 @@ class Structure(ABC):
 
 	def __len__(self):
 		return len(self.__dict__)
-
-
-def get_ipv4_addresses():
-	for name in netifaces.interfaces():
-		iface = netifaces.ifaddresses(name)
-		for addr in iface.get(netifaces.AF_INET, []):
-			yield addr.get('addr')
 
 
 def humanbytes(b):

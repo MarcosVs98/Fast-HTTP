@@ -314,6 +314,8 @@ class AsyncHTTPClient():
 				raise AsyncHTTPUnsupportedMethodException(
 					"Unsupported request method"
 				)
+			t0 = time.time()
+
 			# Request Callback
 			async with request_callback(**vars(async_request)) as async_response:
 				try:
@@ -333,6 +335,7 @@ class AsyncHTTPClient():
 						url=async_response.url,
 						real_url=async_response.real_url,
 						connection=async_response.connection,
+						elapsed=round(time.time() - t0, 3),
 						content=async_response.content,
 						content_length=len(contents_text),
 						encoding=encoding,
