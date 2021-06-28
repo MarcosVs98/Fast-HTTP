@@ -60,7 +60,7 @@ class BenchmarkResponse(Structure):
 	blocks        : tuple = field(default=())
 
 	def __str__(self):
-		return f'<FastHTTP-Benchmark[success={self.success}, ' \
+		return f'<FHTTP-Benchmark[success={self.success}, ' \
 			   f'total_time={round(self.total_time, 3)}]>'
 
 
@@ -197,7 +197,7 @@ class HTTPBenchmark():
 					try:
 						finished, self._unfinished = self._loop.run_until_complete(
 							asyncio.wait(request_block.queue,
-								return_when=asyncio.FIRST_COMPLETED, timeout=30))
+								return_when=asyncio.FIRST_COMPLETED, timeout=fasthttp.settings.LTimeout))
 					except aiohttp.client_exceptions.ClientConnectorError as e:
 						log.error(e)
 					finally:

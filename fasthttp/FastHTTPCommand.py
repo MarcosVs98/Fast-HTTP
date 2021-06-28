@@ -172,7 +172,7 @@ class FastHTTPCommand():
 			# crate request
 			request = AsyncHTTPRequest(**vars(self.arg_groups.request))
 			# create benchmark
-			log.warning("initializing benchmark...")
+			log.warning("Initializing benchmark...")
 
 			benchmark = HTTPBenchmark(
 				request=request, session=session,

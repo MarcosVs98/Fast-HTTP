@@ -119,4 +119,7 @@ TCP_SOCKET_FAMILY = { 4 : socket.AF_INET,  6 : socket.AF_INET6 }
 # Custom resolvers allow you to resolve hostname.
 RESOLVE_HOSTNAME = False
 
+# Loop timeout/ benchmark
+LTimeout = 30
+
 # end-of-file
