@@ -1,4 +1,4 @@
-<div align="center"><img src="img/fasthttp-logan.png" height="300px"/></div>
+<div align="center"><img src="img/fasthttp-logan-min.png" height="250px"/></div>
 
 <h2 align="center">Python library for making asynchronous HTTP requests.</h2>
 
