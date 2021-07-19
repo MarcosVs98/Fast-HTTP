@@ -1,9 +1,8 @@
-<div align="center"><img src="img/fasthttp-logan.png" height="200px"/></div>
+<div align="center"><img src="img/fasthttp-logan.png" height="300px"/></div>
 
-<h1 align="center">Fast-HTTP: Python library for making asynchronous HTTP requests.</h1>
+<h2 align="center">Python library for making asynchronous HTTP requests.</h1>
 
 
-## About
 Fast-HTTP is a library packaged with an asynchronous HTTP client, which allows you to parallelize http requests in order to
 optimize and improve persistence with the target server. All this because the HTTP protocol offers pipelining,
 allowing multiple hits to be sent on the same connection without waiting for responses.
