@@ -1,6 +1,6 @@
 <div align="center"><img src="img/fasthttp-logan.png" height="300px"/></div>
 
-<h2 align="center">Python library for making asynchronous HTTP requests.</h1>
+<h2 align="center">Python library for making asynchronous HTTP requests.</h2>
 
 
 Fast-HTTP is a library packaged with an asynchronous HTTP client, which allows you to parallelize http requests in order to
