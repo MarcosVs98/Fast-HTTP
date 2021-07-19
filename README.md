@@ -385,6 +385,7 @@ Model on the answer blocks.
 #### HTTPBenchmark E3
 
 Model iterating over each response block.
+
 ```pycon
 >>> from fasthttp import HTTPBenchmark
 >>>

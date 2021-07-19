@@ -6,7 +6,6 @@
 *                                                                      *
 ************************************************************************
 """
-import io
 import ssl
 import json
 import time
@@ -25,15 +24,11 @@ from aiohttp import HttpVersion10
 from aiohttp import HttpVersion11
 from fasthttp.utils import Structure
 from fasthttp.exceptions import AsyncHTTPClientException
-from fasthttp.exceptions import AsyncHTTPClientEmptyResponseException
-from fasthttp.exceptions import AsyncHTTPClientTimeoutException
-from fasthttp.exceptions import AsyncHTTPClientTooManyRedirectsException
 from fasthttp.exceptions import AsyncHTTPClientResolveHostException
 from fasthttp.exceptions import AsyncHTTPUnsupportedMethodException
 from fasthttp.exceptions import AsyncLoopException
 from fasthttp.exceptions import AsyncHTTPTimeoutException
 from fasthttp.exceptions import AsyncHTTPCertificateException
-from fasthttp.exceptions import AsyncHTTPConnectionException
 from fasthttp.exceptions import AsyncHTTPClientProxyException
 from fasthttp.exceptions import AsyncHTTPClientError
 
@@ -215,7 +210,7 @@ class AsyncHTTPClient():
 		try:
 			if ((laddr is not None) and (family == socket.AF_INET)):
 				s.bind(laddr)
-		except OSError as e:
+		except (OSError, AsyncHTTPClientResolveHostException) as e:
 			log.debug(f"Cannot bind local address '{laddr}' to socket '{s}': {e}")
 		s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 		log.debug(f'Open Socket: {s}')

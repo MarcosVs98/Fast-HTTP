@@ -8,14 +8,12 @@
 ************************************************************************
 """
 import os
-import re
 import sys
-
 from codecs import open
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
 
 BASE = os.path.abspath(os.path.dirname(__file__))
+
 
 # 'setup.py publish' shortcut.
 if sys.argv[-1] == 'publish':
