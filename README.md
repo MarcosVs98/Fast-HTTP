@@ -1,7 +1,7 @@
-# Fast-HTTP
+<div align="center"><img src="img/fasthttp-logan.png" height="200px"/></div>
 
-Python library for making asynchronous HTTP requests.
- ![Web-Trader Block Diagram](https://github.com/MarcosVs98/Fast-HTTP/blob/main/img/example.png)
+<h1 align="center">Fast-HTTP: Python library for making asynchronous HTTP requests.</h1>
+
 
 ## About
 Fast-HTTP is a library packaged with an asynchronous HTTP client, which allows you to parallelize http requests in order to
@@ -132,7 +132,9 @@ Fast-Http uses a default `ClientResponse` response object used by the aiohttp cl
 The library has a benchmarking tool supporting HTTP/1.0/1.1 written in python, with support for HTTP and HTTPS pipelining.
 
 
-### HTTPBenchmark 
+### HTTPBenchmark
+
+ ![Web-Trader Block Diagram](https://github.com/MarcosVs98/Fast-HTTP/blob/main/img/example.png) 
 
 The tool uses the Fast-HTTP asynchronous client sending request blocks in order to better balance the pipelines, being able to simulate long requests, using internal resources promoted by [aiohttp](https://docs.aiohttp.org/en/stable/) and by Fast-HTTP itself.
  
